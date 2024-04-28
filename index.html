@@ -46,7 +46,7 @@
 		centeredPopup {
 			display:block;
 			min-width: 300px;
-			min-height: 200px;
+			/*min-height: 200px;*/
 			max-width: 100%;
 			max-height: 100%;
 			background-color: #dbdbdb;
@@ -211,6 +211,7 @@
 			width:100%;
 			flex-direction:column;
 			flex-shrink:0;
+			background-color: #ebebeb;
 		}
 		
 		msgbar > div {
@@ -401,6 +402,7 @@
 			background: rgba(255,200,0,0.2);
 		}
 		.contextmenu {
+			outline: 1px solid gray;
 			z-index:100000;
 			border-radius:8px;
 			overflow:hidden;
@@ -456,7 +458,7 @@
 		let logininfo = {};
 		let currentuser = {};
 		let chats = []
-		var reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉"];
+		let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉"];
 	
 		function openconnectarea(err) {
 			document.body.innerHTML = "";
@@ -601,7 +603,7 @@
 		}
 		
 		function loadmainarea() {
-		
+			Notification.requestPermission();
 			function viewuginfo(ugid,type,grole) {
 				let diag = opendialog();
 				diag.title.innerText = "Info";
@@ -653,7 +655,7 @@
 							res.text().then((text) => {
 								let infod = JSON.parse(text);
 								
-								var f = document.createElement('input');
+								let f = document.createElement('input');
 								f.type='file';
 								f.accept = 'image/*';
 								
@@ -858,7 +860,7 @@
 								f.onchange = function() {
 									if (f.files && f.files[0]) {
 					
-										var reader = new FileReader();
+										let reader = new FileReader();
 										reader.onload = function (e) { 
 											pfpimge.setAttribute("src",reader.result);
 											file = f.files[0];
@@ -959,7 +961,8 @@
 			}
 			
 			let currentchatview;
-		
+			let chatitems = {};
+			let readnotifications = [];
 			let ttimer = setInterval(function() {
 				fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 					if (!res.ok) {
@@ -968,11 +971,39 @@
 				}).catch(() => {
 					openloginarea();
 				})
+				fetch(currserver + "getnotifications", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+					if (!res.ok) {
+						lopenloginarea();
+						return;
+					}
+					res.json().then((nots) => {
+						let list = Object.keys(nots);
+						list.forEach(function(i) {
+							if (readnotifications.indexOf(i) <= -1) {
+								let notif = nots[i];
+								Notification.requestPermission();
+								if (document.hasFocus() == false || currentchatid != notif.chatid) {
+									var notification = new Notification(notif.user.name + ' - Pamukky', { body: notif.content, icon: notif.user.picture });
+									var audio = new Audio('notif.mp3');
+									audio.play();
+									notification.addEventListener('click', (event) => {
+										chatitems[notif.chatid].click();
+									});
+								}
+								readnotifications.push(i);
+							}
+						})
+					})
+				}).catch(() => {
+					openloginarea();
+				})
 			},4000)
 			fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 				if (!res.ok) {
 					lopenloginarea();
+					
 				}
+				
 			}).catch(() => {
 				openloginarea();
 			})
@@ -1047,7 +1078,7 @@
 				let creategroupbtn = document.createElement("button");
 				creategroupbtn.innerText = "Create Group";
 				creategroupbtn.addEventListener("click",function() {
-					var f = document.createElement('input');
+					let f = document.createElement('input');
 					f.type='file';
 					f.accept = 'image/*';
 					
@@ -1128,7 +1159,7 @@
 					f.onchange = function() {
 						if (f.files && f.files[0]) {
 		
-							var reader = new FileReader();
+							let reader = new FileReader();
 							reader.onload = function (e) { 
 								pfpimge.setAttribute("src",reader.result);
 								file = f.files[0];
@@ -1159,7 +1190,7 @@
 			})
 			
 			btn.addEventListener("click",function() {
-				var f = document.createElement('input');
+				let f = document.createElement('input');
 				f.type='file';
 				f.accept = 'image/*';
 				
@@ -1254,7 +1285,7 @@
 				f.onchange = function() {
 					if (f.files && f.files[0]) {
     
-						var reader = new FileReader();
+						let reader = new FileReader();
 						reader.onload = function (e) { 
 							pfpimge.setAttribute("src",reader.result);
 							file = f.files[0];
@@ -1265,15 +1296,16 @@
 					}
 				}
 			});
-			
+			let currentchatid = 0;
 			function loadchats() {
 				chatslist.innerHTML = "";
-				var rfb = document.createElement("button");
+				let rfb = document.createElement("button");
 				rfb.addEventListener("click",function() {
 					loadchats();
 				})
 				rfb.innerText = "Refresh"
 				chatslist.appendChild(rfb)
+				let lsci = null;
 				fetch(currserver + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.text().then((text) => {
@@ -1286,7 +1318,9 @@
 										content: "No Messages. Send one to start conversation."
 									}
 								}
+								let id = item["chatid"] + "";
 								let itmcont = document.createElement("chatitem");
+								chatitems[id] = itmcont;
 								let pfpimg = document.createElement("img")
 								pfpimg.src = item.info.picture.replace(/%SERVER%/g,currserver);
 								itmcont.appendChild(pfpimg);
@@ -1314,17 +1348,17 @@
 								itmcont.appendChild(infocnt);
 								
 								chatslist.appendChild(itmcont);
-								let id = item["chatid"] + "";
-								let lsci = null;
+								
 								itmcont.addEventListener("click",function() {
 									if (lsci != null) {
-										lsci.style.background = "transparent"
+										lsci.style.background = ""
 									}
 									if (currentchatview) {
 										currentchatview.kill();
 										rightarea.removeChild(currentchatview.chat);
 									}
 									currentchatview = createchatarea(id, (item.type == "user" ? item.user : item.group));
+									currentchatid = id;
 									currentchatview.titlelabel.innerText = item.info.name;
 									currentchatview.pfp.src = item.info.picture.replace(/%SERVER%/g,currserver);
 									rightarea.appendChild(currentchatview.chat)
@@ -1353,7 +1387,7 @@
 										currentchatview.backbutton.style.display = "none"
 										rightarea.style.display = "";
 										leftarea.style.display = "";
-										//itmcont.style.background = "orange"
+										itmcont.style.background = "orange"
 										
 									}
 									lsci = itmcont;
@@ -1441,7 +1475,7 @@
 				f.onchange = function() {
 					if (f.files && f.files[0]) {
     
-						var reader = new FileReader();
+						let reader = new FileReader();
 						reader.onload = function (e) { 
 							let file = f.files[0];
 							ufl = true;
@@ -1451,7 +1485,19 @@
 							rb.innerText = "x";
 							let img = document.createElement("img")
 							img.classList.add("loading");
-							img.src = reader.result;
+							let imgs = new Image();
+							imgs.src = reader.result;
+							if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+								// dark mode
+								img.src = "file_dark.svg";
+							}else {
+								img.src = "file.svg";
+							}
+							img.classList.add("msgimg");
+							imgs.onload = function() {
+								img.src = imgs.src;
+							}
+							//img.src = reader.result;
 							ui.appendChild(img)
 							att.appendChild(ui);
 							att.appendChild(rb);
@@ -1561,7 +1607,7 @@
 					
 					msgc.addEventListener("contextmenu",function(event) {
 						if (msg.sender != 0) {
-							var ctxdiv = document.createElement("div");
+							let ctxdiv = document.createElement("div");
 							ctxdiv.style.position = "absolute";
 							ctxdiv.style.top = event.clientY + "px";
 							ctxdiv.style.left = event.clientX + "px";
@@ -1569,10 +1615,10 @@
 							ctxdiv.style.minWidth = "315px";
 							ctxdiv.style.maxWidth = "315px";
 							if (crole.AllowSendingReactions == true) {
-								var reactionsdiv = document.createElement("div");
+								let reactionsdiv = document.createElement("div");
 								reactionemojis.forEach((item) => {
-									var itm = item.toString();
-									var reactionbtn = document.createElement("button");
+									let itm = item.toString();
+									let reactionbtn = document.createElement("button");
 									reactionbtn.style.border = "none";
 									reactionbtn.style.background = "none";
 									reactionbtn.classList.add("orangebgonhover");
@@ -1592,7 +1638,7 @@
 								ctxdiv.appendChild(reactionsdiv);
 							}
 							if (msg.issearch == true) {
-								var gomsgbutton = document.createElement("button");
+								let gomsgbutton = document.createElement("button");
 								addRipple(gomsgbutton,"rgba(255,200,0,0.6)",true);
 								gomsgbutton.innerText = "Go To Message";
 								//copybutton.classList.add("btn","btn-warning")
@@ -1612,7 +1658,7 @@
 								})
 								ctxdiv.appendChild(gomsgbutton);
 							}
-							var replybutton = document.createElement("button");
+							let replybutton = document.createElement("button");
 							addRipple(replybutton,"rgba(255,200,0,0.6)",true);
 							replybutton.innerText = "Reply";
 							replybutton.disabled = !crole.AllowSending;
@@ -1633,11 +1679,11 @@
 								clik();
 							})
 							ctxdiv.appendChild(replybutton);
-							var forwardbutton = document.createElement("button");
+							let forwardbutton = document.createElement("button");
 							addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
 							forwardbutton.innerText = "Forward Message...";
 							//copybutton.classList.add("btn","btn-warning")
-							var chatinfs = {};
+							let chatinfs = {};
 							forwardbutton.addEventListener("click", function() {
 								let diag = opendialog();
 								
@@ -1722,7 +1768,7 @@
 								
 								sb.onclick = function() {
 									fchatselectsid.forEach((chtid,a) => {
-										var sa = selectedMessages;
+										let sa = selectedMessages;
 										if (sa.length == 0) sa = [id];
 										sa.forEach((msgg) => {
 											fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': msgg, 'tochatid': chtid}),method: 'POST'}).then((res) => {
@@ -1737,7 +1783,7 @@
 								clik();
 							})
 							ctxdiv.appendChild(forwardbutton);
-							var selectbutton = document.createElement("button");
+							let selectbutton = document.createElement("button");
 							selectbutton.innerText = "Multi-Select";
 							addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
 							//copybutton.classList.add("btn","btn-warning")
@@ -1746,7 +1792,7 @@
 								clik();
 							})
 							ctxdiv.appendChild(selectbutton);
-							var savebtn = document.createElement("button");
+							let savebtn = document.createElement("button");
 							savebtn.innerText = "Save This Message";
 							addRipple(savebtn,"rgba(255,200,0,0.6)",true);
 							savebtn.addEventListener("click", function() {
@@ -1766,11 +1812,11 @@
 								clik();
 							})
 							ctxdiv.appendChild(savebtn);
-							var deletebutton = document.createElement("button");
+							let deletebutton = document.createElement("button");
 							addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
 							deletebutton.innerText = "Delete Message";
 							//deletebutton.classList.add("btn","btn-danger")
-							var copybutton = document.createElement("button");
+							let copybutton = document.createElement("button");
 							addRipple(copybutton,"rgba(255,200,0,0.6)",true);
 							copybutton.innerText = "Copy Selected Text";
 							//copybutton.classList.add("btn","btn-warning")
@@ -1779,7 +1825,7 @@
 								clik();
 							})
 							ctxdiv.appendChild(copybutton);
-							var clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
+							let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
 							deletebutton.addEventListener("click", () => {
 								if (selectedMessages.length > 0) {
 									for (let i = 0; i < selectedMessages.length;i++) {
@@ -1897,9 +1943,19 @@
 							let a = document.createElement("a");
 							a.href = i.replace(/%SERVER%/g,currserver);
 							a.target = "_blank";
+							let imgs = new Image();
+							imgs.src = i.replace(/%SERVER%/g,currserver);
 							let img = document.createElement("img");
+							if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+								// dark mode
+								img.src = "file_dark.svg";
+							}else {
+								img.src = "file.svg";
+							}
 							img.classList.add("msgimg");
-							img.src = i.replace(/%SERVER%/g,currserver);
+							imgs.onload = function() {
+								img.src = imgs.src;
+							}
 							let index = i.lastIndexOf("=") + 1; let filename = i.substr(index);
 							a.title = filename;
 							a.appendChild(img)
