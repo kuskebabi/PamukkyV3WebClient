@@ -6,6 +6,9 @@
 		</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta name='color-scheme' content='light dark'>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital@0;1&display=swap" rel="stylesheet">
 	</head>
 	<style>
 	
@@ -21,7 +24,12 @@
 			justify-content:center;
 			height:100%;
 			width:100%;
-			font-family: Verdana, sans-serif;
+			font-family: "Open Sans",Verdana, sans-serif;
+			font-optical-sizing: auto;
+			font-weight: 400;
+			font-style: normal;
+			font-variation-settings:
+				"wdth" 100;
 			accent-color:orange;
 		}
 		
@@ -41,6 +49,18 @@
 		
 		img {
 			border:none;
+		}
+		select {
+			border:none;
+			cursor:pointer;
+			background: rgba(0,0,0,0.1);
+			padding:4px;
+			border-radius:8px;
+		}
+		
+		select:hover {
+			outline:1px solid gray;
+			background: rgba(0,0,0,0.2);
 		}
 		
 		centeredPopup {
@@ -108,6 +128,7 @@
 			border:none;
 			padding:5px;
 			border-radius:8px;
+			cursor:pointer;
 		}
 		
 		clist {
@@ -115,6 +136,7 @@
 			width: 100%;
 			height:100%;
 			overflow:auto;
+			padding:4px;
 		}
 		
 		messageslist {
@@ -124,6 +146,8 @@
 			height:100%;
 			overflow:auto;
 			padding:3px;
+			padding-left:5%;
+			padding-right:5%;
 		}
 		
 		msgscont {
@@ -251,6 +275,8 @@
 			border-radius: 5px;
 			width:100%;
 			height:50px;
+			margin-top:4px;
+			cursor:pointer;
 		}
 		
 		chatitem:hover {
@@ -277,21 +303,25 @@
 			text-overflow: ellipsis;
 			overflow: hidden; 
 			width:100%;
+			cursor:pointer;
 		}
 		
 		chatitem > infoarea > titlecont {
 			display:flex;
 			align-items: center;
+			
 		}
 		
 		chatitem > infoarea > titlecont > h4 {
 			width:100%;
+			cursor:pointer;
 		}
 		
 		chatitem > infoarea > titlecont > time {
 			white-space: nowrap;
 			flex-shrink: 0;
 			font-size:8px;
+			cursor:pointer;
 		}
 		
 		ma {
@@ -412,6 +442,20 @@
 		
 		.loading {
 			opacity:0.5;
+		}
+		
+		@media only screen and (min-width: 2000px) {
+			messageslist {
+				padding-left:10%;
+				padding-right:10%;
+			}
+		}
+		
+		
+		@media only screen and (max-width: 1024px) {
+			messageslist {
+				padding: 0;
+			}
 		}
 		
 		@media only screen and (max-width: 800px) {
@@ -997,7 +1041,7 @@
 				}).catch(() => {
 					openloginarea();
 				})
-			},4000)
+			},1000)
 			fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 				if (!res.ok) {
 					lopenloginarea();
@@ -1439,7 +1483,7 @@
 				titlebar.appendChild(titletxt);
 				let infotxt = document.createElement("label");
 				infotxt.style.fontSize = "9px";
-				infotxt.style.padding = "2px";
+				infotxt.style.padding = "6px";
 				titlebar.appendChild(infotxt);
 				titlebar.appendChild(document.createElement("ma"));
 				
@@ -1955,6 +1999,7 @@
 							img.classList.add("msgimg");
 							imgs.onload = function() {
 								img.src = imgs.src;
+								img.style.width = img.style.height = Math.max(240 / msg.files.length,64) + "px";
 							}
 							let index = i.lastIndexOf("=") + 1; let filename = i.substr(index);
 							a.title = filename;
@@ -2098,6 +2143,7 @@
 												Object.keys(news).forEach(function(ir) {
 													let react = reactions[ir];
 													let reacc = document.createElement("div");
+													reacc.style.cursor = "pointer";
 													reacc.addEventListener("click",function() {
 														fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
 															
