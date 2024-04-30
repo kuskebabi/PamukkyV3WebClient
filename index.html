@@ -70,8 +70,12 @@
 			max-width: 100%;
 			max-height: 100%;
 			background-color: #dbdbdb;
-			border-radius: 5px;
-			padding:4px;
+			border-radius: 8px;
+			padding:8px;
+		}
+		centeredPopup.docked {
+			background-color: #ebebeb;
+			border-radius:0;
 		}
 		
 		centeredPopup > div > * {
@@ -489,6 +493,9 @@
 			}
 			.contextmenu {
 				background: rgb(40,40,40);
+			}
+			centeredPopup.docked {
+				background-color: #262626;
 			}
 		}
 
@@ -955,8 +962,10 @@
 				closebtn.addEventListener("click",function(e) {
 					if (isatdock == true) {
 						maincont.removeChild(dialoginside);
+						
 					}else {
 						document.body.removeChild(bgcover);
+						
 					}
 				})
 				let isatdock = false;
@@ -972,11 +981,13 @@
 						document.body.appendChild(bgcover);
 						bgcover.appendChild(dialoginside);
 						innercont.style.maxHeight = (document.body.clientHeight * 0.7) + "px";
+						dialoginside.classList.remove("docked")
 					}else {
 						document.body.removeChild(bgcover);
 						bgcover.removeChild(dialoginside);
 						maincont.appendChild(dialoginside);
 						innercont.style.maxHeight = (document.body.clientHeight - 33) + "px";
+						dialoginside.classList.add("docked")
 					}
 					isatdock = !isatdock;
 				})
