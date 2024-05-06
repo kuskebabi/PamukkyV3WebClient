@@ -31,6 +31,11 @@
 			font-variation-settings:
 				"wdth" 100;
 			accent-color:orange;
+			overflow:hidden;
+		}
+		
+		body {
+			position: relative;
 		}
 		
 		.cb {
@@ -100,6 +105,7 @@
 			display:flex;
 			flex-direction: column;
 			position:relative;
+			transition: opacity 1s;
 		}
 		
 		rightarea {
@@ -264,7 +270,7 @@
 		}
 		
 		.transparentbtn:hover {
-			background: ButtonFace;
+			background: rgba(0,0,0,0.3);
 		}
 		
 		.circleimg {
@@ -278,13 +284,14 @@
 			padding: 5px;
 			border-radius: 5px;
 			width:100%;
-			height:50px;
+			height:54px;
 			margin-top:4px;
 			cursor:pointer;
+			transition: background 500ms, border-radius 500ms, transform 500ms;
 		}
 		
 		chatitem:hover {
-			background: ButtonFace;
+			background: rgba(0,0,0,0.3);
 		}
 		
 		chatitem > img {
@@ -421,6 +428,7 @@
 			position: absolute;
 			bottom: 20px;
 			right: 20px;
+			z-index:5;
 		}
 		
 		.contextmenu > * {
@@ -497,6 +505,24 @@
 			centeredPopup.docked {
 				background-color: #262626;
 			}
+			chatitem:hover {
+				background: rgba(255,255,255,0.3);
+			}
+			.transparentbtn:hover {
+				background: rgba(255,255,255,0.3);
+			}
+		}
+		
+		@media (prefers-reduced-motion) {
+			.contextmenu {
+				transition: none;
+			}
+			chatitem {
+				transition: none;
+			}
+			button {
+				transition: none;
+			}
 		}
 
 	</style>
@@ -537,6 +563,7 @@
 			connectbtn.style.width = "100%";
 			connectcnt.appendChild(connectbtn);
 			document.body.appendChild(connectcnt);
+			addRipple(connectbtn,"rgba(255,200,0,0.6)");
 			
 			if (err) {
 				errlbl.innerText = "Failled Connecting"
@@ -607,6 +634,9 @@
 			connectbtn.style.width = "100%";
 			logincnt.appendChild(connectbtn);
 			document.body.appendChild(logincnt);
+			addRipple(loginbtn,"rgba(255,200,0,0.6)");
+			addRipple(registerbtn,"rgba(255,200,0,0.6)");
+			addRipple(connectbtn,"rgba(255,200,0,0.6)");
 			
 			loginbtn.addEventListener("click",function() {
 				loginbtn.disabled = true;
@@ -856,8 +886,6 @@
 																		}else {
 																			
 																		}
-																	}).catch(() => {
-																		openloginarea();
 																	})
 																});
 																urole.appendChild(ri);
@@ -887,8 +915,6 @@
 													}else {
 														
 													}
-												}).catch(() => {
-													openloginarea();
 												})
 											}
 										})}).catch(function(error) {console.error(error);});
@@ -901,8 +927,6 @@
 											}else {
 												
 											}
-										}).catch(() => {
-											openloginarea();
 										})
 									}
 								})
@@ -938,6 +962,7 @@
 				bgcover.style.position = "fixed";
 				bgcover.style.alignItems = "center";
 				bgcover.style.justifyContent = "center";
+				bgcover.style.zIndex = "6";
 				bgcover.addEventListener("click",function(e) {
 					if (e.target == bgcover) {
 						document.body.removeChild(bgcover);
@@ -1021,14 +1046,12 @@
 			let ttimer = setInterval(function() {
 				fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 					if (!res.ok) {
-						lopenloginarea();
+						openloginarea();
 					}
-				}).catch(() => {
-					openloginarea();
 				})
 				fetch(currserver + "getnotifications", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 					if (!res.ok) {
-						lopenloginarea();
+						openloginarea();
 						return;
 					}
 					res.json().then((nots) => {
@@ -1055,12 +1078,10 @@
 			},1000)
 			fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 				if (!res.ok) {
-					lopenloginarea();
+					openloginarea();
 					
 				}
 				
-			}).catch(() => {
-				openloginarea();
 			})
 			
 			document.body.innerHTML = "";
@@ -1091,7 +1112,7 @@
 						currentuser = info;
 					})
 				}else {
-					lopenloginarea();
+					openloginarea();
 				}
 			}).catch(() => {
 				openloginarea();
@@ -1121,8 +1142,6 @@
 								loadchats();
 								diag.closebtn.click();
 							})
-						}else {
-							lopenloginarea();
 						}
 					}).catch(() => {
 						//openloginarea();
@@ -1195,8 +1214,6 @@
 									fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
 										loadchats();
 										diag.closebtn.click();
-									}).catch(() => {
-										openloginarea();
 									})
 								}
 							})}).catch(function(error) {console.error(error);});
@@ -1204,8 +1221,6 @@
 							fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
 								loadchats();
 								diag.closebtn.click();
-							}).catch(() => {
-								openloginarea();
 							})
 						}
 					})
@@ -1234,8 +1249,6 @@
 						if (res.ok) {
 							loadchats();
 							diag.closebtn.click();
-						}else {
-							lopenloginarea();
 						}
 					}).catch(() => {
 						//openloginarea();
@@ -1243,7 +1256,7 @@
 				})
 				bflex.appendChild(joingroupbtn);
 			})
-			
+			addRipple(btn,"rgba(255,200,0,0.6)");
 			btn.addEventListener("click",function() {
 				let f = document.createElement('input');
 				f.type='file';
@@ -1310,11 +1323,7 @@
 											pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
 											currentuser = info;
 										})
-									}else {
-										lopenloginarea();
 									}
-								}).catch(() => {
-									openloginarea();
 								})
 							}
 						})}).catch(function(error) {console.error(error);});
@@ -1328,10 +1337,8 @@
 									currentuser = info;
 								})
 							}else {
-								lopenloginarea();
+								openloginarea();
 							}
-						}).catch(() => {
-							openloginarea();
 						})
 					}
 				})
@@ -1375,6 +1382,7 @@
 								}
 								let id = item["chatid"] + "";
 								let itmcont = document.createElement("chatitem");
+								addRipple(itmcont,"rgba(255,200,0,0.6)");
 								chatitems[id] = itmcont;
 								let pfpimg = document.createElement("img")
 								pfpimg.src = item.info.picture.replace(/%SERVER%/g,currserver);
@@ -1407,6 +1415,8 @@
 								itmcont.addEventListener("click",function() {
 									if (lsci != null) {
 										lsci.style.background = ""
+										lsci.style.borderRadius = "";
+										lsci.style.transform = "";
 									}
 									if (currentchatview) {
 										currentchatview.kill();
@@ -1443,14 +1453,15 @@
 										rightarea.style.display = "";
 										leftarea.style.display = "";
 										itmcont.style.background = "orange"
-										
+										itmcont.style.borderRadius = "5px 0px 0px 5px";
+										itmcont.style.transform = "translateX(4px)";
 									}
 									lsci = itmcont;
 								})
 							}
 						})
 					}else {
-						lopenloginarea();
+						openloginarea();
 					}
 				}).catch(() => {
 					openloginarea();
@@ -1815,7 +1826,7 @@
 											diag.inner.appendChild(fcb)
 										})
 									}else {
-										lopenloginarea();
+										openloginarea();
 									}
 								}).catch(() => {
 									openloginarea();
@@ -2097,7 +2108,7 @@
 								updatechat();
 							})
 						}else {
-							lopenloginarea();
+							openloginarea();
 						}
 						sendingmessage = false;
 					}).catch(() => {
@@ -2198,7 +2209,7 @@
 								ocp = chatpage;
 							})
 						}else {
-							lopenloginarea();
+							openloginarea();
 						}
 					})
 				function updatechat() {
@@ -2232,12 +2243,15 @@
 									kys.forEach((i) => {
 										let val = json[i];
 										if (val.event == "NEWMESSAGE") {
-											chatpage[i] = val;
-											//mkeys[x] = i;
-											let msg = val;
-											msgcdatas[i] = addmsg(msg,i);
-											lastmessagekey = i;
-											messageslist.scrollTop = messageslist.scrollHeight;
+											
+											if (chatpage[i] == undefined) {
+												chatpage[i] = val;
+												//mkeys[x] = i;
+												let msg = val;
+												msgcdatas[i] = addmsg(msg,i);
+												lastmessagekey = i;
+												messageslist.scrollTop = messageslist.scrollHeight;
+											}
 										}
 										if (val.event == "DELETED") {
 											messageflexes[i].innerHTML = "";
