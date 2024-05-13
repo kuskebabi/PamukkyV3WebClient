@@ -1308,6 +1308,64 @@
 				infotable.appendChild(desrow);
 				diag.inner.appendChild(infotable);
 				
+				let cpass = document.createElement("button");
+				cpass.innerText = "Change Password";
+				cpass.addEventListener("click",function() {
+					let diag = opendialog();
+					diag.title.innerText = "Change Password";
+					diag.inner.style.display = "flex";
+					diag.inner.style.flexDirection = "column";
+					diag.inner.style.alignItems = "center";
+					let cpasstable = document.createElement("table");
+					let opr = document.createElement("tr");
+					let pprt = document.createElement("td");
+					pprt.innerText = "Old Password";
+					opr.appendChild(pprt);
+					let oprv = document.createElement("td");
+					let oprinp = document.createElement("input");
+					oprinp.type = "password";
+					oprv.appendChild(oprinp);
+					opr.appendChild(oprv);
+					
+					let npr = document.createElement("tr");
+					let npt = document.createElement("td");
+					npt.innerText = "New Password";
+					npr.appendChild(npt);
+					let nprv = document.createElement("td");
+					let nprinp = document.createElement("input");
+					nprinp.type = "password";
+					nprv.appendChild(nprinp);
+					npr.appendChild(nprv);
+					
+					
+					cpasstable.appendChild(opr);
+					cpasstable.appendChild(npr);
+					diag.inner.appendChild(cpasstable);
+					
+					let changebtn = document.createElement("button");
+					changebtn.innerText = "Change";
+					changebtn.addEventListener("click",function() {
+						fetch(currserver + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
+							if (res.ok) {
+								res.text().then((text) => {
+									
+									info = JSON.parse(text);
+									if (info["status"] == "error") {
+										alert(text);
+										return;
+									}
+									logininfo = info;
+									alert("Password Changed!");
+								})
+							}else {
+								
+							}
+						})
+					});
+					diag.inner.appendChild(changebtn);
+				})
+				diag.inner.appendChild(cpass);
+				
 				let savebtn = document.createElement("button");
 				savebtn.innerText = "Save";
 				savebtn.addEventListener("click",function() {
