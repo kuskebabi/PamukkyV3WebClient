@@ -536,6 +536,13 @@
 		let currentuser = {};
 		let chats = []
 		let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉"];
+		
+		
+		
+		const searchParams = new URLSearchParams(window.location.search);
+		if (searchParams.has("server")) {
+			currserver = searchParams.get("server");
+		}
 	
 		function openconnectarea(err) {
 			document.body.innerHTML = "";
@@ -2387,10 +2394,18 @@
 			}
 		}
 		
-		if (localStorage.getItem("server") == null) {
-			openconnectarea();
+		if (currserver == "") {
+			if (localStorage.getItem("server") == null) {
+				openconnectarea();
+			}else {
+				currserver = localStorage.getItem("server");
+				fetch(currserver + "ping").then(function() {
+					openloginarea();
+				}).catch(function() {
+					openconnectarea(true);
+				})
+			}
 		}else {
-			currserver = localStorage.getItem("server");
 			fetch(currserver + "ping").then(function() {
 				openloginarea();
 			}).catch(function() {
