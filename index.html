@@ -127,7 +127,7 @@
 			box-sizing: border-box;
 		}
 		
-		input {
+		input,textarea {
 			border:none;
 			padding:5px;
 			border-radius:8px;
@@ -250,7 +250,7 @@
 		
 		msgbar > div {
 			display:flex;
-			height: 48px;
+			min-height: 48px;
 			width:100%;
 			align-items:center;
 			flex-shrink:0;
@@ -258,11 +258,12 @@
 		.orangebgonhover:hover {background-color:orange !important;}
 		
 		
-		msgbar > div > input {
-			height: 40px;
+		msgbar > div > textarea {
+			min-height: 40px;
 			border-radius: 20px;
 			margin: 4px;
 			width: 100%;
+			resize: vertical;
 		}
 		
 		.transparentbtn {
@@ -355,6 +356,7 @@
 		msgmain {
 			display:flex;
 			flex-direction:column;
+			max-width: 80%;
 		}
 		
 		msgmain > msgbuble {
@@ -363,6 +365,7 @@
 			padding: 5px;
 			background: #ababab;
 			width:auto;
+			
 		}
 		
 		msgmain.sender > msgbuble {
@@ -1664,7 +1667,7 @@
 				attachbtn.classList.add("cb")
 				attachbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M640-520v-200h80v200h-80ZM440-244q-35-10-57.5-39T360-350v-370h80v476Zm30 164q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v300h-80v-300q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q25 0 47.5-6.5T560-186v89q-21 8-43.5 12.5T470-80Zm170-40v-120H520v-80h120v-120h80v120h120v80H720v120h-80Z"/></svg>';
 				mgbd.appendChild(attachbtn)
-				let msginput = document.createElement("input");
+				let msginput = document.createElement("textarea");
 				
 				mgbd.appendChild(msginput)
 				
@@ -2006,7 +2009,7 @@
 					let msgsender = document.createElement("msgsender");
 					let msgsendertxt = document.createElement("label");
 					let msgpfp = document.createElement("img");
-					
+					msgcontent.style.overflowWrap = "break-word";
 					msgcontent.innerText = msg.content;
 					let dt = new Date(msg.time);
 					let dtt = new Date(msg.time);
@@ -2159,7 +2162,7 @@
 					},0);
 					
 					msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m614-310 51-51-149-149v-210h-72v240l170 170ZM480-96q-79.376 0-149.188-30Q261-156 208.5-208.5T126-330.958q-30-69.959-30-149.5Q96-560 126-630t82.5-122q52.5-52 122.458-82 69.959-30 149.5-30 79.542 0 149.548 30.24 70.007 30.24 121.792 82.08 51.786 51.84 81.994 121.92T864-480q0 79.376-30 149.188Q804-261 752-208.5T629.869-126Q559.738-96 480-96Zm0-384Zm.477 312q129.477 0 220.5-91.5T792-480.477q0-129.477-91.023-220.5T480.477-792Q351-792 259.5-700.977t-91.5 220.5Q168-351 259.5-259.5T480.477-168Z"/></svg>';
-					fetch(currserver + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': msginput.value,replymsg: replymsgid,files: (fileslist.length > 0 ? fileslist : null)}),method: 'POST'}).then((res) => {
+					fetch(currserver + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': msginput.value.trim(),replymsg: replymsgid,files: (fileslist.length > 0 ? fileslist : null)}),method: 'POST'}).then((res) => {
 						if (res.ok) {
 							res.text().then((text) => {
 								//res = JSON.parse(text);
@@ -2188,8 +2191,9 @@
 				});
 				
 				msginput.addEventListener("keydown",function(e) {
-					if (e.key == "Enter") {
+					if (e.key == "Enter" && !e.shiftKey) {
 						sendbtn.click();
+						e.preventDefault();
 					}
 				})
 				
