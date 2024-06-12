@@ -116,6 +116,11 @@ function makecolorful(elem,colors) {
     elem.style.opacity = "";
 }
 function imageView(url) {
+	let w = 0;
+	let h = 0;
+	let sd = 1;
+	
+	
 	var bg = document.createElement("div");
 	bg.style.zIndex = "2";
 	bg.style.backgroundColor = "rgba(0,0,0,0.3)";
@@ -127,17 +132,61 @@ function imageView(url) {
 	bg.style.transition = "opacity 0.3s";
 	bg.style.display = "flex";
 	bg.style.alignItems = "center";
-	bg.style.justifyContent = "center";
-	bg.classList.add("limonjs-imgview-bc")
-	bg.onclick = function() {
-		bg.remove()
+	
+	bg.classList.add("limonjs-imgview-bc");
+	bg.style.overflow = "auto";
+	bg.onclick = function(e) {
+		if (e.target == bg) {
+			bg.remove()
+		}
 	}
+	bg.addEventListener("wheel",function(e) {
+		if (e.ctrlKey) {
+			if (e.deltaY < 0) {
+				sd += 0.1;
+			}else {
+				sd -= 0.1;
+				if (sd < 0.1) {
+					sd = 0.1;
+				}
+			}
+			zoom();
+			e.preventDefault();
+		}
+	})
+	bg.tabIndex = "0";
+	
+	
+	bg.addEventListener("keydown",function(e) {
+		if (e.key == "Escape") {
+			bg.click();
+		}
+	})
 	var img = document.createElement("img")
 	img.src = url;
-	img.style.maxHeight = "100%";
-	img.style.maxWidth = "100%";
+	img.onload = function() {
+		w = img.width;
+		h = img.height;
+		zoom();
+	};
 	img.classList.add("limonjs-imageview-img")
 	bg.appendChild(img)
 	document.body.appendChild(bg)
+	
+	function zoom() {
+		img.style.width = w * sd + "px";
+		img.style.height = h * sd + "px";
+		if (w * sd > window.innerWidth) {
+			bg.style.justifyContent = "";
+		}else {
+			bg.style.justifyContent = "center";
+		}
+		if (h * sd > window.innerHeight) {
+			bg.style.alignItems = "";
+		}else {
+			bg.style.alignItems = "center";
+		}
+	}
+	bg.focus();
 	return bg;
 }

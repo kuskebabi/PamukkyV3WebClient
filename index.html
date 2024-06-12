@@ -466,6 +466,11 @@
 		
 		a {
 			color:black;
+			text-decoration:none;
+		}
+		
+		a:hover {
+			text-decoration:underline;
 		}
 		
 		filed {
@@ -1143,9 +1148,10 @@
 			btn.style.alignItems = "center";
 			let pfpimg = document.createElement("img");
 			pfpimg.classList.add("circleimg")
-			pfpimg.style.margin = "2px";
+			pfpimg.style.margin = "4px";
 			btn.appendChild(pfpimg)
 			let namelbl = document.createElement("label");
+			namelbl.style.margin = "4px";
 			fetch(currserver + "getuser", {body: JSON.stringify({'uid': logininfo.uid}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
@@ -2140,10 +2146,12 @@
 						if (msg.gImages.length > 0) msgbuble.appendChild(document.createElement("br"));
 						msg.gFiles.forEach(function(i) {
 							let a = document.createElement("a");
+							a.style.position = "relative";
 							a.download = i.name;
 							a.href = i.url.replace(/%SERVER%/g,currserver);
 							//a.target = "_blank";
 							let fd = document.createElement("filed");
+							addRipple(a,"rgba(255,255,255,0.6)");
 							let img = document.createElement("img");
 							if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 								// dark mode
