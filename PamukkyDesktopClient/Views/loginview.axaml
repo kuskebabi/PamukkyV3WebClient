@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="PamukkyDesktopClient.Views.loginview">
+	<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+		<Label HorizontalAlignment="Center" FontSize="25">Welcome To Pamukky!</Label>
+		<TextBox Name="emailtb" Margin="8" HorizontalAlignment="Center" Width="300" Watermark="E-Mail"></TextBox>
+		<TextBox Name="passtb" Classes="revealPasswordButton" PasswordChar="•" Margin="0" HorizontalAlignment="Center" Width="300" Watermark="Password"></TextBox>
+		<Label Name="elbl"></Label>
+		<Grid Margin="8" Width="300">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="2*" />
+				<ColumnDefinition Width="2*" />
+			</Grid.ColumnDefinitions>
+			<Button Grid.Column="0" Name="rbtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Register</Button>
+			<Button Grid.Column="1" Name="lbtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Login</Button>
+		</Grid>
+		<Button Margin="8" Width="300" Background="Transparent" Grid.Column="0" Name="dbtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Connect To Different Server</Button>
+	</StackPanel>
+</UserControl>

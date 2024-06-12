@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="PamukkyDesktopClient.Views.normaldialog">
+	<Grid Background="Transparent">
+		<Grid Background="Black" Opacity="0.4" Name="bgcont"></Grid>
+		<Border MinWidth="400" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="10" ClipToBounds="True">
+			<Grid>
+				<ListBox HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></ListBox>
+				<ScrollViewer Name="dgscroll" VerticalScrollBarVisibility="Auto" Padding="5 0 0 5">
+					<StackPanel Name="maindg" Orientation="Vertical">
+						<DockPanel>
+							<Label Name="ttl" Padding="5" FontSize="20">Title</Label>
+						</DockPanel>
+						<Border Name="contarea" Padding="5"></Border>
+						<StackPanel Orientation="Horizontal" Name="btnarea" HorizontalAlignment="Right">
+						
+						</StackPanel>
+					</StackPanel>
+				</ScrollViewer>
+			</Grid>
+		</Border>
+	</Grid>
+</UserControl>

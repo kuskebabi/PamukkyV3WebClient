@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="PamukkyDesktopClient.Views.fileitm">
+  <Button Background="Transparent" Padding="0" HorizontalAlignment="Stretch">
+	  <StackPanel Orientation="Horizontal" Height="50" HorizontalAlignment="Stretch">     
+		<PathIcon Data="{StaticResource document_regular}" Width="40" Height="40" Margin="5"/>
+		<StackPanel>
+			<TextBlock Name="fn" VerticalAlignment="Center" TextWrapping="WrapWithOverflow" Padding="5">File</TextBlock>
+			<Label Name="sz" Padding="5">Size</Label>
+		</StackPanel>
+	  </StackPanel>
+  </Button>
+</UserControl>

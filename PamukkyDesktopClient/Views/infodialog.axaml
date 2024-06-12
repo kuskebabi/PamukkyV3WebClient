@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
+             x:Class="PamukkyDesktopClient.Views.infodialog">
+	<StackPanel>
+		<Border HorizontalAlignment="Center" CornerRadius="80" ClipToBounds="True" Margin="8" Background="Gray">
+			<Image Name="pfp" Width="160" Height="160"></Image>
+		</Border>
+		<SelectableTextBlock Name="gid"></SelectableTextBlock>
+		<DockPanel>
+			<Label Padding="6" VerticalAlignment="Center">Name</Label>
+			<TextBox Margin="6" Watermark="Name is required" Name="nametb"></TextBox>
+		</DockPanel>
+		<DockPanel>
+			<Label Padding="6" VerticalAlignment="Center">Bio</Label>
+			<TextBox Margin="6" AcceptsReturn="True" TextWrapping="Wrap" Name="biotb"></TextBox>
+		</DockPanel>
+
+		<StackPanel Name="usersarea" Orientation="Vertical"></StackPanel>
+		
+		<Label Name="elbl"></Label>
+	</StackPanel>
+</UserControl>

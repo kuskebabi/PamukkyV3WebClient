@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="64"
+             x:Class="PamukkyDesktopClient.Views.ntif">
+	<Button Name="btn" CornerRadius="8" Padding="0" HorizontalAlignment="Stretch" ClipToBounds="True" Margin="2">
+		<Panel>
+			<ListBox></ListBox>
+			<DockPanel Margin="5">
+				<Border DockPanel.Dock="Left" Name="pfpborder" CornerRadius="20" ClipToBounds="True" Height="40" Background="Gray" Margin="6" VerticalAlignment="Center">
+					<Image Name="pfp" Width="40" Height="40"></Image>
+				</Border>
+				<Button Background="Transparent" Padding="0" Width="20" Height="20" HorizontalContentAlignment="Center" CornerRadius="10" DockPanel.Dock="Right" Name="closebtn">x</Button>
+				<StackPanel Orientation="Vertical">
+					<Label Name="title" FontWeight="Bold">Title</Label>
+					<Label Name="content" MaxHeight="50">Content</Label>
+				</StackPanel>
+			</DockPanel>
+		</Panel>
+	</Button>
+
+</UserControl>

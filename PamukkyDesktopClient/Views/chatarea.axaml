@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="PamukkyDesktopClient.Views.chatarea">
+	<Panel>
+		<ListBox Opacity="0.5"></ListBox>
+		<DockPanel Name="chatpart">
+			<Panel DockPanel.Dock="Top">
+				<ListBox></ListBox>
+				<DockPanel DockPanel.Dock="Top">
+					<Button Background="Transparent" Padding="0" Name="ti">
+						<StackPanel Orientation="Horizontal">
+							<Border CornerRadius="40" ClipToBounds="True" Height="40" Margin="3" Background="Gray">
+								<Image Name="pfp" Width="40" Height="40"></Image>
+							</Border>
+							<Label Name="chattitle" VerticalAlignment="Center">Name</Label>
+							<Label Name="ilbl" VerticalAlignment="Center" FontSize="12">???</Label>
+						</StackPanel>
+					</Button>
+				</DockPanel>
+			</Panel>
+			<Border MaxHeight="400" Name="chatbarborder" DockPanel.Dock="Bottom" MinHeight="40" CornerRadius="20" ClipToBounds="True">
+				<Panel>
+					<ListBox></ListBox>
+					<StackPanel>
+						<DockPanel Name="repdock" IsVisible="False">
+							<Button Name="removerep" Background="Transparent" Padding="0" CornerRadius="10" Width="20" Height="20" HorizontalContentAlignment="Center" DockPanel.Dock="Right" VerticalContentAlignment="Center">x</Button>
+							<StackPanel>
+								<Label Name="senderrep" Margin="2" FontWeight="Bold">User</Label>
+								<Label Name="contentrep" Margin="2">Content</Label>
+							</StackPanel>
+						</DockPanel>
+
+						<ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+							<StackPanel Orientation="Horizontal" Name="fuploads"></StackPanel>
+						</ScrollViewer>
+						
+						<DockPanel>
+							<Button Name="up" Background="Transparent">
+								<PathIcon Data="{StaticResource attach_regular}" Width="18" Height="18" Margin="0"/>
+							</Button>
+							
+							<ScrollViewer MaxHeight="280" VerticalScrollBarVisibility="Auto">
+								<TextBox Text="" Watermark="Write a message..." CornerRadius="20" VerticalContentAlignment="Center" MinHeight="40" TextWrapping="Wrap" Name="chattb" Background="Transparent" VerticalAlignment="Center" BorderThickness="0">
+									<TextBox.Styles>
+										<Style Selector="TextBox:pointerover">
+											<Setter Property="Background" Value="Transparent"/>
+											<Setter Property="BorderThickness" Value="0"/>
+										</Style>
+
+										<Style Selector="TextBox:focused">
+											<Setter Property="Background" Value="Transparent"/>
+											<Setter Property="BorderThickness" Value="0"/>
+										</Style>
+									</TextBox.Styles>
+								</TextBox>
+							
+							</ScrollViewer>
+							
+						</DockPanel>
+					</StackPanel>
+				</Panel>
+			</Border>
+			<DockPanel Name="cmm">
+				<ScrollViewer Name="chatmainscroll">
+					<StackPanel Name="chatmain"></StackPanel>
+				</ScrollViewer>
+			</DockPanel>
+		</DockPanel>
+	</Panel>
+</UserControl>

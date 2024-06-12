@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="PamukkyDesktopClient.Views.changepassdg">
+	<StackPanel>
+		<DockPanel>
+			<Label Padding="6" VerticalAlignment="Center">Old Password</Label>
+			<TextBox Margin="6" Classes="revealPasswordButton" PasswordChar="•" Watermark="Old Password" Name="oldpass"></TextBox>
+		</DockPanel>
+		<DockPanel>
+			<Label Padding="6" VerticalAlignment="Center">New Password</Label>
+			<TextBox Margin="6" Classes="revealPasswordButton" PasswordChar="•" Watermark="New Password" Name="newpass"></TextBox>
+		</DockPanel>
+		<Label Name="elbl"></Label>
+	</StackPanel>
+</UserControl>
