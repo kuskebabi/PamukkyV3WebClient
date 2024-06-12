@@ -44,6 +44,11 @@
 			border-radius: 100%;
 			background: transparent;
 			cursor: pointer;
+			margin: 2px;
+		}
+		
+		.cb:hover {
+			background:rgba(255,255,255,0.1);
 		}
 		
 		svg {
@@ -431,7 +436,7 @@
 			position: absolute;
 			bottom: 20px;
 			right: 20px;
-			z-index:5;
+			z-index:1;
 		}
 		
 		.contextmenu > * {
@@ -457,6 +462,28 @@
 		
 		.loading {
 			opacity:0.5;
+		}
+		
+		a {
+			color:black;
+		}
+		
+		filed {
+			display:flex;
+			align-items:center;
+			border-radius:5px;
+		}
+		
+		filed:hover {
+			background: rgba(255,255,255,0.1);
+		}
+		
+		filed > div > label {
+			text-decoration: none !important;
+			color:black;
+			font-weight:bold;
+			cursor:pointer;
+			overflow-wrap:anywhere;
 		}
 		
 		@media only screen and (min-width: 2000px) {
@@ -513,6 +540,12 @@
 			}
 			.transparentbtn:hover {
 				background: rgba(255,255,255,0.3);
+			}
+			filed > div > label {
+				color:white;
+			}
+			a {
+				color:white;
 			}
 		}
 		
@@ -1636,7 +1669,7 @@
 							att.appendChild(ui);
 							att.appendChild(rb);
 							atc.appendChild(att);
-							fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
+							fetch(currserver + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 								console.log(data);
 								if (data.status == "success") {
 									fileslist.push(data.url);
@@ -2073,12 +2106,12 @@
 					}
 					msgm.appendChild(msgbuble);
 					if (msg.files != undefined) {
-						msg.files.forEach(function(i) {
+						msg.gImages.forEach(function(i) {
 							let a = document.createElement("a");
-							a.href = i.replace(/%SERVER%/g,currserver);
+							a.href = i.url.replace(/%SERVER%/g,currserver);
 							a.target = "_blank";
 							let imgs = new Image();
-							imgs.src = i.replace(/%SERVER%/g,currserver);
+							imgs.src = i.url.replace(/%SERVER%/g,currserver);
 							let img = document.createElement("img");
 							if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 								// dark mode
@@ -2087,17 +2120,56 @@
 								img.src = "file.svg";
 							}
 							img.classList.add("msgimg");
+							img.onclick = function() {
+								a.click();
+							}
 							imgs.onload = function() {
 								img.src = imgs.src;
-								img.style.width = img.style.height = Math.max(240 / msg.files.length,64) + "px";
+								img.style.width = img.style.height = Math.max(240 / msg.gImages.length,64) + "px";
+								img.onclick = function() {
+									imageView(imgs.src);
+								}
 							}
-							let index = i.lastIndexOf("=") + 1; let filename = i.substr(index);
+							
+							let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
+							img.title = filename;
+							//a.appendChild(img)
+							msgbuble.appendChild(img);
+							
+						})
+						if (msg.gImages.length > 0) msgbuble.appendChild(document.createElement("br"));
+						msg.gFiles.forEach(function(i) {
+							let a = document.createElement("a");
+							a.download = i.name;
+							a.href = i.url.replace(/%SERVER%/g,currserver);
+							//a.target = "_blank";
+							let fd = document.createElement("filed");
+							let img = document.createElement("img");
+							if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+								// dark mode
+								img.src = "file_dark.svg";
+							}else {
+								img.src = "file.svg";
+							}
+							let filename = i.name;
 							a.title = filename;
-							a.appendChild(img)
+							fd.appendChild(img)
+							let il = document.createElement("div");
+							il.style.display = "flex";
+							il.style.flexDirection = "column";
+							let namel = document.createElement("label");
+							namel.innerText = filename;
+							il.appendChild(namel);
+							let sizel = document.createElement("label");
+							sizel.innerText = humanFileSize(i.size);
+							il.appendChild(sizel);
+							fd.appendChild(il);
+							a.appendChild(fd)
 							msgbuble.appendChild(a);
 						})
-						msgbuble.appendChild(document.createElement("br"))
+						
 					}
+					
 					msgbuble.appendChild(msgcontent);
 					msgbuble.appendChild(msgreactions);
 					
@@ -2416,5 +2488,27 @@
 				openconnectarea(true);
 			})
 		}
+		function humanFileSize(bytes, si=false, dp=1) {
+		  const thresh = si ? 1000 : 1024;
+
+		  if (Math.abs(bytes) < thresh) {
+			return bytes + ' B';
+		  }
+
+		  const units = si 
+			? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+			: ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+		  let u = -1;
+		  const r = 10**dp;
+
+		  do {
+			bytes /= thresh;
+			++u;
+		  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+
+		  return bytes.toFixed(dp) + ' ' + units[u];
+		}
 	</script>
+	<script src="LimonJS.js"></script>
 </html>
