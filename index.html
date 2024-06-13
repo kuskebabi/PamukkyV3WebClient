@@ -1679,11 +1679,17 @@
 								console.log(data);
 								if (data.status == "success") {
 									fileslist.push(data.url);
+									sendbtn.disabled = false;
 									img.classList.remove("loading");
 									rb.addEventListener("click",function() {
 										const index = fileslist.indexOf(data.url);
 										if (index > -1) { 
 											fileslist.splice(index, 1); 
+											if (fileslist.length > 0) {
+												sendbtn.disabled = false;
+											}else {
+												sendbtn.disabled = true;
+											}
 										}
 										atc.removeChild(att);
 									})
@@ -2224,7 +2230,7 @@
 				let msgcdatas = {};
 				sendbtn.disabled = true;
 				msginput.addEventListener("input",function() {
-					if (msginput.value.trim().length == 0) {
+					if (msginput.value.trim().length == 0 && fileslist.length < 1) {
 						sendbtn.disabled = true;
 					}else {
 						sendbtn.disabled = false;
