@@ -18,6 +18,7 @@ body,html {
 		"wdth" 100;
 	accent-color:orange;
 	overflow:hidden;
+	background:wheat;
 }
 
 body {
@@ -63,15 +64,23 @@ centeredPopup {
 	display:block;
 	min-width: 300px;
 	/*min-height: 200px;*/
-	max-width: 100%;
-	max-height: 100%;
+	max-width: 80%;
+	max-height: 800%;
 	background-color: #dbdbdb;
 	border-radius: 8px;
 	padding:8px;
+	animation-name: dialogapear;
+	animation-duration: 0.5s;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 centeredPopup.docked {
 	background-color: #ebebeb;
 	border-radius:0;
+	animation-name: dialogapeardocked;
+	animation-duration: 0.5s;
+	max-width:100%;
+	max-height:100%;
+	box-shadow: none;
 }
 
 centeredPopup > div > * {
@@ -87,6 +96,8 @@ main {
 	display:flex;
 	width:100%;
 	height:100%;
+	animation-name: dialogapear;
+	animation-duration: 0.5s;
 }
 
 leftarea {
@@ -105,6 +116,7 @@ rightarea {
 	display:flex;
 	flex-direction: column;
 	background: rgb(240,240,240);
+	min-width: 0;
 }
 
 mchat {
@@ -279,10 +291,10 @@ chatitem {
 	padding: 5px;
 	border-radius: 5px;
 	width:100%;
-	height:54px;
+	/*height:54px;*/
 	margin-top:4px;
 	cursor:pointer;
-	transition: background 500ms, border-radius 500ms, transform 500ms;
+	transition: background 300ms, border-radius 300ms, transform 300ms;
 }
 
 chatitem:hover {
@@ -321,12 +333,15 @@ chatitem > infoarea > titlecont {
 chatitem > infoarea > titlecont > h4 {
 	width:100%;
 	cursor:pointer;
+	white-space:nowrap;
+	text-overflow: ellipsis;
+	min-width:0;
 }
 
 chatitem > infoarea > titlecont > time {
 	white-space: nowrap;
 	flex-shrink: 0;
-	font-size:8px;
+	font-size:9px;
 	cursor:pointer;
 }
 
@@ -360,7 +375,8 @@ msgmain > msgbuble {
 	padding: 5px;
 	background: #ababab;
 	width:auto;
-	
+	animation-name: msgapear;
+	animation-duration: 0.5s;
 }
 
 msgmain.sender > msgbuble {
@@ -427,6 +443,15 @@ button.fab {
 	bottom: 20px;
 	right: 20px;
 	z-index:1;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+button.fab:hover {
+	background:orange;
+	box-shadow: none;
+}
+button.fab:active {
+	transform:scale(0.8);
 }
 
 .contextmenu > * {
@@ -482,10 +507,36 @@ filed > div > label {
 	overflow-wrap:anywhere;
 }
 
+@keyframes msgapear {
+  from {transform:scale(0);}
+  to {transform:scale(1);}
+}
+
+@keyframes dialogapear {
+  from {transform:scale(0.8);opacity:0;}
+  to {transform:scale(1);opacity:1;}
+}
+@keyframes dialogapeardocked {
+  from {transform:scale(0.8) translateX(100%);opacity:0;}
+  to {transform:scale(1);opacity:1;}
+}
+
+
+
 @media only screen and (min-width: 2000px) {
 	messageslist {
 		padding-left:10%;
 		padding-right:10%;
+	}
+}
+@media only screen and (min-width: 1920px) {
+	main {
+		width:90%;
+		height:90%;
+		border-radius:5px;
+	}
+	body {
+		font-size:20px;
 	}
 }
 
@@ -493,6 +544,10 @@ filed > div > label {
 @media only screen and (max-width: 1024px) {
 	messageslist {
 		padding: 0;
+	}
+	centeredPopup {
+		max-width:100%;
+		max-height:100%;
 	}
 }
 
@@ -512,6 +567,9 @@ filed > div > label {
 }
 
 @media (prefers-color-scheme: dark) {
+	html,body {
+		background:#2b230c;
+	}
 	rightarea {
 		background: rgb(20,20,20);
 	}
@@ -553,7 +611,10 @@ filed > div > label {
 		transition: none;
 	}
 	button {
-		transition: none;
+		transition: none !important;
+	}
+	centeredPopup, msgbuble, body, html, main {
+		animation:none !important;
 	}
 }
 
@@ -573,10 +634,14 @@ filed > div > label {
 		background:white;
 		color:black;
 	}
+	msgcont  {
+		break-inside: avoid;
+	}
 	messageslist {
 		overflow:visible;
 	}
 	html,body {
 		overflow:visible;
 	}
+	
 }

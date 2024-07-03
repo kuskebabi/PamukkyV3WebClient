@@ -1,3 +1,4 @@
+function loaded() {setTimeout(init,500);}
 function init() {
 
 let currserver = "";
@@ -970,7 +971,7 @@ function loadmainarea() {
 						namecont.appendChild(lmt);
 						infocnt.appendChild(namecont);
 						let lastmsgcontent = document.createElement("label")
-						lastmsgcontent.innerText = item.lastmessage.content;
+						lastmsgcontent.innerText = item.lastmessage.content.split("\n")[0];
 						infocnt.appendChild(lastmsgcontent)
 						itmcont.appendChild(infocnt);
 						
@@ -991,7 +992,7 @@ function loadmainarea() {
 							currentchatview.titlelabel.innerText = item.info.name;
 							currentchatview.pfp.src = item.info.picture.replace(/%SERVER%/g,currserver);
 							rightarea.appendChild(currentchatview.chat)
-							if (document.body.clientWidth <= 600) {
+							if (document.body.clientWidth <= 800) {
 								rightarea.style.display = "flex";
 								currentchatview.backbutton.style.display = ""
 								currentchatview.backbutton.onclick = function() {
@@ -1325,6 +1326,8 @@ function loadmainarea() {
 						
 						let fcb = document.createElement("bbar");
 						let cst = document.createElement("label");
+						cst.style.overflowWrap = "anywhere";
+						cst.style.maxWidth = "100%";
 						fcb.appendChild(cst);
 						let sb = document.createElement("button");
 						sb.classList.add("cb")
@@ -1352,6 +1355,7 @@ function loadmainarea() {
 											}
 										}
 										let itmcont = document.createElement("chatitem");
+										addRipple(itmcont,"rgba(255,200,0,0.6)");
 										let pfpimg = document.createElement("img")
 										pfpimg.src = item.info.picture.replace(/%SERVER%/g,currserver);
 										itmcont.appendChild(pfpimg);
@@ -1768,53 +1772,52 @@ function loadmainarea() {
 						
 						mkeys.forEach(function(i) {
 							let msgd = msgcdatas[i];
-							fetch(currserver + "getreactions", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i}),method: 'POST'}).then((res) => {
-								if (res.ok) {
-									res.text().then((text) => {
-										let reactions = JSON.parse(text);
-										let rkeys = Object.keys(reactions);
-										let news = reactions//Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
-										Object.keys(news).forEach(function(ir) {
-											let react = reactions[ir];
-											let reacc = document.createElement("div");
-											reacc.style.cursor = "pointer";
-											reacc.addEventListener("click",function() {
-												fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
-													
-												})
-											})
-											let reace = document.createElement("label");
-											reace.innerText = ir;
-											let cnter = document.createElement("label");
-											cnter.innerText = "0";
-											reacc.appendChild(reace);
-											reacc.appendChild(cnter);
-											msgd.msgreactions.appendChild(reacc);
+							
+							let reactions = chatpage[i].reactions;
+							if (reactions) {
+								let rkeys = Object.keys(reactions);
+								let news = reactions//Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
+								Object.keys(news).forEach(function(ir) {
+									let react = reactions[ir];
+									let reacc = document.createElement("div");
+									reacc.style.cursor = "pointer";
+									reacc.addEventListener("click",function() {
+										fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
 											
-											msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-										});
-										
-										rkeys.forEach(function(i) {
-											let rk = reactions[i];
-											let rkk = Object.keys(rk);
-											let doescontaincurr = false;
-											rkk.forEach(function(aa) {
-												let a = rk[aa];
-												if (a.sender == logininfo.uid) {
-													doescontaincurr = true;
-												}
-											})
-											if (doescontaincurr == true) {
-												msgd.reactions[i].container.classList.add("rcted")
-											}else {
-												msgd.reactions[i].container.classList.remove("rcted")
-											}
-											
-											msgd.reactions[i].counter.innerText = rkk.length;
 										})
 									})
-								}
-							})
+									let reace = document.createElement("label");
+									reace.innerText = ir;
+									let cnter = document.createElement("label");
+									cnter.innerText = "0";
+									reacc.appendChild(reace);
+									reacc.appendChild(cnter);
+									msgd.msgreactions.appendChild(reacc);
+									
+									msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
+								});
+								
+								rkeys.forEach(function(i) {
+									let rk = reactions[i];
+									let rkk = Object.keys(rk);
+									let doescontaincurr = false;
+									rkk.forEach(function(aa) {
+										let a = rk[aa];
+										if (a.sender == logininfo.uid) {
+											doescontaincurr = true;
+										}
+									})
+									if (doescontaincurr == true) {
+										msgd.reactions[i].container.classList.add("rcted")
+									}else {
+										msgd.reactions[i].container.classList.remove("rcted")
+									}
+									
+									msgd.reactions[i].counter.innerText = rkk.length;
+								})
+							}	
+								
+							
 						});
 						
 						
