@@ -1,3 +1,5 @@
+function init() {
+
 let currserver = "";
 let logininfo = {};
 let currentuser = {};
@@ -54,7 +56,7 @@ function openconnectarea(err) {
 				res.text().then((text) => {
 					console.log(text)
 					currserver = servertb.value;
-					localStorage.setItem("server", servertb.value)
+					localStorage.setItem("server", servertb.value);
 					openloginarea();
 				})
 			}else {
@@ -94,6 +96,10 @@ function openloginarea() {
 	passwordtb.style.marginTop = "5px";
 	passwordtb.style.marginBottom = "5px";
 	logincnt.appendChild(passwordtb);
+	let errlbl = document.createElement("label");
+	errlbl.classList.add("errorlabel");
+	errlbl.innerText = " ";
+	logincnt.appendChild(errlbl);
 	let loginbtn = document.createElement("button")
 	loginbtn.innerText = "Login"
 	loginbtn.style.width = "100%";
@@ -120,9 +126,13 @@ function openloginarea() {
 			if (res.ok) {
 				res.text().then((text) => {
 					logininfo = JSON.parse(text);
+					localStorage.setItem("logininfo", text);
 					loadmainarea();
 				})
 			}else {
+				res.json().then((json) => {
+					errlbl.innerText = json.description;
+				});
 				loginbtn.disabled = false;
 				registerbtn.disabled = false;
 			}
@@ -140,9 +150,13 @@ function openloginarea() {
 			if (res.ok) {
 				res.text().then((text) => {
 					logininfo = JSON.parse(text);
+					localStorage.setItem("logininfo", text);
 					loadmainarea();
 				})
 			}else {
+				res.json().then((json) => {
+					errlbl.innerText = json.description;
+				});
 				loginbtn.disabled = false;
 				registerbtn.disabled = false;
 			}
@@ -518,6 +532,10 @@ function loadmainarea() {
 	let chatitems = {};
 	let readnotifications = [];
 	let ttimer = setInterval(function() {
+		if (logininfo == undefined || logininfo == null) {
+			clearTimeout(ttimer);
+			return;
+		}
 		fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 			if (!res.ok) {
 				openloginarea();
@@ -548,12 +566,13 @@ function loadmainarea() {
 			})
 		}).catch(() => {
 			openloginarea();
+			clearTimeout(ttimer);
 		})
 	},1000)
 	fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 		if (!res.ok) {
 			openloginarea();
-			
+			clearTimeout(ttimer);
 		}
 		
 	})
@@ -588,9 +607,11 @@ function loadmainarea() {
 			})
 		}else {
 			openloginarea();
+			clearTimeout(ttimer);
 		}
 	}).catch(() => {
 		openloginarea();
+		clearTimeout(ttimer);
 	})
 	
 	fab.addEventListener("click",function() {
@@ -875,7 +896,17 @@ function loadmainarea() {
 				})
 			}
 		})
+		
 		diag.inner.appendChild(savebtn);
+		
+		
+		let lout = document.createElement("button");
+		lout.innerText = "Logout";
+		lout.addEventListener("click",function() {
+			localStorage.setItem("logininfo", null);
+			location.reload();
+		})
+		diag.inner.appendChild(lout);
 		
 		f.onchange = function() {
 			if (f.files && f.files[0]) {
@@ -1916,7 +1947,13 @@ if (currserver == "") {
 	}else {
 		currserver = localStorage.getItem("server");
 		fetch(currserver + "ping").then(function() {
-			openloginarea();
+			if (localStorage.getItem("logininfo") == null) {
+				openloginarea();
+			}else {
+				logininfo = JSON.parse(localStorage.getItem("logininfo"));
+				loadmainarea();
+			}
+			
 		}).catch(function() {
 			openconnectarea(true);
 		})
@@ -1948,4 +1985,5 @@ function humanFileSize(bytes, si=false, dp=1) {
 
 
   return bytes.toFixed(dp) + ' ' + units[u];
+}
 }

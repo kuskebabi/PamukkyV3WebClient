@@ -130,6 +130,7 @@ button {
 	padding:5px;
 	border-radius:8px;
 	cursor:pointer;
+	margin:2px;
 }
 
 clist {
@@ -160,7 +161,8 @@ bbar {
 	display:flex;
 	align-items:center;
 	bottom:0;
-	position:sticky
+	position:sticky;
+	background: #dbdbdb;
 }
 
 titlebar {
@@ -198,6 +200,7 @@ attachmentscont > uploaditm {
 	object-fit: cover;
 	margin:2px;
 	border-radius:8px;
+	cursor:pointer;
 }
 
 uploaditm {
@@ -335,6 +338,7 @@ ma {
 msgcont {
 	width:100%;
 	display:flex;
+	padding:2px;
 }
 
 msgcont > img {
@@ -428,11 +432,12 @@ button.fab {
 .contextmenu > * {
 	width:100%;
 }
-.contextmenu > button {
+.contextmenu  button {
 	border:none;
 	white-space: nowrap;
 	padding:6px;
 	background: transparent;
+	margin:0px;
 }
 .contextmenu > button:hover {
 	background: rgba(255,200,0,0.2);
@@ -511,7 +516,7 @@ filed > div > label {
 		background: rgb(20,20,20);
 	}
 	
-	centeredPopup,leftarea {
+	centeredPopup,leftarea,bbar {
 		background-color: #171717;
 	}
 	titlebar, msgbar {
@@ -549,5 +554,29 @@ filed > div > label {
 	}
 	button {
 		transition: none;
+	}
+}
+
+@media print {
+	leftarea {
+		display:none !important;
+	}
+	titlebar {
+		display:none !important;
+	}
+	msgbar {
+		display:none !important;
+	}
+	rightarea {
+		display:block !important;
+		width: 100%;
+		background:white;
+		color:black;
+	}
+	messageslist {
+		overflow:visible;
+	}
+	html,body {
+		overflow:visible;
 	}
 }
