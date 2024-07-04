@@ -583,6 +583,7 @@ function loadmainarea() {
 	let leftarea = document.createElement("leftarea");
 	let titlebar = document.createElement("titlebar");
 	let chatslist = document.createElement("clist");
+	//chatslist.style.paddingBottom = "24px";
 	let fab = document.createElement("button");
 	fab.classList.add("fab");
 	fab.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 -960 960 960" width="40"><path d="M446.667-446.667H200v-66.666h246.667V-760h66.666v246.667H760v66.666H513.333V-200h-66.666v-246.667Z"/></svg>';
@@ -1024,6 +1025,20 @@ function loadmainarea() {
 							lsci = itmcont;
 						})
 					}
+					
+					let clbtm = document.createElement("div");
+					clbtm.style.height = "24px";
+					chatslist.appendChild(clbtm);
+					let fabhint = document.createElement("label");
+					fabhint.style.background = "var(--main-bg)";
+					//fabhint.style.position = "sticky";
+					fabhint.style.bottom = "-4px";
+					fabhint.style.display = "block";
+					fabhint.innerText = "Click on the \"+\" button to add a new chat > > ";
+					
+					chatslist.appendChild(fabhint);
+					
+					
 				})
 			}else {
 				openloginarea();
@@ -1325,12 +1340,16 @@ function loadmainarea() {
 						let diag = opendialog();
 						
 						let fcb = document.createElement("bbar");
+						fcb.style.minHeight = "30px";
 						let cst = document.createElement("label");
 						cst.style.overflowWrap = "anywhere";
-						cst.style.maxWidth = "100%";
+						cst.style.maxWidth = "calc(100%-30px)";
+						cst.style.paddingRight = "30px";
 						fcb.appendChild(cst);
 						let sb = document.createElement("button");
-						sb.classList.add("cb")
+						sb.classList.add("cb");
+						sb.style.position = "absolute";
+						sb.style.right = "0";
 						sb.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
 						fcb.appendChild(sb);
 						let fchatselectsid = [];
@@ -1378,7 +1397,7 @@ function loadmainarea() {
 										namecont.appendChild(lmt);
 										infocnt.appendChild(namecont);
 										let lastmsgcontent = document.createElement("label")
-										lastmsgcontent.innerText = item.lastmessage.content;
+										lastmsgcontent.innerText = item.lastmessage.content.split("\n")[0];
 										infocnt.appendChild(lastmsgcontent)
 										itmcont.appendChild(infocnt);
 										
@@ -1598,12 +1617,11 @@ function loadmainarea() {
 					}
 					imgs.onload = function() {
 						img.src = imgs.src;
-						img.style.width = img.style.height = Math.max(240 / msg.gImages.length,64) + "px";
 						img.onclick = function() {
 							imageView(imgs.src);
 						}
 					}
-					
+					img.style.width = img.style.height = Math.max(240 / msg.gImages.length,64) + "px";
 					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
 					img.title = filename;
 					//a.appendChild(img)
@@ -1895,6 +1913,12 @@ function loadmainarea() {
 										msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
 									});
 									
+									let nurl = [];
+									Object.keys(msgd.reactions).forEach((i) => {
+										let v = msgd.reactions[i];
+										nurl.push(v.container);
+									})
+									
 									rkeys.forEach(function(i) {
 										let rk = reactions[i];
 										let rkk = Object.keys(rk);
@@ -1905,6 +1929,7 @@ function loadmainarea() {
 												doescontaincurr = true;
 											}
 										})
+										nurl.splice(nurl.indexOf(msgd.reactions[i].container),1)
 										if (doescontaincurr == true) {
 											msgd.reactions[i].container.classList.add("rcted")
 										}else {
@@ -1912,6 +1937,9 @@ function loadmainarea() {
 										}
 										
 										msgd.reactions[i].counter.innerText = rkk.length;
+									})
+									nurl.forEach((i) => {
+										try {i.remove();}catch {}
 									})
 								}
 							})

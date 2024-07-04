@@ -1,7 +1,3 @@
-button:disabled {
-	opacity:0.5;
-	cursor: default;
-}
 body,html {
 	display:flex;
 	margin:0px;
@@ -19,6 +15,18 @@ body,html {
 	accent-color:orange;
 	overflow:hidden;
 	background:wheat;
+	--main-bg: #ebebeb;
+}
+
+button:disabled {
+	opacity:0.5;
+	cursor: default;
+}
+
+img{border:0;}
+
+td {
+	padding:5px;
 }
 
 body {
@@ -103,7 +111,7 @@ main {
 leftarea {
 	height:100%;
 	width:30%;
-	background-color: #dbdbdb;
+	background-color: #ebebeb;
 	display:flex;
 	flex-direction: column;
 	position:relative;
@@ -298,7 +306,7 @@ chatitem {
 }
 
 chatitem:hover {
-	background: rgba(0,0,0,0.3);
+	background: rgba(0,0,0,0.2);
 }
 
 chatitem > img {
@@ -569,6 +577,7 @@ filed > div > label {
 @media (prefers-color-scheme: dark) {
 	html,body {
 		background:#2b230c;
+		--main-bg: #171717;
 	}
 	rightarea {
 		background: rgb(20,20,20);
@@ -590,7 +599,7 @@ filed > div > label {
 		background-color: #262626;
 	}
 	chatitem:hover {
-		background: rgba(255,255,255,0.3);
+		background: rgba(255,255,255,0.2);
 	}
 	.transparentbtn:hover {
 		background: rgba(255,255,255,0.3);
