@@ -201,6 +201,9 @@ replycont {
 	flex-shrink:0;
 	padding:6px;
 	opacity:0.7;
+	margin: 5px;
+	border-radius: 5px;
+	border-left: 3px solid white;
 }
 attachmentscont {
 	display:flex;
@@ -418,6 +421,15 @@ msgreacts > div {
 	height:28px;
 	background: rgba(255,255,255,0.2);
 	align-items:center;
+	margin:2px;
+}
+msgreacts > div:hover {
+	opacity: 0.9;
+	outline: 1px solid gray;
+}
+
+msgreacts > div * {
+	cursor:pointer;
 }
 
 msgreacts > div.rcted {

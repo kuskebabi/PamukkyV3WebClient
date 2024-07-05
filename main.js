@@ -1338,7 +1338,9 @@ function loadmainarea() {
 					let chatinfs = {};
 					forwardbutton.addEventListener("click", function() {
 						let diag = opendialog();
-						
+						if (document.body.clientWidth <= 800) {
+							diag.dialog.style.width = "40%";
+						}
 						let fcb = document.createElement("bbar");
 						fcb.style.minHeight = "30px";
 						let cst = document.createElement("label");
@@ -1782,7 +1784,7 @@ function loadmainarea() {
 								let msg = chatpage[mkeys[x]];
 								msgcdatas[mkeys[x]] = addmsg(msg,mkeys[x]);
 								lastmessagekey = mkeys[x];
-								messageslist.scrollTop = messageslist.scrollHeight;
+								
 							}
 						}else {
 							lastmessagekey = mkeys[mkeys.length - 1]
@@ -1838,7 +1840,7 @@ function loadmainarea() {
 							
 						});
 						
-						
+						messageslist.scrollTop = messageslist.scrollHeight;
 						ocp = chatpage;
 					})
 				}else {
@@ -1940,6 +1942,12 @@ function loadmainarea() {
 									})
 									nurl.forEach((i) => {
 										try {i.remove();}catch {}
+									})
+									Object.keys(msgd.reactions).forEach((i) => {
+										let v = msgd.reactions[i];
+										if (nurl.indexOf(v.container) > -1) {
+											delete v;
+										}
 									})
 								}
 							})
