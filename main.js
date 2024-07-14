@@ -1258,6 +1258,7 @@ function loadmainarea() {
 			})
 			
 			msgc.addEventListener("contextmenu",function(event) {
+				if (event.target.tagName.toLower() == "vidoe") return;
 				if (msg.sender != 0) {
 					let ctxdiv = document.createElement("div");
 					ctxdiv.style.position = "absolute";
@@ -1628,6 +1629,20 @@ function loadmainarea() {
 					img.title = filename;
 					//a.appendChild(img)
 					msgbuble.appendChild(img);
+					
+				})
+				msg.gVideos.forEach(function(i) {
+					
+					let vid = document.createElement("video");
+					vid.muted = true;
+					vid.autoplay = true;
+					vid.controls = true;
+					vid.src = i.url.replace(/%SERVER%/g,currserver); 
+					vid.style.aspectRatio = "16/9";
+					vid.style.width = "100%";
+					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
+					vid.title = filename;
+					msgbuble.appendChild(vid);
 					
 				})
 				if (msg.gImages.length > 0) msgbuble.appendChild(document.createElement("br"));
