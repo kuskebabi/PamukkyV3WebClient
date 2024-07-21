@@ -285,6 +285,7 @@ msgbar > div > textarea {
 
 .transparentbtn {
 	background:transparent;
+	cursor:pointer;
 }
 
 .transparentbtn:hover {
@@ -477,14 +478,17 @@ button.fab:active {
 .contextmenu > * {
 	width:100%;
 }
-.contextmenu  button {
+.contextmenu > *, .customctx > div > * {
+	width:100%;
+}
+.contextmenu button, .customctx button {
 	border:none;
 	white-space: nowrap;
 	padding:6px;
 	background: transparent;
 	margin:0px;
 }
-.contextmenu > button:hover {
+.contextmenu button:hover, .customctx button:hover {
 	background: rgba(255,200,0,0.2);
 }
 .contextmenu {
@@ -494,6 +498,20 @@ button.fab:active {
 	overflow:hidden;
 	background: rgb(240,240,240);
 	transition: opacity 200ms;
+}
+.customctx {
+	z-index:100000;
+	transition: opacity 200ms;
+	display:inline-block;
+}
+.customctx > div {
+	outline: 1px solid gray;
+	z-index:100000;
+	border-radius:8px;
+	overflow:hidden;
+	background: rgb(240,240,240);
+	transition: opacity 200ms;
+	display:inline-block;
 }
 
 .loading {
@@ -539,6 +557,10 @@ filed > div > label {
 @keyframes dialogapeardocked {
   from {transform:scale(0.8) translateX(100%);opacity:0;}
   to {transform:scale(1);opacity:1;}
+}
+
+flex {
+	display:flex;
 }
 
 
@@ -604,7 +626,7 @@ filed > div > label {
 	msgmain > msgbuble {
 		background: #262626;
 	}
-	.contextmenu {
+	.contextmenu, .customctx > div {
 		background: rgb(40,40,40);
 	}
 	centeredPopup.docked {

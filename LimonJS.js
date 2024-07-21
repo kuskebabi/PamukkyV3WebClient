@@ -163,6 +163,7 @@ function imageView(url) {
 		}
 	})
 	var img = document.createElement("img")
+	img.style.background = "white"
 	img.src = url;
 	img.onload = function() {
 		w = img.width;

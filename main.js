@@ -1,4 +1,4 @@
-function loaded() {setTimeout(init,500);}
+function loaded() {setTimeout(init,1000);}
 function init() {
 
 let currserver = "";
@@ -1129,7 +1129,8 @@ function loadmainarea() {
 					let ui = document.createElement("div");
 					let rb = document.createElement("button")
 					rb.innerText = "x";
-					let img = document.createElement("img")
+					let img = document.createElement("img");
+					img.style.background = "white";
 					img.classList.add("loading");
 					let imgs = new Image();
 					imgs.src = reader.result;
@@ -1258,13 +1259,13 @@ function loadmainarea() {
 			})
 			
 			msgc.addEventListener("contextmenu",function(event) {
-				if (event.target.tagName.toLower() == "vidoe") return;
+				try {if (event.target.tagName.toLower() == "video") return;}catch {}
 				if (msg.sender != 0) {
 					let ctxdiv = document.createElement("div");
 					ctxdiv.style.position = "absolute";
 					ctxdiv.style.top = event.clientY + "px";
 					ctxdiv.style.left = event.clientX + "px";
-					ctxdiv.classList.add("contextmenu");
+					ctxdiv.classList.add("customctx");
 					ctxdiv.style.minWidth = "315px";
 					ctxdiv.style.maxWidth = "315px";
 					if (crole.AllowSendingReactions == true) {
@@ -1290,6 +1291,8 @@ function loadmainarea() {
 						});
 						ctxdiv.appendChild(reactionsdiv);
 					}
+					let cnt = document.createElement("div");
+					ctxdiv.appendChild(cnt);
 					if (msg.issearch == true) {
 						let gomsgbutton = document.createElement("button");
 						addRipple(gomsgbutton,"rgba(255,200,0,0.6)",true);
@@ -1309,7 +1312,7 @@ function loadmainarea() {
 							},200)
 							clik();
 						})
-						ctxdiv.appendChild(gomsgbutton);
+						cnt.appendChild(gomsgbutton);
 					}
 					let replybutton = document.createElement("button");
 					addRipple(replybutton,"rgba(255,200,0,0.6)",true);
@@ -1331,7 +1334,7 @@ function loadmainarea() {
 						replysname.innerText = msg.senderuser.name;
 						clik();
 					})
-					ctxdiv.appendChild(replybutton);
+					cnt.appendChild(replybutton);
 					let forwardbutton = document.createElement("button");
 					addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
 					forwardbutton.innerText = "Forward Message...";
@@ -1444,7 +1447,7 @@ function loadmainarea() {
 						
 						clik();
 					})
-					ctxdiv.appendChild(forwardbutton);
+					cnt.appendChild(forwardbutton);
 					let selectbutton = document.createElement("button");
 					selectbutton.innerText = "Multi-Select";
 					addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
@@ -1453,7 +1456,7 @@ function loadmainarea() {
 						selectmessage();
 						clik();
 					})
-					ctxdiv.appendChild(selectbutton);
+					cnt.appendChild(selectbutton);
 					let savebtn = document.createElement("button");
 					savebtn.innerText = "Save This Message";
 					addRipple(savebtn,"rgba(255,200,0,0.6)",true);
@@ -1473,7 +1476,7 @@ function loadmainarea() {
 						}
 						clik();
 					})
-					ctxdiv.appendChild(savebtn);
+					cnt.appendChild(savebtn);
 					let deletebutton = document.createElement("button");
 					addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
 					deletebutton.innerText = "Delete Message";
@@ -1486,7 +1489,7 @@ function loadmainarea() {
 						document.execCommand('copy');
 						clik();
 					})
-					ctxdiv.appendChild(copybutton);
+					cnt.appendChild(copybutton);
 					let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
 					deletebutton.addEventListener("click", () => {
 						if (selectedMessages.length > 0) {
@@ -1509,7 +1512,7 @@ function loadmainarea() {
 					}else {
 						deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
 					}
-					ctxdiv.appendChild(deletebutton);
+					cnt.appendChild(deletebutton);
 					ctxdiv.style.opacity = "0";
 					document.body.appendChild(ctxdiv);
 					requestAnimationFrame(function() {
@@ -1608,6 +1611,7 @@ function loadmainarea() {
 					let imgs = new Image();
 					imgs.src = i.url.replace(/%SERVER%/g,currserver);
 					let img = document.createElement("img");
+					img.style.background = "white";
 					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 						// dark mode
 						img.src = "file_dark.svg";
