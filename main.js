@@ -452,7 +452,7 @@ function loadmainarea() {
 		bgcover.style.alignItems = "center";
 		bgcover.style.justifyContent = "center";
 		bgcover.style.zIndex = "6";
-		bgcover.addEventListener("click",function(e) {
+		bgcover.addEventListener("pointerdown",function(e) {
 			if (e.target == bgcover) {
 				document.body.removeChild(bgcover);
 			}
@@ -914,10 +914,82 @@ function loadmainarea() {
 			if (f.files && f.files[0]) {
 
 				let reader = new FileReader();
-				reader.onload = function (e) { 
-					pfpimge.setAttribute("src",reader.result);
-					file = f.files[0];
-					ufl = true;
+				reader.onload = function (e) {
+					
+					
+					let cic = document.createElement("div");
+					cic.style.width = "256px";
+					cic.style.height = "256px";
+					cic.style.overflow = "hidden";
+					cic.style.position = "relative";
+					let ci = document.createElement("img");
+					ci.setAttribute("src",reader.result);
+					ci.onload = function() {
+						if (ci.naturalWidth < 256 && ci.naturalHeight < 256) {
+							file = f.files[0];
+							ufl = true;
+							pfpimge.setAttribute("src",reader.result);
+							return;
+						}
+						alert("Sorry! cropping is TODO, please upload a picture that is smaller than 256x256")
+						return;
+						ci.style.position = "absolute";
+						let cdiag = opendialog();
+						cdiag.title.innerText = "Crop";
+						cdiag.inner.style.display = "flex";
+						cdiag.inner.style.flexDirection = "column";
+						cdiag.inner.style.alignItems = "center";
+						ci.ondragstart = function() { return false; };
+						let dragging = false;
+						let lastx = 0;
+						let lasty = 0;
+						let ix = 0;
+						let iy = 0;
+						function updatepos() {
+							if (ix > 0) {
+								ix = 0;
+							}
+							if (iy > 0) {
+								iy = 0;
+							}
+							if (ix < -(ci.naturalWidth - 256)) {
+								ix = -(ci.naturalWidth - 256);
+							}
+							if (iy < -(ci.naturalHeight - 256)) {
+								iy = -(ci.naturalHeight - 256);
+							}
+							ci.style.top = iy + "px";
+							ci.style.left = ix + "px";
+						}
+						cic.addEventListener("pointerdown", (e) => {dragging = true;lastx = e.clientX;lasty = e.clientY;});
+						document.body.addEventListener("pointerup", (e) => {dragging = false});
+						document.body.addEventListener("pointermove", (e) => {
+							if (dragging) {
+								ix += e.clientX - lastx;
+								iy += e.clientY - lasty;
+								updatepos();
+							}
+							lastx = e.clientX;lasty = e.clientY;
+							e.preventDefault();
+							
+						});
+						cic.appendChild(ci);
+						cdiag.inner.appendChild(cic);
+						let cbtn = document.createElement("button");
+						cbtn.innerText = "Crop";
+						cbtn.addEventListener("click",function() {
+							let canvas = document.createElement("canvas");
+							canvas.width = 256;
+							canvas.height = 256;
+							const ctx = canvas.getContext("2d");
+							ctx.drawImage(ci, ix, iy); 
+							
+							diag.closebtn.click();	
+						})
+						cdiag.inner.appendChild(cbtn);
+					}
+					
+					
 				};
 
 				reader.readAsDataURL(f.files[0]); 
@@ -1276,7 +1348,7 @@ function loadmainarea() {
 							reactionbtn.style.border = "none";
 							reactionbtn.style.background = "none";
 							reactionbtn.classList.add("orangebgonhover");
-							reactionbtn.padding = "4px";
+							reactionbtn.style.padding = "4px";
 							reactionbtn.style.width = "35px";
 							reactionbtn.style.height = "35px";
 							reactionbtn.style.fontSize = "20px";
