@@ -187,6 +187,7 @@ function loadmainarea() {
 						let infod = JSON.parse(text);
 						
 						let pfpimge = document.createElement("img");
+						pfpimg.loading = "lazy";
 						pfpimge.classList.add("circleimg");
 						pfpimge.style.width = "80px";
 						pfpimge.style.height = "80px";
@@ -234,6 +235,7 @@ function loadmainarea() {
 						
 						let pfpimge = document.createElement("img");
 						pfpimge.classList.add("circleimg");
+						pfpimge.loading = "lazy";
 						pfpimge.style.width = "80px";
 						pfpimge.style.height = "80px";
 						pfpimge.style.cursor = "pointer";
@@ -340,6 +342,7 @@ function loadmainarea() {
 													uname.style.alignItems = "center";
 													let userpfp = document.createElement("img");
 													userpfp.classList.add("circleimg");
+													userpfp.loading = "lazy";
 													let usernamelbl = document.createElement("label");
 													uname.appendChild(userpfp);
 													uname.appendChild(usernamelbl);
@@ -1023,6 +1026,7 @@ function loadmainarea() {
 						addRipple(itmcont,"rgba(255,200,0,0.6)");
 						chatitems[id] = itmcont;
 						let pfpimg = document.createElement("img")
+						pfpimg.loading = "lazy";
 						pfpimg.src = item.info.picture.replace(/%SERVER%/g,currserver);
 						itmcont.appendChild(pfpimg);
 						let infocnt = document.createElement("infoarea");
@@ -2032,7 +2036,7 @@ function loadmainarea() {
 										msgd.reactions[i].counter.innerText = rkk.length;
 									})
 									nurl.forEach((i) => {
-										try {i.remove();}catch {}
+										try {i.remove();delete msgd.reactions[i];}catch {}
 									})
 									Object.keys(msgd.reactions).forEach((i) => {
 										let v = msgd.reactions[i];
