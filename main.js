@@ -187,6 +187,7 @@ function loadmainarea() {
 						let infod = JSON.parse(text);
 						
 						let pfpimge = document.createElement("img");
+						pfpimge.style.boxShadow = "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)";
 						pfpimg.loading = "lazy";
 						pfpimge.classList.add("circleimg");
 						pfpimge.style.width = "80px";
@@ -234,6 +235,7 @@ function loadmainarea() {
 						let file;
 						
 						let pfpimge = document.createElement("img");
+						pfpimge.style.boxShadow = "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)";
 						pfpimge.classList.add("circleimg");
 						pfpimge.loading = "lazy";
 						pfpimge.style.width = "80px";
@@ -471,6 +473,7 @@ function loadmainarea() {
 		titlelbl.innerText = "Dialog";
 		titlelbl.style.marginRight = "auto";
 		let closebtn = document.createElement("button");
+		addRipple(closebtn,"rgba(255,200,0,0.6)");
 		closebtn.style.flexShrink = "0";
 		closebtn.style.width = "25px";
 		closebtn.style.height = "25px";
@@ -488,6 +491,7 @@ function loadmainarea() {
 		let isatdock = false;
 		
 		let dockbtn = document.createElement("button");
+		addRipple(dockbtn,"rgba(255,200,0,0.6)");
 		dockbtn.style.flexShrink = "0";
 		dockbtn.style.width = "25px";
 		dockbtn.style.height = "25px";
@@ -585,6 +589,7 @@ function loadmainarea() {
 	let maincont = document.createElement("main");
 	let leftarea = document.createElement("leftarea");
 	let titlebar = document.createElement("titlebar");
+	titlebar.classList.add("grd");
 	let chatslist = document.createElement("clist");
 	//chatslist.style.paddingBottom = "24px";
 	let fab = document.createElement("button");
@@ -1079,6 +1084,7 @@ function loadmainarea() {
 									setTimeout(function() {
 										rightarea.style.display = "none";
 										leftarea.style.display = "";
+										currentchatview.chat.innerHTML = "";
 									},500)
 								}
 								requestAnimationFrame(function() {
@@ -1148,6 +1154,7 @@ function loadmainarea() {
 		let mchat = document.createElement("mchat");
 		let titlebar = document.createElement("titlebar");
 		let backbtn = document.createElement("button");
+		addRipple(backbtn,"rgba(255,200,0,0.6)");
 		backbtn.classList.add("cb")
 		backbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M384-96 0-480l384-384 68 68-316 316 316 316-68 68Z"/></svg>';
 		backbtn.style.display = "none";
@@ -1166,6 +1173,7 @@ function loadmainarea() {
 		titlebar.appendChild(document.createElement("ma"));
 		
 		let infobtn = document.createElement("button");
+		addRipple(infobtn,"rgba(255,200,0,0.6)");
 		infobtn.classList.add("cb")
 		infobtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M444-288h72v-240h-72v240Zm35.789-312Q495-600 505.5-610.289q10.5-10.29 10.5-25.5Q516-651 505.711-661.5q-10.29-10.5-25.5-10.5Q465-672 454.5-661.711q-10.5 10.29-10.5 25.5Q444-621 454.289-610.5q10.29 10.5 25.5 10.5Zm.487 504Q401-96 331-126q-70-30-122.5-82.5T126-330.958q-30-69.959-30-149.5Q96-560 126-629.5t82.5-122Q261-804 330.958-834q69.959-30 149.5-30Q560-864 629.5-834t122 82.5Q804-699 834-629.276q30 69.725 30 149Q864-401 834-331q-30 70-82.5 122.5T629.276-126q-69.725 30-149 30ZM480-168q130 0 221-91t91-221q0-130-91-221t-221-91q-130 0-221 91t-91 221q0 130 91 221t221 91Zm0-312Z"/></svg>';
 		infobtn.addEventListener("click",function() {
@@ -1180,6 +1188,7 @@ function loadmainarea() {
 		
 		let mgb = document.createElement("msgbar");
 		let rc = document.createElement("replycont");
+		addRipple(rc,"rgba(255,200,0,0.6)");
 		rc.addEventListener("click",function() {
 			rc.style.display = "none";
 			replymsgid = undefined;
@@ -1259,6 +1268,7 @@ function loadmainarea() {
 		let mgbd = document.createElement("div");
 		let attachbtn = document.createElement("button");
 		attachbtn.addEventListener("click", function() {f.click();})
+		addRipple(attachbtn,"rgba(255,200,0,0.6)");
 		attachbtn.classList.add("cb")
 		attachbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M640-520v-200h80v200h-80ZM440-244q-35-10-57.5-39T360-350v-370h80v476Zm30 164q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v300h-80v-300q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q25 0 47.5-6.5T560-186v89q-21 8-43.5 12.5T470-80Zm170-40v-120H520v-80h120v-120h80v120h120v80H720v120h-80Z"/></svg>';
 		mgbd.appendChild(attachbtn)
@@ -1267,6 +1277,7 @@ function loadmainarea() {
 		mgbd.appendChild(msginput)
 		
 		let sendbtn = document.createElement("button");
+		addRipple(sendbtn,"rgba(255,200,0,0.6)");
 		sendbtn.classList.add("cb")
 		sendbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
 		mgbd.appendChild(sendbtn)
@@ -1282,6 +1293,7 @@ function loadmainarea() {
 		let lastmsgtime = new Date(0);
 		let msgscont;
 		let selectedMessages = [];
+		let sendedmessages = [];
 		let crole = {"AdminOrder":0,"AllowMessageDeleting":true,"AllowEditingSettings":true,"AllowKicking":true,"AllowBanning":true,"AllowSending":true,"AllowEditingUsers":true,"AllowSendingReactions":true};
 		let replymsgid = undefined;
 		
@@ -1643,7 +1655,8 @@ function loadmainarea() {
 				fu.addEventListener("click",function() {
 					viewuginfo(msg.forwardedfrom, "user")
 				})
-				fetch(currserver + "getuser", {body: JSON.stringify({'uid': msg.forwardedfrom}),method: 'POST'}).then((res) => {
+				fu.innerText = msg.forwardedname;
+				/*fetch(currserver + "getuser", {body: JSON.stringify({'uid': msg.forwardedfrom}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.text().then((text) => {
 							let uii = JSON.parse(text);
@@ -1651,14 +1664,14 @@ function loadmainarea() {
 							fu.innerText = uii.name;
 						})
 					}
-				});
-				fu.innerText = "...";
+				});*/
 				il.appendChild(fu);
 				msgbuble.appendChild(il);
 			}
 			
 			if (msg.replymsgcontent != undefined) {
 				let rc = document.createElement("replycont");
+				addRipple(rc,"rgba(255,200,0,0.6)");
 				rc.addEventListener("click",function() {
 					
 				})
@@ -1677,6 +1690,10 @@ function loadmainarea() {
 				msgm.appendChild(msgsender);
 				msgsendertxt.innerText = msg.senderuser.name;
 				msgpfp.src = msg.senderuser.picture.replace(/%SERVER%/g,currserver);
+				msgpfp.style.cursor = "pointer";
+				msgpfp.addEventListener("click",function() {
+					viewuginfo(msg.sender,"user")
+				})
 			}
 			msgm.appendChild(msgbuble);
 			if (msg.files != undefined) {
@@ -1827,14 +1844,14 @@ function loadmainarea() {
 			fetch(currserver + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': msginput.value.trim(),replymsg: replymsgid,files: (fileslist.length > 0 ? fileslist : null)}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
-						//res = JSON.parse(text);
-						//if (res.result == "error") {
-						//	
-						//}else {
-						//	msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
-						//}
+						res = JSON.parse(text);
+						if (res.result == "error") {
+							
+						}else {
+							msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
+						}
 						
-						msgscont.removeChild(msg.message);
+						sendedmessages.push(msg.message);
 						updatechat();
 					})
 				}else {
@@ -1866,12 +1883,12 @@ function loadmainarea() {
 						isready = true;
 						chatpage = JSON.parse(text);
 						let mkeys = Object.keys(chatpage);
-						let deled = Object.keys(ocp).filter(x => !mkeys.includes(x));
+						/*let deled = Object.keys(ocp).filter(x => !mkeys.includes(x));
 						console.log(deled);
 						deled.forEach(function(k) {
 							delete ocp[k]
 							messageflexes[k].innerHTML = "";
-						})
+						})*/
 						
 						if ((lastmessagekey == "" || mkeys.indexOf(lastmessagekey) != -1)) {
 							let sid = mkeys.indexOf(lastmessagekey) + 1;
@@ -2046,6 +2063,10 @@ function loadmainarea() {
 									})
 								}
 							})
+							sendedmessages.forEach(function(i) {
+								i.remove();
+							})
+							sendedmessages = [];
 						})
 					}else {
 						//openloginarea();
