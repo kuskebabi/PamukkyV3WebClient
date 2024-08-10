@@ -40,6 +40,7 @@ body {
 	background: transparent;
 	cursor: pointer;
 	margin: 2px;
+	flex-shrink:0;
 }
 
 .cb:hover {
@@ -106,6 +107,7 @@ main {
 	height:100%;
 	animation-name: dialogapear;
 	animation-duration: 0.5s;
+	overflow:hidden;
 }
 
 leftarea {
@@ -116,6 +118,7 @@ leftarea {
 	flex-direction: column;
 	position:relative;
 	transition: opacity 1s;
+	background-image: radial-gradient(circle at left top, rgba(255,160,0,0.6628851369649422) 10%, rgba(255,255,255,0) 24%);
 }
 
 rightarea {
@@ -194,6 +197,10 @@ titlebar {
 	flex-shrink:0;
 }
 
+.grd {
+	background: linear-gradient(90deg, rgba(255,255,255,0) 42%, rgba(235,235,235,1) 100%);
+}
+
 replycont {
 	display:flex;
 	width:100%;
@@ -224,6 +231,10 @@ attachmentscont > uploaditm {
 	margin:2px;
 	border-radius:8px;
 	cursor:pointer;
+	transition: box-shadow 200ms;
+}
+.msgimg:hover {
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 uploaditm {
@@ -571,11 +582,11 @@ flex {
 		padding-right:10%;
 	}
 }
-@media only screen and (min-width: 1920px) {
+@media only screen and (min-width: 1900px) {
 	main {
 		width:90%;
 		height:90%;
-		border-radius:5px;
+		border-radius:8px;
 	}
 	body {
 		font-size:20px;
@@ -623,6 +634,10 @@ flex {
 	titlebar, msgbar {
 		background-color: #262626;
 	}
+	.grd {
+		background: linear-gradient(90deg, rgba(255,255,255,0) 42%, rgba(38,38,38,1) 100%);
+	}
+
 	msgmain > msgbuble {
 		background: #262626;
 	}
