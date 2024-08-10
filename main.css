@@ -429,11 +429,12 @@ msgreacts {
 
 msgreacts > div {
 	display: inline-flex;
-	border-radius: 14px;
-	height:28px;
+	border-radius: 18px;
+	height:26px;
 	background: rgba(255,255,255,0.2);
 	align-items:center;
 	margin:2px;
+	padding: 4px;
 }
 msgreacts > div:hover {
 	opacity: 0.9;

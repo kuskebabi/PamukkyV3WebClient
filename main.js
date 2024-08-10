@@ -1,3 +1,23 @@
+function linkify(inputText) {
+	var replacedText, replacePattern1, replacePattern2, replacePattern3;
+	inputText = inputText.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/ /g,"&nbsp;").replace(/\r/g,"")
+
+	//URLs starting with http://, https://, or ftp://
+	replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
+	replacedText = inputText.replace(/&nbsp;/g," ").replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');
+
+	//URLs starting with "www." (without // before it, or it'd re-link the ones done above).
+	replacePattern2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+	replacedText = replacedText.replace(replacePattern2, '$1<a href="https://$2" target="_blank">$2</a>');
+
+	//Change email addresses to mailto:: links.
+	replacePattern3 = /(([a-zA-Z0-9\-\_\.])+@[a-zA-Z\_]+?(\.[a-zA-Z]{2,6})+)/gim;
+	replacedText = replacedText.replace(replacePattern3, '<a href="mailto:$1">$1</a>');
+
+	return replacedText;
+}
+
+
 function loaded() {setTimeout(init,1000);}
 function init() {
 
@@ -5,7 +25,7 @@ let currserver = "";
 let logininfo = {};
 let currentuser = {};
 let chats = []
-let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉"];
+let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉","🔥", "💀","😘","😐","😡","👌","😆","😱","😋"];
 
 
 
@@ -843,16 +863,31 @@ function loadmainarea() {
 			nprv.appendChild(nprinp);
 			npr.appendChild(nprv);
 			
+			let npc = document.createElement("tr");
+			let npcc = document.createElement("td");
+			npcc.innerText = "Confirm Password";
+			npc.appendChild(npcc);
+			let nprc = document.createElement("td");
+			let npcinp = document.createElement("input");
+			npcinp.type = "password";
+			nprc.appendChild(npcinp);
+			npc.appendChild(nprc);
+			
 			
 			cpasstable.appendChild(opr);
 			cpasstable.appendChild(npr);
+			cpasstable.appendChild(npc);
 			diag.inner.appendChild(cpasstable);
 			
 			let changebtn = document.createElement("button");
 			changebtn.innerText = "Change";
 			changebtn.addEventListener("click",function() {
+				if (npcinp.value != nprinp.value) {
+					alert("New and Confirm doesnt match!");
+					return;
+				}
 				fetch(currserver + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
-					if (res.ok) {
+					//if (res.ok) {
 						res.text().then((text) => {
 							
 							info = JSON.parse(text);
@@ -863,9 +898,9 @@ function loadmainarea() {
 							logininfo = info;
 							alert("Password Changed!");
 						})
-					}else {
+					//}else {
 						
-					}
+					//}
 				})
 			});
 			diag.inner.appendChild(changebtn);
@@ -1112,9 +1147,9 @@ function loadmainarea() {
 					clbtm.style.height = "24px";
 					chatslist.appendChild(clbtm);
 					let fabhint = document.createElement("label");
-					fabhint.style.background = "var(--main-bg)";
+					//fabhint.style.background = "var(--main-bg)";
 					//fabhint.style.position = "sticky";
-					fabhint.style.bottom = "-4px";
+					//fabhint.style.bottom = "-4px";
 					fabhint.style.display = "block";
 					fabhint.innerText = "Click on the \"+\" button to add a new chat > > ";
 					
@@ -1146,6 +1181,7 @@ function loadmainarea() {
 	function createchatarea(chatid,ugid) {
 		let f = document.createElement('input');
 		f.type='file';
+		f.multiple = true;
 		
 		let fileslist = [];
 		let isuserchat = chatid.includes("-");
@@ -1164,10 +1200,10 @@ function loadmainarea() {
 		pfpimg.style.margin = "2px";
 		titlebar.appendChild(pfpimg);
 		let titletxt = document.createElement("h4");
-		
+		titletxt.style.paddingLeft = "4px";
 		titlebar.appendChild(titletxt);
 		let infotxt = document.createElement("label");
-		infotxt.style.fontSize = "9px";
+		infotxt.style.fontSize = "10px";
 		infotxt.style.padding = "6px";
 		titlebar.appendChild(infotxt);
 		titlebar.appendChild(document.createElement("ma"));
@@ -1201,69 +1237,91 @@ function loadmainarea() {
 		rc.appendChild(replycnt);
 		mgb.appendChild(rc);
 		
+		function uploadfile(file) {
+			let reader = new FileReader();
+			reader.onload = function (e) { 
+				ufl = true;
+				let att = document.createElement("uploaditm");
+				let ui = document.createElement("div");
+				let rb = document.createElement("button")
+				rb.innerText = "x";
+				let img = document.createElement("img");
+				img.style.background = "white";
+				img.classList.add("loading");
+				let imgs = new Image();
+				imgs.src = reader.result;
+				if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					// dark mode
+					img.src = "file_dark.svg";
+				}else {
+					img.src = "file.svg";
+				}
+				img.classList.add("msgimg");
+				imgs.onload = function() {
+					img.src = imgs.src;
+				}
+				//img.src = reader.result;
+				ui.appendChild(img)
+				att.appendChild(ui);
+				att.appendChild(rb);
+				atc.appendChild(att);
+				fetch(currserver + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
+					console.log(data);
+					if (data.status == "success") {
+						fileslist.push(data.url);
+						sendbtn.disabled = false;
+						img.classList.remove("loading");
+						rb.addEventListener("click",function() {
+							const index = fileslist.indexOf(data.url);
+							if (index > -1) { 
+								fileslist.splice(index, 1); 
+								if (fileslist.length > 0) {
+									sendbtn.disabled = false;
+								}else {
+									sendbtn.disabled = true;
+								}
+							}
+							atc.removeChild(att);
+						})
+					}
+				})}).catch(function(error) {console.error(error);});
+			};
+
+			reader.readAsDataURL(file); 
+		}
+		
 		let atc = document.createElement("attachmentscont");
 		mgb.appendChild(atc);
 		f.onchange = function() {
-			if (f.files && f.files[0]) {
-
-				let reader = new FileReader();
-				reader.onload = function (e) { 
-					let file = f.files[0];
-					ufl = true;
-					let att = document.createElement("uploaditm");
-					let ui = document.createElement("div");
-					let rb = document.createElement("button")
-					rb.innerText = "x";
-					let img = document.createElement("img");
-					img.style.background = "white";
-					img.classList.add("loading");
-					let imgs = new Image();
-					imgs.src = reader.result;
-					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-						// dark mode
-						img.src = "file_dark.svg";
-					}else {
-						img.src = "file.svg";
-					}
-					img.classList.add("msgimg");
-					imgs.onload = function() {
-						img.src = imgs.src;
-					}
-					//img.src = reader.result;
-					ui.appendChild(img)
-					att.appendChild(ui);
-					att.appendChild(rb);
-					atc.appendChild(att);
-					fetch(currserver + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-						console.log(data);
-						if (data.status == "success") {
-							fileslist.push(data.url);
-							sendbtn.disabled = false;
-							img.classList.remove("loading");
-							rb.addEventListener("click",function() {
-								const index = fileslist.indexOf(data.url);
-								if (index > -1) { 
-									fileslist.splice(index, 1); 
-									if (fileslist.length > 0) {
-										sendbtn.disabled = false;
-									}else {
-										sendbtn.disabled = true;
-									}
-								}
-								atc.removeChild(att);
-							})
-						}
-					})}).catch(function(error) {console.error(error);});
-				};
-
-				reader.readAsDataURL(f.files[0]); 
+			if (f.files) {
+				Array.prototype.forEach.call(f.files,function(i) {
+					uploadfile(i);
+				})
 			}
 			
 		}
 		
 		rc.style.display = "none";
 		
+		mchat.addEventListener('dragover', (e) => {
+			e.preventDefault()
+		});
+		mchat.addEventListener('drop', (e) => {
+			Array.prototype.forEach.call(e.dataTransfer.files,function(i) {
+				uploadfile(i);
+			});
+			e.preventDefault()
+		});
 		
+		mchat.addEventListener("paste", async e => {
+			e.preventDefault();
+			if (!e.clipboardData.files.length) {
+				return;
+			}
+			Array.prototype.forEach.call(e.clipboardData.files,function(i) {
+				uploadfile(i);
+			});
+		});
 		
 		let mgbd = document.createElement("div");
 		let attachbtn = document.createElement("button");
@@ -1347,7 +1405,11 @@ function loadmainarea() {
 			})
 			
 			msgc.addEventListener("contextmenu",function(event) {
-				try {if (event.target.tagName.toLower() == "video") return;}catch {}
+				//try {
+					if (event.target.tagName.toString().toLowerCase() == "video") return;
+					if (event.target.tagName.toString().toLowerCase() == "a") return;
+					if (event.target.tagName.toString().toLowerCase() == "img") return;
+				//}catch {}
 				if (msg.sender != 0) {
 					let ctxdiv = document.createElement("div");
 					ctxdiv.style.position = "absolute";
@@ -1358,6 +1420,7 @@ function loadmainarea() {
 					ctxdiv.style.maxWidth = "315px";
 					if (crole.AllowSendingReactions == true) {
 						let reactionsdiv = document.createElement("div");
+						reactionsdiv.style.maxWidth = "315px";
 						reactionemojis.forEach((item) => {
 							let itm = item.toString();
 							let reactionbtn = document.createElement("button");
@@ -1629,7 +1692,7 @@ function loadmainarea() {
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
 			msgcontent.style.overflowWrap = "break-word";
-			msgcontent.innerText = msg.content;
+			msgcontent.innerHTML = linkify(msg.content);
 			let dt = new Date(msg.time);
 			let dtt = new Date(msg.time);
 			let nowdate = new Date();
