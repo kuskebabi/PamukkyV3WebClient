@@ -744,7 +744,7 @@ function loadmainarea() {
 						}
 					})}).catch(function(error) {console.error(error);});
 				}else {
-					fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
+					fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': "", 'info': desinp.value }),method: 'POST'}).then((res) => {
 						loadchats();
 						diag.closebtn.click();
 					})
@@ -1314,10 +1314,14 @@ function loadmainarea() {
 		});
 		
 		mchat.addEventListener("paste", async e => {
-			e.preventDefault();
+			
 			if (!e.clipboardData.files.length) {
 				return;
 			}
+			if (e.clipboardData.files.length > 0) {
+				e.preventDefault();
+			}
+			
 			Array.prototype.forEach.call(e.clipboardData.files,function(i) {
 				uploadfile(i);
 			});
