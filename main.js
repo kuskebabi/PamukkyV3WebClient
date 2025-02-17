@@ -1055,7 +1055,7 @@ function loadmainarea() {
 					chats = JSON.parse(text);
 					for (let index = 0; index < chats.length; index++) {
 						let item = chats[index];
-						if (!item.hasOwnProperty("lastmessage")) {
+						if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
 							item["lastmessage"] = {
 								time: new Date(),
 								content: "No Messages. Send one to start conversation."
@@ -1528,7 +1528,7 @@ function loadmainarea() {
 									chats = JSON.parse(text);
 									for (let index = 0; index < chats.length; index++) {
 										let item = chats[index];
-										if (!item.hasOwnProperty("lastmessage")) {
+										if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
 											item["lastmessage"] = {
 												time: new Date(),
 												content: "No Messages. Send one to start conversation."
