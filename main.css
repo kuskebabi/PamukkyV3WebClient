@@ -585,8 +585,8 @@ flex {
 }
 @media only screen and (min-width: 1900px) {
 	main {
-		width:90%;
-		height:90%;
+		width:98%;
+		height:98%;
 		border-radius:8px;
 	}
 	body {

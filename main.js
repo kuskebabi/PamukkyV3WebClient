@@ -2,6 +2,9 @@ function linkify(inputText) {
 	var replacedText, replacePattern1, replacePattern2, replacePattern3;
 	inputText = inputText.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/ /g,"&nbsp;").replace(/\r/g,"")
 
+	// Fix newlines.
+	inputText = inputText.replace(/\n/g,"<br>");
+
 	//URLs starting with http://, https://, or ftp://
 	replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
 	replacedText = inputText.replace(/&nbsp;/g," ").replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');
@@ -26,7 +29,88 @@ let logininfo = {};
 let currentuser = {};
 let chats = []
 let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉","🔥", "💀","😘","😐","😡","👌","😆","😱","😋"];
-
+let cacheduserinfo = {};
+let uidcallbacks = {};
+function getuserinfo(uid, callback) {
+	if (cacheduserinfo.hasOwnProperty(uid)) { // Return the cached
+		callback(cacheduserinfo[uid]);
+	}else {
+		if (uidcallbacks.hasOwnProperty(uid)) {
+			uidcallbacks[uid].push(callback); //Just add this in callback list
+		}else { //New request
+			uidcallbacks[uid] = [callback]; //create the array
+			fetch(currserver + "getuser", {body: JSON.stringify({'token': logininfo.token, 'uid': uid}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					res.text().then((text) => {
+						//Yay! now we attempt to parse it then callback all of them
+						let info = JSON.parse(text);
+						cacheduserinfo[uid] = info;
+						uidcallbacks[uid].forEach((callback) => {
+							callback(info);
+						})
+					})
+				}else { // non 200 response
+					uidcallbacks[uid].forEach((callback) => {
+						callback({
+							name: "Unknown User",
+							picture: "",
+							info: ""
+						});
+					})
+				}
+			}).catch(() => { //Error in response
+				uidcallbacks[uid].forEach((callback) => {
+					callback({
+						name: "Unknown User",
+						picture: "",
+						info: ""
+					});
+				})
+			});
+		}
+	}
+}
+let cachedgroupinfo = {};
+let gidcallbacks = {};
+function getgroupinfo(gid, callback) {
+	if (cachedgroupinfo.hasOwnProperty(gid)) { // Return the cached
+		callback(cachedgroupinfo[gid]);
+	}else {
+		if (gidcallbacks.hasOwnProperty(gid)) {
+			gidcallbacks[gid].push(callback); //Just add this in callback list
+		}else { //New request
+			gidcallbacks[gid] = [callback]; //create the array
+			fetch(currserver + "getgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': gid}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					res.text().then((text) => {
+						//Yay! now we attempt to parse it then callback all of them
+						let info = JSON.parse(text);
+						cachedgroupinfo[gid] = info;
+						gidcallbacks[gid].forEach((callback) => {
+							callback(info);
+						})
+					})
+				}else { // non 200 response
+					gidcallbacks[gid].forEach((callback) => {
+						callback({
+							name: "Unknown Group",
+							picture: "",
+							info: ""
+						});
+					})
+				}
+			}).catch(() => { //Error in response
+				gidcallbacks[gid].forEach((callback) => {
+					callback({
+						name: "Unknown Group",
+						picture: "",
+						info: ""
+					});
+				})
+			});
+		}
+	}
+}
 
 
 const searchParams = new URLSearchParams(window.location.search);
@@ -616,17 +700,20 @@ function loadmainarea() {
 	fab.classList.add("fab");
 	fab.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 -960 960 960" width="40"><path d="M446.667-446.667H200v-66.666h246.667V-760h66.666v246.667H760v66.666H513.333V-200h-66.666v-246.667Z"/></svg>';
 	leftarea.appendChild(fab);
-	let btn = document.createElement("button");
-	btn.style.height = "100%";
-	btn.classList.add("transparentbtn")
-	btn.style.display = "flex";
-	btn.style.alignItems = "center";
+	let profilebtn = document.createElement("button");
+	profilebtn.style.height = "100%";
+	profilebtn.classList.add("transparentbtn")
+	profilebtn.style.display = "flex";
+	profilebtn.style.alignItems = "center";
+	addRipple(profilebtn,"rgba(255,200,0,0.6)");
+
 	let pfpimg = document.createElement("img");
 	pfpimg.classList.add("circleimg")
 	pfpimg.style.margin = "4px";
-	btn.appendChild(pfpimg)
+	profilebtn.appendChild(pfpimg);
 	let namelbl = document.createElement("label");
 	namelbl.style.margin = "4px";
+	profilebtn.appendChild(namelbl);
 	fetch(currserver + "getuser", {body: JSON.stringify({'uid': logininfo.uid}),method: 'POST'}).then((res) => {
 		if (res.ok) {
 			res.text().then((text) => {
@@ -782,8 +869,7 @@ function loadmainarea() {
 		})
 		bflex.appendChild(joingroupbtn);
 	})
-	addRipple(btn,"rgba(255,200,0,0.6)");
-	btn.addEventListener("click",function() {
+	profilebtn.addEventListener("click",function() {
 		let f = document.createElement('input');
 		f.type='file';
 		f.accept = 'image/*';
@@ -1067,12 +1153,10 @@ function loadmainarea() {
 						chatitems[id] = itmcont;
 						let pfpimg = document.createElement("img")
 						pfpimg.loading = "lazy";
-						pfpimg.src = item.info.picture.replace(/%SERVER%/g,currserver);
 						itmcont.appendChild(pfpimg);
 						let infocnt = document.createElement("infoarea");
 						let namecont = document.createElement("titlecont");
 						let nameh4 = document.createElement("h4");
-						nameh4.innerText = item.info.name;
 						namecont.appendChild(nameh4)
 						let lmt = document.createElement("time");
 						let dt = new Date(item.lastmessage.time);
@@ -1088,12 +1172,15 @@ function loadmainarea() {
 						namecont.appendChild(lmt);
 						infocnt.appendChild(namecont);
 						let lastmsgcontent = document.createElement("label")
-						lastmsgcontent.innerText = item.lastmessage.content.split("\n")[0];
+						getuserinfo(item.lastmessage.sender, function(sender) {
+							lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
+						});
+
 						infocnt.appendChild(lastmsgcontent)
 						itmcont.appendChild(infocnt);
 						
 						chatslist.appendChild(itmcont);
-						
+						let cinfo = {};
 						itmcont.addEventListener("click",function() {
 							if (lsci != null) {
 								lsci.style.background = ""
@@ -1106,8 +1193,8 @@ function loadmainarea() {
 							}
 							currentchatview = createchatarea(id, (item.type == "user" ? item.user : item.group));
 							currentchatid = id;
-							currentchatview.titlelabel.innerText = item.info.name;
-							currentchatview.pfp.src = item.info.picture.replace(/%SERVER%/g,currserver);
+							currentchatview.titlelabel.innerText = cinfo.name;
+							currentchatview.pfp.src = cinfo.picture.replace(/%SERVER%/g,currserver);
 							rightarea.appendChild(currentchatview.chat)
 							if (document.body.clientWidth <= 800) {
 								rightarea.style.display = "flex";
@@ -1141,6 +1228,19 @@ function loadmainarea() {
 							}
 							lsci = itmcont;
 						})
+
+						//callback for get*info
+						function callback(info) {
+							pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
+							nameh4.innerText = info.name;
+							cinfo = info;
+						}
+						//make the correct call
+						if (item.type == "user") {
+							getuserinfo(item.user, callback);
+						}else if (item.type == "group") {
+							getgroupinfo(item.group, callback);
+						}
 					}
 					
 					let clbtm = document.createElement("div");
@@ -1166,14 +1266,12 @@ function loadmainarea() {
 	}
 	
 	loadchats();
-	
-	btn.appendChild(namelbl)
-	titlebar.appendChild(btn)
-	leftarea.appendChild(titlebar)
-	leftarea.appendChild(chatslist)
-	maincont.appendChild(leftarea)
+	titlebar.appendChild(profilebtn);
+	leftarea.appendChild(titlebar);
+	leftarea.appendChild(chatslist);
+	maincont.appendChild(leftarea);
 	let rightarea = document.createElement("rightarea");
-	maincont.appendChild(rightarea)
+	maincont.appendChild(rightarea);
 	
 	document.body.appendChild(maincont);
 
@@ -1391,6 +1489,7 @@ function loadmainarea() {
 				messageslist.appendChild(msgscont)
 				lastmsgsender = msg.sender;
 			}
+			let senderuser = {};
 			let msgc = document.createElement("msgcont");
 			messageflexes[id] = msgc;
 			function selectmessage() {
@@ -1486,7 +1585,7 @@ function loadmainarea() {
 							replycnt.innerText = msg.content;
 						}
 						
-						replysname.innerText = msg.senderuser.name;
+						replysname.innerText = senderuser.name;
 						clik();
 					})
 					cnt.appendChild(replybutton);
@@ -1537,12 +1636,10 @@ function loadmainarea() {
 										let itmcont = document.createElement("chatitem");
 										addRipple(itmcont,"rgba(255,200,0,0.6)");
 										let pfpimg = document.createElement("img")
-										pfpimg.src = item.info.picture.replace(/%SERVER%/g,currserver);
 										itmcont.appendChild(pfpimg);
 										let infocnt = document.createElement("infoarea");
 										let namecont = document.createElement("titlecont");
 										let nameh4 = document.createElement("h4");
-										nameh4.innerText = item.info.name;
 										namecont.appendChild(nameh4)
 										let lmt = document.createElement("time");
 										let dt = new Date(item.lastmessage.time);
@@ -1558,10 +1655,12 @@ function loadmainarea() {
 										namecont.appendChild(lmt);
 										infocnt.appendChild(namecont);
 										let lastmsgcontent = document.createElement("label")
-										lastmsgcontent.innerText = item.lastmessage.content.split("\n")[0];
+										getuserinfo(item.lastmessage.sender, function(sender) {
+											lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
+										});
 										infocnt.appendChild(lastmsgcontent)
 										itmcont.appendChild(infocnt);
-										
+										let cinfo = {};
 										diag.inner.appendChild(itmcont);
 										let id = item["chatid"] + "";
 										itmcont.addEventListener("click",function() {
@@ -1571,11 +1670,23 @@ function loadmainarea() {
 												itmcont.style.background = "";
 											}else {
 												fchatselectsid.push(id);
-												gous.push(item.info.name);
+												gous.push(cinfo.name);
 												itmcont.style.background = "orange";
 											}
 											refreshlabel();
 										})
+										//callback for get*info
+										function callback(info) {
+											pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
+											nameh4.innerText = info.name;
+											cinfo = info;
+										}
+										//make the correct call
+										if (item.type == "user") {
+											getuserinfo(item.user, callback);
+										}else if (item.type == "group") {
+											getgroupinfo(item.group, callback);
+										}
 									}
 									diag.inner.appendChild(fcb)
 								})
@@ -1755,8 +1866,13 @@ function loadmainarea() {
 			
 			if (msg.sender != 0) {
 				msgm.appendChild(msgsender);
-				msgsendertxt.innerText = msg.senderuser.name;
-				msgpfp.src = msg.senderuser.picture.replace(/%SERVER%/g,currserver);
+				getuserinfo(msg.sender,(user) => {
+					msgsendertxt.innerText = user.name;
+					msgpfp.src = user.picture.replace(/%SERVER%/g,currserver);
+					msgpfp.title = user.name;
+					senderuser = user;
+				})
+
 				msgpfp.style.cursor = "pointer";
 				msgpfp.addEventListener("click",function() {
 					viewuginfo(msg.sender,"user")
@@ -1903,8 +2019,7 @@ function loadmainarea() {
 			let msg = addmsg({
 				sender:logininfo.uid,
 				content: msginput.value,
-				time: new Date(),
-				senderuser: currentuser
+				time: new Date()
 			},0);
 			
 			msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m614-310 51-51-149-149v-210h-72v240l170 170ZM480-96q-79.376 0-149.188-30Q261-156 208.5-208.5T126-330.958q-30-69.959-30-149.5Q96-560 126-630t82.5-122q52.5-52 122.458-82 69.959-30 149.5-30 79.542 0 149.548 30.24 70.007 30.24 121.792 82.08 51.786 51.84 81.994 121.92T864-480q0 79.376-30 149.188Q804-261 752-208.5T629.869-126Q559.738-96 480-96Zm0-384Zm.477 312q129.477 0 220.5-91.5T792-480.477q0-129.477-91.023-220.5T480.477-792Q351-792 259.5-700.977t-91.5 220.5Q168-351 259.5-259.5T480.477-168Z"/></svg>';
