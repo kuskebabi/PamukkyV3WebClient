@@ -1833,7 +1833,10 @@ function loadmainarea() {
 				fu.addEventListener("click",function() {
 					viewuginfo(msg.forwardedfrom, "user")
 				})
-				fu.innerText = msg.forwardedname;
+				getuserinfo(msg.forwardedfrom,function(user) {
+					fu.innerText = user.name;
+				})
+
 				/*fetch(currserver + "getuser", {body: JSON.stringify({'uid': msg.forwardedfrom}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.text().then((text) => {
