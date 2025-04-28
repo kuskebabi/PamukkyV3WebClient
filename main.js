@@ -32,6 +32,14 @@ let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","�
 let cacheduserinfo = {};
 let uidcallbacks = {};
 function getuserinfo(uid, callback) {
+	if (uid == 0) {
+		callback({
+			name: "Pamuk",
+			picture: "",
+			info: "Birb"
+		});
+		return;
+	}
 	if (cacheduserinfo.hasOwnProperty(uid)) { // Return the cached
 		callback(cacheduserinfo[uid]);
 	}else {
@@ -1144,7 +1152,8 @@ function loadmainarea() {
 						if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
 							item["lastmessage"] = {
 								time: new Date(),
-								content: "No Messages. Send one to start conversation."
+								content: "No Messages. Send one to start conversation.",
+								sender: 0
 							}
 						}
 						let id = item["chatid"] + "";
@@ -1447,9 +1456,8 @@ function loadmainarea() {
 		mchat.appendChild(mgb)
 		
 		let lastmessagekey = "";
-		let messagepage = 0;
 		let chatpage;
-		let lastmsgsender = "";
+		let lastmsgsender;
 		let lastmsgtime = new Date(0);
 		let msgscont;
 		let selectedMessages = [];
@@ -1484,6 +1492,18 @@ function loadmainarea() {
 		}
 		
 		function addmsg(msg,id) {
+			let dt = new Date(msg.time);
+			let dtt = new Date(msg.time);
+			let nowdate = new Date();
+			if (dtt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
+				lastmsgtime = new Date(msg.time);
+				addmsg({
+					sender:0,
+					content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
+					   time: dt
+				})
+				lastmsgsender = msg.sender;
+			}
 			if (msg.sender != lastmsgsender) {
 				msgscont = document.createElement("msgscont");
 				messageslist.appendChild(msgscont)
@@ -1508,11 +1528,10 @@ function loadmainarea() {
 			})
 			
 			msgc.addEventListener("contextmenu",function(event) {
-				//try {
-					if (event.target.tagName.toString().toLowerCase() == "video") return;
-					if (event.target.tagName.toString().toLowerCase() == "a") return;
-					if (event.target.tagName.toString().toLowerCase() == "img") return;
-				//}catch {}
+				let tagname = event.target.tagName.toString();
+				if (tagname.toLowerCase() == "video") return;
+				if (tagname.toLowerCase() == "a") return;
+				if (tagname.toLowerCase() == "img") return;
 				if (msg.sender != 0) {
 					let ctxdiv = document.createElement("div");
 					ctxdiv.style.position = "absolute";
@@ -1547,11 +1566,10 @@ function loadmainarea() {
 					}
 					let cnt = document.createElement("div");
 					ctxdiv.appendChild(cnt);
-					if (msg.issearch == true) {
+					if (msg.issearch == true) { // Was used in v2 area, and yes this entire logic looks like it needs a refactor
 						let gomsgbutton = document.createElement("button");
 						addRipple(gomsgbutton,"rgba(255,200,0,0.6)",true);
 						gomsgbutton.innerText = "Go To Message";
-						//copybutton.classList.add("btn","btn-warning")
 						gomsgbutton.addEventListener("click", function() {
 							init();
 							messagespage = Math.floor( (messages.indexOf(key) - 1) / messagespagesize );
@@ -1572,7 +1590,6 @@ function loadmainarea() {
 					addRipple(replybutton,"rgba(255,200,0,0.6)",true);
 					replybutton.innerText = "Reply";
 					replybutton.disabled = !crole.AllowSending;
-					//copybutton.classList.add("btn","btn-warning")
 					replybutton.addEventListener("click", function() {
 						replymsgid = id;
 						rc.style.display = "";
@@ -1592,7 +1609,6 @@ function loadmainarea() {
 					let forwardbutton = document.createElement("button");
 					addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
 					forwardbutton.innerText = "Forward Message...";
-					//copybutton.classList.add("btn","btn-warning")
 					let chatinfs = {};
 					forwardbutton.addEventListener("click", function() {
 						let diag = opendialog();
@@ -1698,16 +1714,12 @@ function loadmainarea() {
 						})
 						
 						sb.onclick = function() {
-							fchatselectsid.forEach((chtid,a) => {
-								let sa = selectedMessages;
-								if (sa.length == 0) sa = [id];
-								sa.forEach((msgg) => {
-									fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': msgg, 'tochatid': chtid}),method: 'POST'}).then((res) => {
-										
-									})
-									diag.closebtn.click();
-								})
+							let messages = selectedMessages;
+							if (messages.length == 0) messages = [id];
+							fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
+
 							})
+							diag.closebtn.click();
 						}
 						
 						
@@ -1717,40 +1729,29 @@ function loadmainarea() {
 					let selectbutton = document.createElement("button");
 					selectbutton.innerText = "Multi-Select";
 					addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
-					//copybutton.classList.add("btn","btn-warning")
 					selectbutton.addEventListener("click", function() {
 						selectmessage();
 						clik();
 					})
 					cnt.appendChild(selectbutton);
 					let savebtn = document.createElement("button");
-					savebtn.innerText = "Save This Message";
+					savebtn.innerText = "Save Message";
 					addRipple(savebtn,"rgba(255,200,0,0.6)",true);
 					savebtn.addEventListener("click", function() {
-						if (selectedMessages.length > 0) {
-							for (let i = 0; i < selectedMessages.length;i++) {
-								messageflexes[selectedMessages[i]].style.background = "transparent";
-								fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': selectedMessages[i]}),method: 'POST'}).then((res) => {
-									
-								})
-							}
-							selectedMessages = [];
-						}else {
-							fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id}),method: 'POST'}).then((res) => {
-								
-							})
-						}
+						let messages = selectedMessages;
+						if (messages.length == 0) messages = [id];
+						fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+
+						})
 						clik();
 					})
 					cnt.appendChild(savebtn);
 					let deletebutton = document.createElement("button");
 					addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
 					deletebutton.innerText = "Delete Message";
-					//deletebutton.classList.add("btn","btn-danger")
 					let copybutton = document.createElement("button");
 					addRipple(copybutton,"rgba(255,200,0,0.6)",true);
-					copybutton.innerText = "Copy Selected Text";
-					//copybutton.classList.add("btn","btn-warning")
+					copybutton.innerText = "Copy selected text";
 					copybutton.addEventListener("click", function() {
 						document.execCommand('copy');
 						clik();
@@ -1758,17 +1759,11 @@ function loadmainarea() {
 					cnt.appendChild(copybutton);
 					let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
 					deletebutton.addEventListener("click", () => {
-						if (selectedMessages.length > 0) {
-							for (let i = 0; i < selectedMessages.length;i++) {
-								messageflexes[selectedMessages[i]].style.background = "transparent";
-								fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': selectedMessages[i]}),method: 'POST'}).then((res) => {
-									
-								})
-							}
-							selectedMessages = [];
-						}else {
-							fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id}),method: 'POST'}).then((res) => {
-								
+						if (confirm("Do you really want to delete?")) {
+							let messages = selectedMessages;
+							if (messages.length == 0) messages = [id];
+							fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+
 							})
 						}
 						clik();
@@ -1808,21 +1803,7 @@ function loadmainarea() {
 			let msgpfp = document.createElement("img");
 			msgcontent.style.overflowWrap = "break-word";
 			msgcontent.innerHTML = linkify(msg.content);
-			let dt = new Date(msg.time);
-			let dtt = new Date(msg.time);
-			let nowdate = new Date();
-			//try {
-				if (dtt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
-					lastmsgtime = new Date(msg.time);
-					addmsg({
-						sender:0,
-						content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
-						time: dt
-					})
-				}
-				msgtimelbl.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-			//}catch {}
-			//console.log(msg);
+			msgtimelbl.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
 			
 			if (msg.forwardedfrom != undefined) {
 				let il = document.createElement("div");
@@ -1857,7 +1838,10 @@ function loadmainarea() {
 					
 				})
 				let replysname = document.createElement("b");
-				replysname.innerText = msg.replymsgsender;
+				getuserinfo(msg.replymsgsender,function(user) {
+					replysname.innerText = user.name;
+				})
+
 				rc.appendChild(replysname);
 				let replycnt = document.createElement("label");
 				replycnt.innerText = msg.replymsgcontent;
@@ -2040,7 +2024,7 @@ function loadmainarea() {
 						updatechat();
 					})
 				}else {
-					openloginarea();
+					msgscont.removeChild(msg.message);
 				}
 				sendingmessage = false;
 			}).catch(() => {
@@ -2062,39 +2046,26 @@ function loadmainarea() {
 		})
 		
 		let isready = true;
-		fetch(currserver + "getchatpage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'page': messagepage}),method: 'POST'}).then((res) => {
+		fetch(currserver + "getchatpage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'page': 0}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						isready = true;
 						chatpage = JSON.parse(text);
 						let mkeys = Object.keys(chatpage);
-						/*let deled = Object.keys(ocp).filter(x => !mkeys.includes(x));
-						console.log(deled);
-						deled.forEach(function(k) {
-							delete ocp[k]
-							messageflexes[k].innerHTML = "";
-						})*/
 						
-						if ((lastmessagekey == "" || mkeys.indexOf(lastmessagekey) != -1)) {
-							let sid = mkeys.indexOf(lastmessagekey) + 1;
-							for (let x = sid; x < mkeys.length; x++) {
-								let msg = chatpage[mkeys[x]];
-								msgcdatas[mkeys[x]] = addmsg(msg,mkeys[x]);
-								lastmessagekey = mkeys[x];
-								
-							}
-						}else {
-							lastmessagekey = mkeys[mkeys.length - 1]
-						}
+						mkeys.forEach(i => {
+							let msg = chatpage[i];
+							msgcdatas[i] = addmsg(msg,i);
+							lastmessagekey = i;
+						})
+
 						
 						mkeys.forEach(function(i) {
 							let msgd = msgcdatas[i];
 							
 							let reactions = chatpage[i].reactions;
 							if (reactions) {
-								let rkeys = Object.keys(reactions);
-								let news = reactions//Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
-								Object.keys(news).forEach(function(ir) {
+								Object.keys(reactions).forEach(function(ir) {
 									let react = reactions[ir];
 									let reacc = document.createElement("div");
 									reacc.style.cursor = "pointer";
@@ -2112,26 +2083,23 @@ function loadmainarea() {
 									msgd.msgreactions.appendChild(reacc);
 									
 									msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-								});
-								
-								rkeys.forEach(function(i) {
-									let rk = reactions[i];
-									let rkk = Object.keys(rk);
+
+									let rkk = Object.keys(react);
 									let doescontaincurr = false;
-									rkk.forEach(function(aa) {
-										let a = rk[aa];
+									Object.keys(react).forEach(function(aa) {
+										let a = react[aa];
 										if (a.sender == logininfo.uid) {
 											doescontaincurr = true;
 										}
 									})
-									if (doescontaincurr == true) {
-										msgd.reactions[i].container.classList.add("rcted")
-									}else {
-										msgd.reactions[i].container.classList.remove("rcted")
+
+									if (doescontaincurr) {
+										msgd.reactions[ir].container.classList.add("rcted")
 									}
-									
-									msgd.reactions[i].counter.innerText = rkk.length;
-								})
+
+									msgd.reactions[ir].counter.innerText = rkk.length;
+								});
+								
 							}	
 								
 							
@@ -2166,7 +2134,7 @@ function loadmainarea() {
 			
 			
 			
-			if (messagepage == 0 && sendingmessage == false) {
+			if (sendingmessage == false) {
 				fetch(currserver + "getupdates", {body: JSON.stringify({'token': logininfo.token, 'id': chatid}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.json().then((json) => {
@@ -2186,7 +2154,11 @@ function loadmainarea() {
 									}
 								}
 								if (val.event == "DELETED") {
-									messageflexes[i].innerHTML = "";
+									messageflexes[i].remove();
+									let index = selectedMessages.indexOf(i);
+									if (index >= 0) {
+										selectedMessages.splice(index,1);
+									}
 								}
 								if (val.event == "REACTIONS") {
 									let msgd = msgcdatas[i];
