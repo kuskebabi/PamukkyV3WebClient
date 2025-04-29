@@ -32,14 +32,6 @@ let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","�
 let cacheduserinfo = {};
 let uidcallbacks = {};
 function getuserinfo(uid, callback) {
-	if (uid == 0) {
-		callback({
-			name: "Pamuk",
-			picture: "",
-			info: "Birb"
-		});
-		return;
-	}
 	if (cacheduserinfo.hasOwnProperty(uid)) { // Return the cached
 		callback(cacheduserinfo[uid]);
 	}else {
@@ -989,7 +981,7 @@ function loadmainarea() {
 								alert(text);
 								return;
 							}
-							logininfo = info;
+							//logininfo = info;
 							alert("Password Changed!");
 						})
 					//}else {
