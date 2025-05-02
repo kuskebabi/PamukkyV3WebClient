@@ -1864,7 +1864,7 @@ function loadmainarea() {
 					a.href = i.url.replace(/%SERVER%/g,currserver);
 					a.target = "_blank";
 					let imgs = new Image();
-					imgs.src = i.url.replace(/%SERVER%/g,currserver);
+					imgs.src = i.url.replace(/%SERVER%/g,currserver) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
 					let img = document.createElement("img");
 					img.style.background = "white";
 					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
