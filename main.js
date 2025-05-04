@@ -723,7 +723,132 @@ function loadmainarea() {
 	let leftarea = document.createElement("leftarea");
 	let titlebar = document.createElement("titlebar");
 	titlebar.classList.add("grd");
-	let chatslist = document.createElement("clist");
+	let chatslist = createLazyList();
+	chatslist.element.classList.add("clist");
+	chatslist.setGetSize(function(list,index) {
+		if (index == 0) {
+			return 32;
+		}
+		return 68;
+	});
+	chatslist.setItemGenerator(function(list,index) {
+		if (index == 0) {
+			let rfb = document.createElement("button");
+			rfb.addEventListener("click",function() {
+				loadchats();
+			})
+			rfb.innerText = "Refresh"
+			return rfb;
+		}
+		if (index == list.length - 1) {
+			let fabhint = document.createElement("label");
+			fabhint.style.display = "block";
+			fabhint.innerText = "Click on the \"+\" button to add a new chat > > ";
+			return fabhint;
+		}
+		let item = list[index];
+		if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
+			item["lastmessage"] = {
+				time: new Date(),
+							   content: "No Messages. Send one to start conversation.",
+							   sender: 0
+			}
+		}
+		let id = item["chatid"] + "";
+		let itmcont = document.createElement("chatitem");
+		addRipple(itmcont,"rgba(255,200,0,0.6)");
+		chatitems[id] = itmcont;
+		let pfpimg = document.createElement("img")
+		pfpimg.loading = "lazy";
+		itmcont.appendChild(pfpimg);
+		let infocnt = document.createElement("infoarea");
+		let namecont = document.createElement("titlecont");
+		let nameh4 = document.createElement("h4");
+		namecont.appendChild(nameh4)
+		let lmt = document.createElement("time");
+		let dt = new Date(item.lastmessage.time);
+		let dtt = new Date(item.lastmessage.time);
+		let nowdate = new Date();
+		//try {
+		if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
+			lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+		}else {
+			lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+		}
+		//}catch {}
+		namecont.appendChild(lmt);
+		infocnt.appendChild(namecont);
+		let lastmsgcontent = document.createElement("label")
+		getuserinfo(item.lastmessage.sender, function(sender) {
+			lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
+		});
+
+		infocnt.appendChild(lastmsgcontent)
+		itmcont.appendChild(infocnt);
+
+		let cinfo = {};
+		itmcont.addEventListener("click",function() {
+			if (currentchatview) {
+				currentchatview.kill();
+				rightarea.removeChild(currentchatview.chat);
+			}
+			currentchatview = createchatarea(id, (item.type == "user" ? item.user : item.group));
+			currentchatid = id;
+			currentchatview.titlelabel.innerText = cinfo.name;
+			currentchatview.pfp.src = cinfo.picture.replace(/%SERVER%/g,currserver);
+			rightarea.appendChild(currentchatview.chat)
+			if (document.body.clientWidth <= 800) {
+				rightarea.style.display = "flex";
+				currentchatview.backbutton.style.display = ""
+				currentchatview.backbutton.onclick = function() {
+					rightarea.style.left = "";
+					leftarea.style.display = "";
+					requestAnimationFrame(function() {leftarea.style.opacity = "1";})
+					setTimeout(function() {
+						rightarea.style.display = "none";
+						leftarea.style.display = "";
+						currentchatview.chat.innerHTML = "";
+					},500)
+				}
+				requestAnimationFrame(function() {
+					setTimeout(function() {
+						rightarea.style.left = "0px";
+						leftarea.style.opacity = "0";
+						setTimeout(function() {
+							leftarea.style.display = "none";
+						},500)
+					},100)
+				})
+			}else {
+				currentchatview.backbutton.style.display = "none"
+				rightarea.style.display = "";
+				leftarea.style.display = "";
+			}
+			chatslist.render();
+		})
+
+		//callback for get*info
+		function callback(info) {
+			pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
+			nameh4.innerText = info.name;
+			cinfo = info;
+		}
+		//make the correct call
+		if (item.type == "user") {
+			getuserinfo(item.user, callback);
+		}else if (item.type == "group") {
+			getgroupinfo(item.group, callback);
+		}
+		if (document.body.clientWidth > 800 && currentchatid == id) {
+			itmcont.style.background = "orange"
+			itmcont.style.borderRadius = "5px 0px 0px 5px";
+			//itmcont.style.transform = "translateX(4px)";
+		}
+		return itmcont;
+	});
+	/*let clbtm = document.createElement("div");
+	clbtm.style.height = "24px";
+	chatslist.appendChild(clbtm);*/
 	//chatslist.style.paddingBottom = "24px";
 	let fab = document.createElement("button");
 	fab.classList.add("fab");
@@ -1156,149 +1281,22 @@ function loadmainarea() {
 	});
 	let currentchatid = 0;
 	function loadchats() {
-		chatslist.innerHTML = "";
-		let rfb = document.createElement("button");
-		rfb.addEventListener("click",function() {
-			loadchats();
-		})
-		rfb.innerText = "Refresh"
-		chatslist.appendChild(rfb)
-		let lsci = null;
 		fetch(currserver + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 			if (res.ok) {
 				res.text().then((text) => {
 					chats = JSON.parse(text);
-					for (let index = 0; index < chats.length; index++) {
-						let item = chats[index];
-						if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
-							item["lastmessage"] = {
-								time: new Date(),
-								content: "No Messages. Send one to start conversation.",
-								sender: 0
-							}
-						}
-						let id = item["chatid"] + "";
-						let itmcont = document.createElement("chatitem");
-						addRipple(itmcont,"rgba(255,200,0,0.6)");
-						chatitems[id] = itmcont;
-						let pfpimg = document.createElement("img")
-						pfpimg.loading = "lazy";
-						itmcont.appendChild(pfpimg);
-						let infocnt = document.createElement("infoarea");
-						let namecont = document.createElement("titlecont");
-						let nameh4 = document.createElement("h4");
-						namecont.appendChild(nameh4)
-						let lmt = document.createElement("time");
-						let dt = new Date(item.lastmessage.time);
-						let dtt = new Date(item.lastmessage.time);
-						let nowdate = new Date();
-						//try {
-							if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
-								lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-							}else {
-								lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-							}
-						//}catch {}
-						namecont.appendChild(lmt);
-						infocnt.appendChild(namecont);
-						let lastmsgcontent = document.createElement("label")
-						getuserinfo(item.lastmessage.sender, function(sender) {
-							lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
-						});
-
-						infocnt.appendChild(lastmsgcontent)
-						itmcont.appendChild(infocnt);
-						
-						chatslist.appendChild(itmcont);
-						let cinfo = {};
-						itmcont.addEventListener("click",function() {
-							if (lsci != null) {
-								lsci.style.background = ""
-								lsci.style.borderRadius = "";
-								lsci.style.transform = "";
-							}
-							if (currentchatview) {
-								currentchatview.kill();
-								rightarea.removeChild(currentchatview.chat);
-							}
-							currentchatview = createchatarea(id, (item.type == "user" ? item.user : item.group));
-							currentchatid = id;
-							currentchatview.titlelabel.innerText = cinfo.name;
-							currentchatview.pfp.src = cinfo.picture.replace(/%SERVER%/g,currserver);
-							rightarea.appendChild(currentchatview.chat)
-							if (document.body.clientWidth <= 800) {
-								rightarea.style.display = "flex";
-								currentchatview.backbutton.style.display = ""
-								currentchatview.backbutton.onclick = function() {
-									rightarea.style.left = "";
-									leftarea.style.display = "";
-									requestAnimationFrame(function() {leftarea.style.opacity = "1";})
-									setTimeout(function() {
-										rightarea.style.display = "none";
-										leftarea.style.display = "";
-										currentchatview.chat.innerHTML = "";
-									},500)
-								}
-								requestAnimationFrame(function() {
-									setTimeout(function() {
-										rightarea.style.left = "0px";
-										leftarea.style.opacity = "0";
-										setTimeout(function() {
-											leftarea.style.display = "none";
-										},500)
-									},100)
-								})
-							}else {
-								currentchatview.backbutton.style.display = "none"
-								rightarea.style.display = "";
-								leftarea.style.display = "";
-								itmcont.style.background = "orange"
-								itmcont.style.borderRadius = "5px 0px 0px 5px";
-								itmcont.style.transform = "translateX(4px)";
-							}
-							lsci = itmcont;
-						})
-
-						//callback for get*info
-						function callback(info) {
-							pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
-							nameh4.innerText = info.name;
-							cinfo = info;
-						}
-						//make the correct call
-						if (item.type == "user") {
-							getuserinfo(item.user, callback);
-						}else if (item.type == "group") {
-							getgroupinfo(item.group, callback);
-						}
-					}
-					
-					let clbtm = document.createElement("div");
-					clbtm.style.height = "24px";
-					chatslist.appendChild(clbtm);
-					let fabhint = document.createElement("label");
-					//fabhint.style.background = "var(--main-bg)";
-					//fabhint.style.position = "sticky";
-					//fabhint.style.bottom = "-4px";
-					fabhint.style.display = "block";
-					fabhint.innerText = "Click on the \"+\" button to add a new chat > > ";
-					
-					chatslist.appendChild(fabhint);
-					
-					
+					chatslist.setList([{}, ...chats, {}]);
 				})
 			}else {
 				openloginarea();
 			}
-		}).catch(() => {
-			openloginarea();
 		})
 	}
 	
 	loadchats();
 	titlebar.appendChild(profilebtn);
 	leftarea.appendChild(titlebar);
-	leftarea.appendChild(chatslist);
+	leftarea.appendChild(chatslist.element);
 	maincont.appendChild(leftarea);
 	let rightarea = document.createElement("rightarea");
 	maincont.appendChild(rightarea);
@@ -2346,4 +2344,75 @@ function humanFileSize(bytes, si=false, dp=1) {
 
   return bytes.toFixed(dp) + ' ' + units[u];
 }
+}
+
+//something i made
+function createLazyList() {
+	let list = [];
+	let listelement = document.createElement("div");
+	listelement.style.overflow = "auto";
+	let innerelement = document.createElement("div");
+	innerelement.style.position = "relative";
+	listelement.appendChild(innerelement);
+	let pos = 0;
+	listelement.addEventListener("scroll",function() {
+		pos = listelement.scrollTop;
+		render();
+	})
+
+	let itemgenerator = function(list,index) {};
+	let getsize = function(list,index) {};
+
+	let esize = 0;
+
+	function setitemgenerator(f) {
+		itemgenerator = f;
+	}
+	function setgetsize(f) {
+		getsize = f;
+	}
+	function setlist(l) {
+		list = l;
+		esize = calculateFullSize();
+		render();
+	}
+
+	function calculateFullSize() {
+		let size = 0;
+		list.forEach(function(i,idx) {
+			size += getsize(list,idx);
+		});
+		return size;
+	}
+
+	function render() {
+		innerelement.innerHTML = "";
+		innerelement.style.height = esize + "px";
+		//console.log(esize);
+		let idx = 0;
+		let size = 0;
+		while (pos >= size + getsize(list,idx)) {
+			size += getsize(list,idx);
+			idx++;
+		}
+		let offset = pos - size;
+		let visibleitemidx = 0;
+		while (pos + listelement.clientHeight >= size) {
+			let elem = itemgenerator(list,idx);
+			innerelement.appendChild(elem);
+			elem.style.position = "absolute";
+			elem.style.top = (size) + "px";
+			visibleitemidx++;
+			size += getsize(list,idx);
+			idx++;
+		}
+	}
+
+	return {
+		element:listelement,
+		setList: setlist,
+		setItemGenerator: setitemgenerator,
+		setGetSize: setgetsize,
+		render: render
+	}
 }
