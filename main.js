@@ -452,14 +452,9 @@ function loadmainarea() {
 													let usernamelbl = document.createElement("label");
 													uname.appendChild(userpfp);
 													uname.appendChild(usernamelbl);
-													fetch(currserver + "getuser", {body: JSON.stringify({'uid': user.user}),method: 'POST'}).then((res) => {
-														if (res.ok) {
-															res.text().then((text) => {
-																let uii = JSON.parse(text);
-																userpfp.src = uii.picture.replace(/%SERVER%/g,currserver);
-																usernamelbl.innerText = uii.name;
-															})
-														}
+													getuserinfo(user.user,function(uii) {
+														userpfp.src = uii.picture.replace(/%SERVER%/g,currserver);
+														usernamelbl.innerText = uii.name;
 													});
 													urow.appendChild(uname);
 													let urole = document.createElement("td");
@@ -1478,9 +1473,15 @@ function loadmainarea() {
 		mgbd.appendChild(sendbtn)
 		
 		mgb.appendChild(mgbd);
-		
+
+		let typinglabel = document.createElement("label");
+		typinglabel.classList.add("typinglabel");
+		typinglabel.innerText = "Nobody is typing";
+		mgb.appendChild(typinglabel);
+
 		mchat.appendChild(mgb)
 		
+
 		let lastmessagekey = "";
 		let chatpage;
 		let lastmsgsender;
@@ -1492,26 +1493,22 @@ function loadmainarea() {
 		let replymsgid = undefined;
 		
 		if (!isuserchat) {
-			fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+			fetch(currserver + "getgrouprole", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
-						let roles = JSON.parse(text);
-						fetch(currserver + "getgroupusers", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
-							if (res.ok) {
-								res.text().then((text) => {
-									let users = JSON.parse(text);
-									let ukeys = Object.keys(users);
-									infotxt.innerText = ukeys.length + " Members";
-									let cuser = users[logininfo.uid];
-									crole = roles[cuser.role];
-									if (crole.AllowSending == true) {
-										
-									}else {
-										mgb.style.display = "none";
-									}
-								})
-							}
-						});
+						crole = JSON.parse(text);
+						if (crole.AllowSending == true) {
+
+						}else {
+							mgb.style.display = "none";
+						}
+					})
+				}
+			});
+			fetch(currserver + "getgroupmemberscount", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					res.text().then((text) => {
+						infotxt.innerText = text + " Members";
 					})
 				}
 			});
@@ -2018,11 +2015,17 @@ function loadmainarea() {
 		let sendingmessage = false;
 		let msgcdatas = {};
 		sendbtn.disabled = true;
+		let sendtyping = true;
 		msginput.addEventListener("input",function() {
 			if (msginput.value.trim().length == 0 && fileslist.length < 1) {
 				sendbtn.disabled = true;
 			}else {
 				sendbtn.disabled = false;
+			}
+			if (sendtyping) {
+				fetch(currserver + "settyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'});
+				sendtyping = false;
+				setTimeout(function() {sendtyping = true},1000);
 			}
 		})
 		
@@ -2056,7 +2059,7 @@ function loadmainarea() {
 			}).catch(() => {
 				msgscont.removeChild(msg.message);
 				sendingmessage = false;
-			})
+			});
 			fileslist = [];
 			atc.innerHTML = "";
 			msginput.value = "";
@@ -2139,7 +2142,6 @@ function loadmainarea() {
 				}
 			})
 		function updatechat() {
-			console.log("isready", isready)
 			if (!isready) return;
 			isready = false;
 			if (isuserchat) {
@@ -2156,9 +2158,6 @@ function loadmainarea() {
 					}
 				});
 			}
-			
-			
-			
 			
 			if (sendingmessage == false) {
 				fetch(currserver + "getupdates", {body: JSON.stringify({'token': logininfo.token, 'id': chatid}),method: 'POST'}).then((res) => {
@@ -2254,6 +2253,29 @@ function loadmainarea() {
 					}else {
 						//openloginarea();
 						isready = true;
+					}
+				})
+				fetch(currserver + "gettyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
+					if (res.ok) {
+						res.json().then((json) => {
+							let index = json.indexOf(logininfo.uid);
+							if (index >= 0) {
+								json.splice(index,1);
+							}
+							if (json.length == 0) {
+								typinglabel.innerText = "Nobody is typing";
+							}else {
+								let usernameslist = [];
+								json.forEach(function(i) {
+									getuserinfo(i,function(u) {
+										usernameslist.push(u.name);
+										if (json.length == usernameslist.length) {
+											typinglabel.innerText = usernameslist.join(",") + " is typing...";
+										}
+									})
+								});
+							}
+						});
 					}
 				})
 			}else {
