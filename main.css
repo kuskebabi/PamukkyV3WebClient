@@ -307,9 +307,10 @@ msgbar > div > textarea {
 	border-radius: 100%;
 	width: 40px;
 	height: 40px;
+	background:white;
 }
 
-chatitem {
+.chatitem {
 	display:flex;
 	padding: 5px;
 	border-radius: 5px;
@@ -318,28 +319,32 @@ chatitem {
 	margin-top:4px;
 	cursor:pointer;
 	transition: background 300ms, border-radius 300ms, transform 300ms;
+	text-align: inherit;
+	font-size: inherit;
+	background:transparent;
 }
 
-chatitem:hover {
+.chatitem:hover {
 	background: rgba(0,0,0,0.2);
 }
 
-chatitem > img {
+.chatitem > img {
 	border-radius: 100%;
 	width: 40px;
 	height: 40px;
 	margin-right: 5px;
 	flex-shrink:0;
+	background:white;
 }
 
-chatitem > infoarea {
+.chatitem > infoarea {
 	display:flex;
 	flex-direction: column;
 	width:100%;
 	overflow: hidden; 
 }
 
-chatitem > infoarea > label {
+.chatitem > infoarea > label {
 	white-space:nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden; 
@@ -347,13 +352,13 @@ chatitem > infoarea > label {
 	cursor:pointer;
 }
 
-chatitem > infoarea > titlecont {
+.chatitem > infoarea > titlecont {
 	display:flex;
 	align-items: center;
 	
 }
 
-chatitem > infoarea > titlecont > h4 {
+.chatitem > infoarea > titlecont > h4 {
 	width:100%;
 	cursor:pointer;
 	white-space:nowrap;
@@ -361,7 +366,7 @@ chatitem > infoarea > titlecont > h4 {
 	min-width:0;
 }
 
-chatitem > infoarea > titlecont > time {
+.chatitem > infoarea > titlecont > time {
 	white-space: nowrap;
 	flex-shrink: 0;
 	font-size:9px;
@@ -384,6 +389,7 @@ msgcont > img {
 	height:40px;
 	border-radius: 100%;
 	margin:4px;
+	background:white;
 }
 
 msgmain {
@@ -560,6 +566,7 @@ filed > div > label {
 .typinglabel {
 	font-size: 9px;
 	padding: 2px;
+	transition: opacity 0.5s;
 }
 
 @keyframes msgapear {
@@ -653,7 +660,7 @@ flex {
 	centeredPopup.docked {
 		background-color: #262626;
 	}
-	chatitem:hover {
+	.chatitem:hover {
 		background: rgba(255,255,255,0.2);
 	}
 	.transparentbtn:hover {
@@ -671,7 +678,7 @@ flex {
 	.contextmenu {
 		transition: none;
 	}
-	chatitem {
+	.chatitem {
 		transition: none;
 	}
 	button {
@@ -679,6 +686,9 @@ flex {
 	}
 	centeredPopup, msgbuble, body, html, main {
 		animation:none !important;
+	}
+	.infolabel {
+		transition: none;
 	}
 }
 

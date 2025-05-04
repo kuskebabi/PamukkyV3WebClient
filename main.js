@@ -19,12 +19,10 @@ function linkify(inputText) {
 
 	return replacedText;
 }
-
+let currserver = "";
 
 function loaded() {setTimeout(init,1000);}
 function init() {
-
-let currserver = "";
 let logininfo = {};
 let currentuser = {};
 let chats = []
@@ -296,7 +294,7 @@ function loadmainarea() {
 						pfpimge.classList.add("circleimg");
 						pfpimge.style.width = "80px";
 						pfpimge.style.height = "80px";
-						pfpimge.src = infod.picture.replace(/%SERVER%/g,currserver);
+						pfpimge.src = getpfp(infod.picture);
 						diag.inner.appendChild(pfpimge);
 						
 						let infotable = document.createElement("table");
@@ -346,7 +344,7 @@ function loadmainarea() {
 						pfpimge.style.height = "80px";
 						pfpimge.style.cursor = "pointer";
 						pfpimge.title = "Click to upload";
-						pfpimge.src = infod.picture.replace(/%SERVER%/g,currserver);
+						pfpimge.src = getpfp(infod.picture,"group.svg");
 						pfpimge.addEventListener("click",function () {f.click();})
 						diag.inner.appendChild(pfpimge);
 						
@@ -378,141 +376,160 @@ function loadmainarea() {
 						infotable.appendChild(desrow);
 						diag.inner.appendChild(infotable);
 						
-						let userstable = document.createElement("table");
-						
-						diag.inner.appendChild(userstable);
 						let roles = {};
-						fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+						let crole = {};
+						fetch(currserver + "getgrouprole", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								res.text().then((text) => {
-									roles = JSON.parse(text);
-									let rokeys = Object.keys(roles);
-									fetch(currserver + "getgroupusers", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
-										if (res.ok) {
-											res.text().then((text) => {
-												let users = JSON.parse(text);
-												let ukeys = Object.keys(users);
-												let cuser = users[logininfo.uid];
-												let crole = roles[cuser.role];
-												if (crole.AllowEditingSettings == true) {
-													let editrolesbtn = document.createElement("button");
-													editrolesbtn.innerText = "Edit Roles";
-													diag.inner.appendChild(editrolesbtn);
-													editrolesbtn.addEventListener("click",function() {
-														let diaga = opendialog();
-														diaga.title.innerText = "Edit Roles";
-														diaga.inner.style.display = "flex";
-														diaga.inner.style.flexDirection = "column";
-														diaga.inner.style.alignItems = "center";
-														
-														rokeys.forEach(function(a) {
-															let x = a;
-															let role = roles[a];
-															let rt = document.createElement("h4");
-															rt.innerText = a;
-															diaga.inner.appendChild(rt);
-															let kcont = document.createElement("div");
-															kcont.style.width = "100%";
-															let rkeys = Object.keys(role);
-															rkeys.forEach(function(aa) {
-																let a = aa;
-																let i = role[aa];
-																if (aa != "AdminOrder") {
-																	let ccont = document.createElement("div");
-																	ccont.style.display = "flex";
-																	let pcb = document.createElement("input");
-																	pcb.type = "checkbox";
-																	pcb.checked = i;
-																	let pl = document.createElement("label");
-																	pl.innerText = aa;
-																	pl.for = pcb;
-																	pcb.addEventListener("change",function() {
-																		i = pcb.checked;
-																		role[a] = i;
-																		roles[x] = role;
-																	})
-																	ccont.appendChild(pcb);
-																	ccont.appendChild(pl);
-																	diaga.inner.appendChild(ccont);
-																}
-															})
-															diaga.inner.appendChild(kcont);
-														});
-													})
-												}
-												ukeys.forEach(function (e) {
-													let user = users[e];
-													let urow = document.createElement("tr");
-													let uname = document.createElement("td");
-													uname.style.display = "flex";
-													uname.style.alignItems = "center";
-													let userpfp = document.createElement("img");
-													userpfp.classList.add("circleimg");
-													userpfp.loading = "lazy";
-													let usernamelbl = document.createElement("label");
-													uname.appendChild(userpfp);
-													uname.appendChild(usernamelbl);
-													getuserinfo(user.user,function(uii) {
-														userpfp.src = uii.picture.replace(/%SERVER%/g,currserver);
-														usernamelbl.innerText = uii.name;
-													});
-													urow.appendChild(uname);
-													let urole = document.createElement("td");
-													if (!crole.AllowEditingUsers) {
-														urole.innerText = user.role;
-													}else {
-														let ri = document.createElement("select");
-														rokeys.forEach(function(i) {
-															let opt = document.createElement("option");
-															opt.value = i;
-															opt.innerText = i;
-															ri.appendChild(opt);
+									crole = JSON.parse(text);
+									if (crole.AllowEditingSettings == true) {
+										let editrolesbtn = document.createElement("button");
+										editrolesbtn.innerText = "Edit Roles";
+										diag.inner.appendChild(editrolesbtn);
+										editrolesbtn.addEventListener("click",function() {
+											let diaga = opendialog();
+											diaga.title.innerText = "Edit Roles";
+											diaga.inner.style.display = "flex";
+											diaga.inner.style.flexDirection = "column";
+											diaga.inner.style.alignItems = "center";
+
+											rokeys.forEach(function(a) {
+												let x = a;
+												let role = roles[a];
+												let rt = document.createElement("h4");
+												rt.innerText = a;
+												diaga.inner.appendChild(rt);
+												let kcont = document.createElement("div");
+												kcont.style.width = "100%";
+												let rkeys = Object.keys(role);
+												rkeys.forEach(function(aa) {
+													let a = aa;
+													let i = role[aa];
+													if (aa != "AdminOrder") {
+														let ccont = document.createElement("div");
+														ccont.style.display = "flex";
+														let pcb = document.createElement("input");
+														pcb.type = "checkbox";
+														pcb.checked = i;
+														let pl = document.createElement("label");
+														pl.innerText = aa;
+														pl.for = pcb;
+														pcb.addEventListener("change",function() {
+															i = pcb.checked;
+															role[a] = i;
+															roles[x] = role;
 														})
-														ri.value = user.role;
-														ri.addEventListener("change",function() {
-															//alert("wait..")
-															fetch(currserver + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'userid': user.user, 'role': ri.value }),method: 'POST'}).then((res) => {
-																if (res.ok) {
-																	res.text().then((text) => {
-
-																	})
-																}else {
-																	
-																}
-															})
-														});
-														urole.appendChild(ri);
+														ccont.appendChild(pcb);
+														ccont.appendChild(pl);
+														diaga.inner.appendChild(ccont);
 													}
-													urow.appendChild(urole);
-													if (crole.AllowKicking || crole.AllowBanning) {
-														let uacts = document.createElement("td");
-														if (crole.AllowKicking) {
-															let kickbtn = document.createElement("button");
-															kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
-															kickbtn.addEventListener("click",function() {
-																if (confirm("Do you really want to kick this user?")) {
-																	fetch(currserver + "kickuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user.user}),method: 'POST'}).then((res) => {
-																		if (res.ok) {
-																			urow.remove();
-																		}else {
-
-																		}
-																	})
-																}
-															})
-															uacts.appendChild(kickbtn);
-														}
-														urow.appendChild(uacts);
-													}
-
-													userstable.appendChild(urow);
 												})
+												diaga.inner.appendChild(kcont);
 											});
-										}
-									});
-								});
+										})
+									}
+								})
 							}
 						});
+						let membersbtn = document.createElement("button");
+						membersbtn.innerText = "Members";
+						membersbtn.addEventListener("click",function() {
+							let users = {};
+							let rokeys = {};
+							let diag = opendialog();
+							diag.title.innerText = "Members";
+							let userstable = createLazyList("table");
+							userstable.setItemGenerator(function(ukeys,e) {
+								let user = users[ukeys[e]];
+								if (user == undefined) return;
+								let urow = document.createElement("tr");
+								urow.style.width = "100%";
+								let uname = document.createElement("td");
+								uname.style.display = "flex";
+								uname.style.alignItems = "center";
+								let userpfp = document.createElement("img");
+								userpfp.classList.add("circleimg");
+								userpfp.loading = "lazy";
+								let usernamelbl = document.createElement("label");
+								uname.appendChild(userpfp);
+								uname.appendChild(usernamelbl);
+								getuserinfo(user.user,function(uii) {
+									userpfp.src = getpfp(uii.picture);
+									usernamelbl.innerText = uii.name;
+								});
+								urow.appendChild(uname);
+								let urole = document.createElement("td");
+								if (!crole.AllowEditingUsers) {
+									urole.innerText = user.role;
+								}else {
+									let ri = document.createElement("select");
+									rokeys.forEach(function(i) {
+										let opt = document.createElement("option");
+										opt.value = i;
+										opt.innerText = i;
+										ri.appendChild(opt);
+									})
+									ri.value = user.role;
+									ri.addEventListener("change",function() {
+										//alert("wait..")
+										fetch(currserver + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'userid': user.user, 'role': ri.value }),method: 'POST'}).then((res) => {
+											if (res.ok) {
+												res.text().then((text) => {
+
+												})
+											}else {
+
+											}
+										})
+									});
+									urole.appendChild(ri);
+								}
+								urow.appendChild(urole);
+								if (crole.AllowKicking || crole.AllowBanning) {
+									let uacts = document.createElement("td");
+									if (crole.AllowKicking) {
+										let kickbtn = document.createElement("button");
+										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
+										kickbtn.addEventListener("click",function() {
+											if (confirm("Do you really want to kick this user?")) {
+												fetch(currserver + "kickuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user.user}),method: 'POST'}).then((res) => {
+													if (res.ok) {
+														urow.remove();
+													}else {
+
+													}
+												})
+											}
+										})
+										uacts.appendChild(kickbtn);
+									}
+									urow.appendChild(uacts);
+								}
+								return urow;
+							});
+							userstable.setGetSize(function(list,idx) {return 52});
+							diag.inner.appendChild(userstable.element);
+							fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+								if (res.ok) {
+									res.text().then((text) => {
+										roles = JSON.parse(text);
+										rokeys = Object.keys(roles);
+										fetch(currserver + "getgroupusers", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+											if (res.ok) {
+												res.text().then((text) => {
+													users = JSON.parse(text);
+													let ukeys = Object.keys(users);
+													let cuser = users[logininfo.uid];
+													crole = roles[cuser.role];
+													userstable.setList(ukeys);
+												});
+											}
+										});
+									});
+								}
+							});
+						})
+						diag.inner.appendChild(membersbtn);
 						
 						let savebtn = document.createElement("button");
 						savebtn.innerText = "Save";
@@ -597,6 +614,7 @@ function loadmainarea() {
 		})
 		
 		let dialoginside = document.createElement("centeredPopup");
+		dialoginside.tabIndex = "0";
 		dialoginside.style.maxHeight = "100%";
 		dialoginside.style.overflow = "auto";
 		let tflex = document.createElement("div");
@@ -620,6 +638,12 @@ function loadmainarea() {
 				document.body.removeChild(bgcover);
 				
 			}
+		})
+		dialoginside.addEventListener("keydown",function(e) {
+			if (e.key == "Escape") {
+				closebtn.click();
+			}
+			console.log(e.key)
 		})
 		let isatdock = false;
 		
@@ -659,6 +683,8 @@ function loadmainarea() {
 		bgcover.appendChild(dialoginside);
 		
 		document.body.appendChild(bgcover);
+
+		dialoginside.focus();
 		
 		return {
 			bgcover: bgcover,
@@ -729,7 +755,10 @@ function loadmainarea() {
 		if (index == 0) {
 			return 32;
 		}
-		return 68;
+		if (document.body.clientWidth >= 1900) {
+			return 68;
+		}
+		return 54;
 	});
 	chatslist.setItemGenerator(function(list,index) {
 		if (index == 0) {
@@ -747,6 +776,7 @@ function loadmainarea() {
 			return fabhint;
 		}
 		let item = list[index];
+		if (item == undefined) return;
 		if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
 			item["lastmessage"] = {
 				time: new Date(),
@@ -755,7 +785,8 @@ function loadmainarea() {
 			}
 		}
 		let id = item["chatid"] + "";
-		let itmcont = document.createElement("chatitem");
+		let itmcont = document.createElement("button");
+		itmcont.classList.add("chatitem");
 		addRipple(itmcont,"rgba(255,200,0,0.6)");
 		chatitems[id] = itmcont;
 		let pfpimg = document.createElement("img")
@@ -829,7 +860,7 @@ function loadmainarea() {
 
 		//callback for get*info
 		function callback(info) {
-			pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
+			pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
 			nameh4.innerText = info.name;
 			cinfo = info;
 		}
@@ -839,10 +870,11 @@ function loadmainarea() {
 		}else if (item.type == "group") {
 			getgroupinfo(item.group, callback);
 		}
+
 		if (document.body.clientWidth > 800 && currentchatid == id) {
 			itmcont.style.background = "orange"
 			itmcont.style.borderRadius = "5px 0px 0px 5px";
-			//itmcont.style.transform = "translateX(4px)";
+			itmcont.style.transform = "translateX(4px)";
 		}
 		return itmcont;
 	});
@@ -1044,7 +1076,7 @@ function loadmainarea() {
 		pfpimge.style.height = "80px";
 		pfpimge.style.cursor = "pointer";
 		pfpimge.title = "Click to upload";
-		pfpimge.src = currentuser.picture.replace(/%SERVER%/g,currserver);
+		pfpimge.src = getpfp(currentuser.picture);
 		pfpimge.addEventListener("click",function () {f.click();})
 		diag.inner.appendChild(pfpimge);
 		
@@ -1475,6 +1507,7 @@ function loadmainarea() {
 		let typinglabel = document.createElement("label");
 		typinglabel.classList.add("typinglabel");
 		typinglabel.innerText = "Nobody is typing";
+		typinglabel.style.opacity = "0";
 		mgb.appendChild(typinglabel);
 
 		mchat.appendChild(mgb)
@@ -1658,81 +1691,93 @@ function loadmainarea() {
 							})
 							cst.innerText = text;
 						}
+						let chatslist = createLazyList();
+						chatslist.element.classList.add("clist");
+						chatslist.setGetSize(function(list,index) {
+							if (document.body.clientWidth >= 1900) {
+								return 68;
+							}
+							return 54;
+						});
+						chatslist.setItemGenerator(function(list,index) {
+							let item = list[index];
+							if (item == undefined) return;
+							if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
+								item["lastmessage"] = {
+									time: new Date(),
+									content: "No Messages. Send one to start conversation.",
+									sender: "0"
+								}
+							}
+							let itmcont = document.createElement("button");
+							itmcont.classList.add("chatitem");
+							addRipple(itmcont,"rgba(255,200,0,0.6)");
+							let pfpimg = document.createElement("img")
+							itmcont.appendChild(pfpimg);
+							let infocnt = document.createElement("infoarea");
+							let namecont = document.createElement("titlecont");
+							let nameh4 = document.createElement("h4");
+							namecont.appendChild(nameh4)
+							let lmt = document.createElement("time");
+							let dt = new Date(item.lastmessage.time);
+							let dtt = new Date(item.lastmessage.time);
+							let nowdate = new Date();
+							//try {
+							if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
+								lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+							}else {
+								lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+							}
+							//}catch {}
+							namecont.appendChild(lmt);
+							infocnt.appendChild(namecont);
+							let lastmsgcontent = document.createElement("label")
+							getuserinfo(item.lastmessage.sender, function(sender) {
+								lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
+							});
+							infocnt.appendChild(lastmsgcontent)
+							itmcont.appendChild(infocnt);
+							let cinfo = {};
+							let id = item["chatid"] + "";
+							itmcont.addEventListener("click",function() {
+								if (fchatselectsid.includes(id)) {
+									gous.splice(fchatselectsid.indexOf(id),1);
+									fchatselectsid.splice(fchatselectsid.indexOf(id),1);
+								}else {
+									fchatselectsid.push(id);
+									gous.push(cinfo.name);
+								}
+								refreshlabel();
+								chatslist.render();
+							})
+							//callback for get*info
+							function callback(info) {
+								pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
+								nameh4.innerText = info.name;
+								cinfo = info;
+							}
+							//make the correct call
+							if (item.type == "user") {
+								getuserinfo(item.user, callback);
+							}else if (item.type == "group") {
+								getgroupinfo(item.group, callback);
+							}
+
+							if (fchatselectsid.includes(id)) {
+								itmcont.style.background = "orange";
+							}
+							return itmcont;
+						});
 						fetch(currserver + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								res.text().then((text) => {
 									chats = JSON.parse(text);
-									for (let index = 0; index < chats.length; index++) {
-										let item = chats[index];
-										if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
-											item["lastmessage"] = {
-												time: new Date(),
-												content: "No Messages. Send one to start conversation."
-											}
-										}
-										let itmcont = document.createElement("chatitem");
-										addRipple(itmcont,"rgba(255,200,0,0.6)");
-										let pfpimg = document.createElement("img")
-										itmcont.appendChild(pfpimg);
-										let infocnt = document.createElement("infoarea");
-										let namecont = document.createElement("titlecont");
-										let nameh4 = document.createElement("h4");
-										namecont.appendChild(nameh4)
-										let lmt = document.createElement("time");
-										let dt = new Date(item.lastmessage.time);
-										let dtt = new Date(item.lastmessage.time);
-										let nowdate = new Date();
-										//try {
-											if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
-												lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-											}else {
-												lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-											}
-										//}catch {}
-										namecont.appendChild(lmt);
-										infocnt.appendChild(namecont);
-										let lastmsgcontent = document.createElement("label")
-										getuserinfo(item.lastmessage.sender, function(sender) {
-											lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
-										});
-										infocnt.appendChild(lastmsgcontent)
-										itmcont.appendChild(infocnt);
-										let cinfo = {};
-										diag.inner.appendChild(itmcont);
-										let id = item["chatid"] + "";
-										itmcont.addEventListener("click",function() {
-											if (fchatselectsid.includes(id)) {
-												gous.splice(fchatselectsid.indexOf(id),1);
-												fchatselectsid.splice(fchatselectsid.indexOf(id),1);
-												itmcont.style.background = "";
-											}else {
-												fchatselectsid.push(id);
-												gous.push(cinfo.name);
-												itmcont.style.background = "orange";
-											}
-											refreshlabel();
-										})
-										//callback for get*info
-										function callback(info) {
-											pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
-											nameh4.innerText = info.name;
-											cinfo = info;
-										}
-										//make the correct call
-										if (item.type == "user") {
-											getuserinfo(item.user, callback);
-										}else if (item.type == "group") {
-											getgroupinfo(item.group, callback);
-										}
-									}
-									diag.inner.appendChild(fcb)
+									chatslist.setList(chats);
 								})
-							}else {
-								openloginarea();
 							}
-						}).catch(() => {
-							openloginarea();
 						})
+						diag.inner.appendChild(chatslist.element)
+						diag.inner.appendChild(fcb)
 						
 						sb.onclick = function() {
 							let messages = selectedMessages;
@@ -1770,15 +1815,6 @@ function loadmainarea() {
 					let deletebutton = document.createElement("button");
 					addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
 					deletebutton.innerText = "Delete Message";
-					let copybutton = document.createElement("button");
-					addRipple(copybutton,"rgba(255,200,0,0.6)",true);
-					copybutton.innerText = "Copy selected text";
-					copybutton.addEventListener("click", function() {
-						document.execCommand('copy');
-						clik();
-					})
-					cnt.appendChild(copybutton);
-					let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
 					deletebutton.addEventListener("click", () => {
 						if (confirm("Do you really want to delete?")) {
 							let messages = selectedMessages;
@@ -1789,6 +1825,15 @@ function loadmainarea() {
 						}
 						clik();
 					})
+					let copybutton = document.createElement("button");
+					addRipple(copybutton,"rgba(255,200,0,0.6)",true);
+					copybutton.innerText = "Copy selected text";
+					copybutton.addEventListener("click", function() {
+						document.execCommand('copy');
+						clik();
+					})
+					cnt.appendChild(copybutton);
+					let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
 					if (selectedMessages.length > 0) {
 						deletebutton.disabled = false;
 					}else {
@@ -1803,7 +1848,7 @@ function loadmainarea() {
 					document.body.addEventListener("click",clik)
 					setTimeout(function() {
 						document.body.addEventListener("contextmenu",clik)
-					},100)
+					},0)
 					if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
 						ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
 					}
@@ -1838,16 +1883,6 @@ function loadmainarea() {
 				getuserinfo(msg.forwardedfrom,function(user) {
 					fu.innerText = user.name;
 				})
-
-				/*fetch(currserver + "getuser", {body: JSON.stringify({'uid': msg.forwardedfrom}),method: 'POST'}).then((res) => {
-					if (res.ok) {
-						res.text().then((text) => {
-							let uii = JSON.parse(text);
-							//serpfp.src = uii.picture.replace(/%SERVER%/g,currserver);
-							fu.innerText = uii.name;
-						})
-					}
-				});*/
 				il.appendChild(fu);
 				msgbuble.appendChild(il);
 			}
@@ -1876,7 +1911,7 @@ function loadmainarea() {
 				msgm.appendChild(msgsender);
 				getuserinfo(msg.sender,(user) => {
 					msgsendertxt.innerText = user.name;
-					msgpfp.src = user.picture.replace(/%SERVER%/g,currserver);
+					msgpfp.src = getpfp(user.picture);
 					msgpfp.title = user.name;
 					senderuser = user;
 				})
@@ -2262,6 +2297,7 @@ function loadmainarea() {
 							}
 							if (json.length == 0) {
 								typinglabel.innerText = "Nobody is typing";
+								typinglabel.style.opacity = "0";
 							}else {
 								let usernameslist = [];
 								json.forEach(function(i) {
@@ -2269,6 +2305,7 @@ function loadmainarea() {
 										usernameslist.push(u.name);
 										if (json.length == usernameslist.length) {
 											typinglabel.innerText = usernameslist.join(",") + " is typing...";
+											typinglabel.style.opacity = "";
 										}
 									})
 								});
@@ -2347,12 +2384,12 @@ function humanFileSize(bytes, si=false, dp=1) {
 }
 
 //something i made
-function createLazyList() {
+function createLazyList(innertype = "div") {
 	let list = [];
 	let listelement = document.createElement("div");
 	listelement.style.overflow = "auto";
-	let innerelement = document.createElement("div");
-	innerelement.style.position = "relative";
+	let innerelement = document.createElement(innertype);
+	innerelement.style.width = "100%";
 	listelement.appendChild(innerelement);
 	let pos = 0;
 	listelement.addEventListener("scroll",function() {
@@ -2388,6 +2425,7 @@ function createLazyList() {
 	function render() {
 		innerelement.innerHTML = "";
 		innerelement.style.height = esize + "px";
+		innerelement.style.overflow = "hidden";
 		//console.log(esize);
 		let idx = 0;
 		let size = 0;
@@ -2399,9 +2437,11 @@ function createLazyList() {
 		let visibleitemidx = 0;
 		while (pos + listelement.clientHeight >= size) {
 			let elem = itemgenerator(list,idx);
-			innerelement.appendChild(elem);
-			elem.style.position = "absolute";
-			elem.style.top = (size) + "px";
+			if (elem) {
+				innerelement.appendChild(elem);
+				if (visibleitemidx == 0) elem.style.marginTop = size + "px";
+				//elem.style.top = (size) + "px";
+			}
 			visibleitemidx++;
 			size += getsize(list,idx);
 			idx++;
@@ -2414,5 +2454,13 @@ function createLazyList() {
 		setItemGenerator: setitemgenerator,
 		setGetSize: setgetsize,
 		render: render
+	}
+}
+
+function getpfp(url,fallback = "person.svg") {
+	if (url.trim() == "") {
+		return fallback;
+	}else {
+		return url.replace(/%SERVER%/g,currserver);
 	}
 }
