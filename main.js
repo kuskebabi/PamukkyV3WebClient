@@ -437,8 +437,10 @@ function loadmainarea() {
 							let users = {};
 							let rokeys = {};
 							let diag = opendialog();
+							diag.inner.style.overflow = "hidden";
 							diag.title.innerText = "Members";
 							let userstable = createLazyList("table");
+							userstable.element.style.height = "100%";
 							userstable.setItemGenerator(function(ukeys,e) {
 								let user = users[ukeys[e]];
 								if (user == undefined) return;
@@ -598,8 +600,8 @@ function loadmainarea() {
 	function opendialog() {
 		let bgcover = document.createElement("div");
 		bgcover.style.background = "rgba(0,0,0,0.3)";
-		bgcover.style.width = "100%";
-		bgcover.style.height = "100%";
+		bgcover.style.right = "0";
+		bgcover.style.bottom = "0";
 		bgcover.style.top = "0";
 		bgcover.style.left = "0";
 		bgcover.style.display = "flex";
@@ -615,11 +617,12 @@ function loadmainarea() {
 		
 		let dialoginside = document.createElement("centeredPopup");
 		dialoginside.tabIndex = "0";
-		dialoginside.style.maxHeight = "100%";
-		dialoginside.style.overflow = "auto";
+		dialoginside.style.display = "flex";
+		dialoginside.style.flexDirection = "column";
 		let tflex = document.createElement("div");
 		tflex.style.display = "flex";
 		tflex.style.alignItems = "center";
+		tflex.style.flexShrink = "0";
 		let titlelbl = document.createElement("h4");
 		titlelbl.innerText = "Dialog";
 		titlelbl.style.marginRight = "auto";
@@ -677,7 +680,7 @@ function loadmainarea() {
 		let innercont = document.createElement("div");
 		innercont.style.overflow = "auto";
 		innercont.style.minWidth = "100%";
-		innercont.style.maxHeight = (document.body.clientHeight * 0.7) + "px";
+		innercont.style.maxHeight = "100%";
 		dialoginside.appendChild(innercont);
 		
 		bgcover.appendChild(dialoginside);
@@ -705,14 +708,11 @@ function loadmainarea() {
 		}
 		fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 			if (!res.ok) {
+				clearTimeout(ttimer);
 				openloginarea();
 			}
 		})
 		fetch(currserver + "getnotifications", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
-			if (!res.ok) {
-				openloginarea();
-				return;
-			}
 			res.json().then((nots) => {
 				let list = Object.keys(nots);
 				list.forEach(function(i) {
@@ -758,7 +758,7 @@ function loadmainarea() {
 		if (document.body.clientWidth >= 1900) {
 			return 68;
 		}
-		return 54;
+		return 58;
 	});
 	chatslist.setItemGenerator(function(list,index) {
 		if (index == 0) {
@@ -1220,8 +1220,12 @@ function loadmainarea() {
 		let lout = document.createElement("button");
 		lout.innerText = "Logout";
 		lout.addEventListener("click",function() {
-			localStorage.setItem("logininfo", null);
-			location.reload();
+			fetch(currserver + "logout", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					localStorage.setItem("logininfo", null);
+					location.reload();
+				}
+			});
 		})
 		diag.inner.appendChild(lout);
 		
@@ -1666,20 +1670,19 @@ function loadmainarea() {
 					let chatinfs = {};
 					forwardbutton.addEventListener("click", function() {
 						let diag = opendialog();
-						if (document.body.clientWidth <= 800) {
-							diag.dialog.style.width = "40%";
-						}
-						let fcb = document.createElement("bbar");
-						fcb.style.minHeight = "30px";
+						diag.title.innerText = "Forward";
+						diag.inner.style.overflow = "hidden";
+						//diag.inner.style.height = "calc(100% - 68px)";
+						diag.inner.style.display = "flex";
+						diag.inner.style.flexDirection = "column";
+						let fcb = document.createElement("div");
+						fcb.classList.add("bbar");
 						let cst = document.createElement("label");
 						cst.style.overflowWrap = "anywhere";
-						cst.style.maxWidth = "calc(100%-30px)";
-						cst.style.paddingRight = "30px";
+						cst.style.width = "100%";
 						fcb.appendChild(cst);
 						let sb = document.createElement("button");
 						sb.classList.add("cb");
-						sb.style.position = "absolute";
-						sb.style.right = "0";
 						sb.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
 						fcb.appendChild(sb);
 						let fchatselectsid = [];
@@ -1697,7 +1700,7 @@ function loadmainarea() {
 							if (document.body.clientWidth >= 1900) {
 								return 68;
 							}
-							return 54;
+							return 58;
 						});
 						chatslist.setItemGenerator(function(list,index) {
 							let item = list[index];
@@ -1944,7 +1947,7 @@ function loadmainarea() {
 					imgs.onload = function() {
 						img.src = imgs.src;
 						img.onclick = function() {
-							imageView(imgs.src);
+							imageView(i.url.replace(/%SERVER%/g,currserver));
 						}
 					}
 					img.style.width = img.style.height = Math.max(240 / msg.gImages.length,64) + "px";
@@ -1957,8 +1960,8 @@ function loadmainarea() {
 				msg.gVideos.forEach(function(i) {
 					
 					let vid = document.createElement("video");
-					vid.muted = true;
-					vid.autoplay = true;
+					//vid.muted = true;
+					//vid.autoplay = true;
 					vid.controls = true;
 					vid.src = i.url.replace(/%SERVER%/g,currserver); 
 					vid.style.aspectRatio = "16/9";

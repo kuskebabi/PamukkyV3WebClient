@@ -72,9 +72,8 @@ select:hover {
 centeredPopup {
 	display:block;
 	min-width: 300px;
-	/*min-height: 200px;*/
-	max-width: 80%;
-	max-height: 800%;
+	max-width: 100%;
+	max-height: 100%;
 	background-color: #dbdbdb;
 	border-radius: 8px;
 	padding:8px;
@@ -93,7 +92,7 @@ centeredPopup.docked {
 }
 
 centeredPopup > div > * {
-	flex-shrink:0;
+	/*flex-shrink:0;*/
 }
 
 h1,h2,h3,h4,h5 {
@@ -180,11 +179,11 @@ msgscont {
 	flex-direction: column;
 }
 
-bbar {
+.bbar {
 	display:flex;
+	flex-shrink:0;
+	min-height:30;
 	align-items:center;
-	bottom:0;
-	position:sticky;
 	background: #dbdbdb;
 }
 
@@ -641,7 +640,7 @@ flex {
 		background: rgb(20,20,20);
 	}
 	
-	centeredPopup,leftarea,bbar {
+	centeredPopup,leftarea,.bbar {
 		background-color: #171717;
 	}
 	titlebar, msgbar {
