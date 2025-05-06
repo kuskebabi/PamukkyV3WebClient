@@ -438,6 +438,8 @@ function loadmainarea() {
 							let rokeys = {};
 							let diag = opendialog();
 							diag.inner.style.overflow = "hidden";
+							diag.inner.style.display = "flex";
+							diag.inner.style.flexDirection = "column";
 							diag.title.innerText = "Members";
 							let userstable = createLazyList("table");
 							userstable.element.style.height = "100%";
@@ -680,7 +682,8 @@ function loadmainarea() {
 		let innercont = document.createElement("div");
 		innercont.style.overflow = "auto";
 		innercont.style.minWidth = "100%";
-		innercont.style.maxHeight = "100%";
+		//innercont.style.maxHeight = "100%";
+		innercont.style.flexGrow = "1";
 		dialoginside.appendChild(innercont);
 		
 		bgcover.appendChild(dialoginside);
@@ -1687,12 +1690,8 @@ function loadmainarea() {
 						fcb.appendChild(sb);
 						let fchatselectsid = [];
 						let gous = [];
-						function refreshlabel() {	
-							let text = "";
-							gous.forEach(function(i,id) {
-								text += i + (id > gous.length-2 ? "" : ", ");
-							})
-							cst.innerText = text;
+						function refreshlabel() {
+							cst.innerText = gous.join(", ");
 						}
 						let chatslist = createLazyList();
 						chatslist.element.classList.add("clist");
@@ -1976,6 +1975,7 @@ function loadmainarea() {
 					let a = document.createElement("a");
 					a.style.position = "relative";
 					a.download = i.name;
+					a.target = "_blank";
 					a.href = i.url.replace(/%SERVER%/g,currserver);
 					//a.target = "_blank";
 					let fd = document.createElement("filed");
@@ -2392,6 +2392,7 @@ function createLazyList(innertype = "div") {
 	let listelement = document.createElement("div");
 	listelement.style.overflow = "auto";
 	let innerelement = document.createElement(innertype);
+	innerelement.style.overflow = "hidden";
 	innerelement.style.width = "100%";
 	listelement.appendChild(innerelement);
 	let pos = 0;
@@ -2428,7 +2429,6 @@ function createLazyList(innertype = "div") {
 	function render() {
 		innerelement.innerHTML = "";
 		innerelement.style.height = esize + "px";
-		innerelement.style.overflow = "hidden";
 		//console.log(esize);
 		let idx = 0;
 		let size = 0;
