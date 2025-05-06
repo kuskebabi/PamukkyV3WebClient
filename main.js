@@ -385,7 +385,6 @@ function loadmainarea() {
 									if (crole.AllowEditingSettings == true) {
 										let editrolesbtn = document.createElement("button");
 										editrolesbtn.innerText = "Edit Roles";
-										diag.inner.appendChild(editrolesbtn);
 										editrolesbtn.addEventListener("click",function() {
 											let diaga = opendialog();
 											diaga.title.innerText = "Edit Roles";
@@ -393,42 +392,60 @@ function loadmainarea() {
 											diaga.inner.style.flexDirection = "column";
 											diaga.inner.style.alignItems = "center";
 
-											rokeys.forEach(function(a) {
-												let x = a;
-												let role = roles[a];
-												let rt = document.createElement("h4");
-												rt.innerText = a;
-												diaga.inner.appendChild(rt);
-												let kcont = document.createElement("div");
-												kcont.style.width = "100%";
-												let rkeys = Object.keys(role);
-												rkeys.forEach(function(aa) {
-													let a = aa;
-													let i = role[aa];
-													if (aa != "AdminOrder") {
-														let ccont = document.createElement("div");
-														ccont.style.display = "flex";
-														let pcb = document.createElement("input");
-														pcb.type = "checkbox";
-														pcb.checked = i;
-														let pl = document.createElement("label");
-														pl.innerText = aa;
-														pl.for = pcb;
-														pcb.addEventListener("change",function() {
-															i = pcb.checked;
-															role[a] = i;
-															roles[x] = role;
-														})
-														ccont.appendChild(pcb);
-														ccont.appendChild(pl);
-														diaga.inner.appendChild(ccont);
-													}
-												})
-												diaga.inner.appendChild(kcont);
+											fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+												if (res.ok) {
+													res.text().then((text) => {
+														roles = JSON.parse(text);
+														rokeys = Object.keys(roles);
+
+														rokeys.forEach(function(a) {
+															let x = a;
+															let role = roles[a];
+															let rt = document.createElement("h4");
+															rt.innerText = a;
+															diaga.inner.appendChild(rt);
+															let kcont = document.createElement("div");
+															kcont.style.width = "100%";
+															let rkeys = Object.keys(role);
+															rkeys.forEach(function(aa) {
+																let a = aa;
+																let i = role[aa];
+																if (aa != "AdminOrder") {
+																	let ccont = document.createElement("div");
+																	ccont.style.display = "flex";
+																	let pcb = document.createElement("input");
+																	pcb.type = "checkbox";
+																	pcb.checked = i;
+																	let pl = document.createElement("label");
+																	pl.innerText = aa;
+																	pl.for = pcb;
+																	pcb.addEventListener("change",function() {
+																		i = pcb.checked;
+																		role[a] = i;
+																		roles[x] = role;
+																	})
+																	ccont.appendChild(pcb);
+																	ccont.appendChild(pl);
+																	diaga.inner.appendChild(ccont);
+																}
+															})
+															diaga.inner.appendChild(kcont);
+														});
+													});
+												}
 											});
 										})
+										diag.inner.appendChild(editrolesbtn);
 									}
 								})
+							}
+						});
+						fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+							if (res.ok) {
+								res.text().then((text) => {
+									roles = JSON.parse(text);
+									diag.inner.appendChild(savebtn);
+								});
 							}
 						});
 						let membersbtn = document.createElement("button");
@@ -534,6 +551,7 @@ function loadmainarea() {
 							});
 						})
 						diag.inner.appendChild(membersbtn);
+
 						
 						let savebtn = document.createElement("button");
 						savebtn.innerText = "Save";
@@ -563,7 +581,6 @@ function loadmainarea() {
 								})
 							}
 						})
-						diag.inner.appendChild(savebtn);
 
 						let leavebtn = document.createElement("button");
 						leavebtn.innerText = "Leave";
@@ -648,7 +665,7 @@ function loadmainarea() {
 			if (e.key == "Escape") {
 				closebtn.click();
 			}
-			console.log(e.key)
+			//console.log(e.key)
 		})
 		let isatdock = false;
 		
