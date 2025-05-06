@@ -723,7 +723,7 @@ function loadmainarea() {
 						let notif = nots[i];
 						Notification.requestPermission();
 						if (document.hasFocus() == false || currentchatid != notif.chatid) {
-							var notification = new Notification(notif.user.name + ' - Pamukky', { body: notif.content, icon: notif.user.picture });
+							var notification = new Notification(notif.user.name + ' - Pamukky', { body: notif.content, icon: getpfp(notif.user.picture) });
 							var audio = new Audio('notif.mp3');
 							audio.play();
 							notification.addEventListener('click', (event) => {
@@ -829,7 +829,7 @@ function loadmainarea() {
 			currentchatview = createchatarea(id, (item.type == "user" ? item.user : item.group));
 			currentchatid = id;
 			currentchatview.titlelabel.innerText = cinfo.name;
-			currentchatview.pfp.src = cinfo.picture.replace(/%SERVER%/g,currserver);
+			currentchatview.pfp.src = getpfp(cinfo.picture, item.type == "user" ? "person.svg" : "group.svg");
 			rightarea.appendChild(currentchatview.chat)
 			if (document.body.clientWidth <= 800) {
 				rightarea.style.display = "flex";
@@ -903,21 +903,10 @@ function loadmainarea() {
 	let namelbl = document.createElement("label");
 	namelbl.style.margin = "4px";
 	profilebtn.appendChild(namelbl);
-	fetch(currserver + "getuser", {body: JSON.stringify({'uid': logininfo.uid}),method: 'POST'}).then((res) => {
-		if (res.ok) {
-			res.text().then((text) => {
-				info = JSON.parse(text);
-				namelbl.innerText = info.name;
-				pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
-				currentuser = info;
-			})
-		}else {
-			openloginarea();
-			clearTimeout(ttimer);
-		}
-	}).catch(() => {
-		openloginarea();
-		clearTimeout(ttimer);
+	getuserinfo(logininfo.uid, (info) => {
+		namelbl.innerText = info.name;
+		pfpimg.src = getpfp(info.picture);
+		currentuser = info;
 	})
 	
 	fab.addEventListener("click",function() {
@@ -2464,6 +2453,6 @@ function getpfp(url,fallback = "person.svg") {
 	if (url.trim() == "") {
 		return fallback;
 	}else {
-		return url.replace(/%SERVER%/g,currserver);
+		return url.replace(/%SERVER%/g,currserver) + (url.includes("%SERVER%") ? "&type=thumb" : "");
 	}
 }
