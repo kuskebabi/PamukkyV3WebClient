@@ -296,6 +296,24 @@ function loadmainarea() {
 						pfpimge.style.height = "80px";
 						pfpimge.src = getpfp(infod.picture);
 						diag.inner.appendChild(pfpimge);
+
+						let infotxt = document.createElement("label");
+						infotxt.style.margin = "6px";
+						infotxt.style.fontSize = "10px";
+						diag.inner.appendChild(infotxt);
+
+						fetch(currserver + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
+							if (res.ok) {
+								res.text().then((text) => {
+									if (text == "Online") {
+										infotxt.innerText = "Online";
+									}else {
+										let dt = new Date(text);
+										infotxt.innerText = "Last Online: " + dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+									}
+								})
+							}
+						});
 						
 						let infotable = document.createElement("table");
 						let namerow = document.createElement("tr");
