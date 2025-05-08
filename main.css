@@ -77,14 +77,14 @@ centeredPopup {
 	background-color: #dbdbdb;
 	border-radius: 8px;
 	padding:8px;
-	animation-name: dialogapear;
+	animation-name: dialogappear;
 	animation-duration: 0.5s;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 centeredPopup.docked {
 	background-color: #ebebeb;
 	border-radius:0;
-	animation-name: dialogapeardocked;
+	animation-name: dialogappeardocked;
 	animation-duration: 0.5s;
 	max-width:100%;
 	max-height:100%;
@@ -104,8 +104,8 @@ main {
 	display:flex;
 	width:100%;
 	height:100%;
-	animation-name: dialogapear;
-	animation-duration: 0.5s;
+	animation-name: mainappear;
+	animation-duration: 0.3s;
 	overflow:hidden;
 }
 
@@ -382,6 +382,8 @@ msgcont {
 	width:100%;
 	display:flex;
 	padding:2px;
+	animation-name: msgcappear;
+	animation-duration: 0.5s;
 }
 
 msgcont > img {
@@ -404,7 +406,7 @@ msgmain > msgbuble {
 	padding: 5px;
 	background: #ababab;
 	width:auto;
-	animation-name: msgapear;
+	animation-name: msgbappear;
 	animation-duration: 0.5s;
 }
 
@@ -570,19 +572,28 @@ filed > div > label {
 	transition: opacity 0.5s;
 }
 
-@keyframes msgapear {
-  from {transform:scale(0);}
+@keyframes msgbappear {
+  from {transform:scale(0.8);}
   to {transform:scale(1);}
 }
+@keyframes msgcappear {
+	from {opacity:0;}
+}
 
-@keyframes dialogapear {
+@keyframes dialogappear {
   from {transform:scale(0.8);opacity:0;}
-  to {transform:scale(1);opacity:1;}
+  to {transform:scale(1);}
 }
-@keyframes dialogapeardocked {
-  from {transform:scale(0.8) translateX(100%);opacity:0;}
-  to {transform:scale(1);opacity:1;}
+@keyframes dialogappeardocked {
+	from {transform:scale(0.8) translateX(100%);opacity:0;}
+	to {transform:scale(1);}
 }
+
+@keyframes mainappear {
+	from {transform:scale(1.2);opacity:0;}
+	to {transform:scale(1);}
+}
+
 
 flex {
 	display:flex;
@@ -596,7 +607,7 @@ flex {
 		padding-right:10%;
 	}
 }
-@media only screen and (min-width: 1900px) {
+/*@media only screen and (min-width: 1900px) {
 	main {
 		width:98%;
 		height:98%;
@@ -605,7 +616,7 @@ flex {
 	body {
 		font-size:20px;
 	}
-}
+}*/
 
 
 @media only screen and (max-width: 1024px) {
