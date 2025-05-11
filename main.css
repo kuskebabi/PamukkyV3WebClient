@@ -196,6 +196,18 @@ titlebar {
 	flex-shrink:0;
 }
 
+pinbar {
+	display:flex;
+	height: 56px;
+	width:100%;
+	background-color: #ebebeb;
+	align-items:center;
+	flex-shrink:0;
+}
+pinbar > replycont {
+	flex-shrink: initial;
+}
+
 .grd {
 	background: linear-gradient(90deg, rgba(255,255,255,0) 42%, rgba(235,235,235,1) 100%);
 }
@@ -364,6 +376,7 @@ msgbar > div > textarea {
 	white-space:nowrap;
 	text-overflow: ellipsis;
 	min-width:0;
+	display:inline;
 }
 
 .chatitem > infoarea > titlecont > time {
@@ -535,7 +548,11 @@ button.fab:active {
 }
 
 .loading {
-	opacity:0.5;
+	animation-name: loading;
+	animation-duration: 2s;
+	animation-iteration-count: infinite;
+	background-color:gray;
+	color: transparent;
 }
 
 a {
@@ -572,6 +589,11 @@ filed > div > label {
 	transition: opacity 0.5s;
 }
 
+@keyframes loading {
+	0%   {opacity:0.3;}
+	50%  {opacity:0.8;}
+	100% {opacity:0.3;}
+}
 @keyframes msgbappear {
   from {transform:scale(0.8);}
   to {transform:scale(1);}
@@ -656,7 +678,7 @@ flex {
 	centeredPopup,leftarea,.bbar {
 		background-color: #171717;
 	}
-	titlebar, msgbar {
+	titlebar, msgbar, pinbar {
 		background-color: #262626;
 	}
 	.grd {
@@ -708,7 +730,7 @@ flex {
 	leftarea {
 		display:none !important;
 	}
-	titlebar {
+	titlebar, pinbar {
 		display:none !important;
 	}
 	msgbar {

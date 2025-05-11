@@ -46,6 +46,7 @@ function getuserinfo(uid, callback) {
 						uidcallbacks[uid].forEach((callback) => {
 							callback(info);
 						})
+						delete uidcallbacks[uid];
 					})
 				}else { // non 200 response
 					uidcallbacks[uid].forEach((callback) => {
@@ -55,6 +56,7 @@ function getuserinfo(uid, callback) {
 							info: ""
 						});
 					})
+					delete uidcallbacks[uid];
 				}
 			}).catch(() => { //Error in response
 				uidcallbacks[uid].forEach((callback) => {
@@ -64,6 +66,7 @@ function getuserinfo(uid, callback) {
 						info: ""
 					});
 				})
+				delete uidcallbacks[uid];
 			});
 		}
 	}
@@ -300,11 +303,14 @@ function loadmainarea() {
 						let infotxt = document.createElement("label");
 						infotxt.style.margin = "6px";
 						infotxt.style.fontSize = "10px";
+						infotxt.innerText = "loading...";
+						infotxt.classList.add("loading");
 						diag.inner.appendChild(infotxt);
 
 						fetch(currserver + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								res.text().then((text) => {
+									infotxt.classList.remove("loading");
 									if (text == "Online") {
 										infotxt.innerText = "Online";
 									}else {
@@ -488,13 +494,19 @@ function loadmainarea() {
 								uname.style.alignItems = "center";
 								let userpfp = document.createElement("img");
 								userpfp.classList.add("circleimg");
+								userpfp.classList.add("loading");
 								userpfp.loading = "lazy";
 								let usernamelbl = document.createElement("label");
+								usernamelbl.classList.add("loading");
+								usernamelbl.innerText = "loading..."
+								usernamelbl.style.marginLeft = "4px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
 								getuserinfo(user.user,function(uii) {
 									userpfp.src = getpfp(uii.picture);
 									usernamelbl.innerText = uii.name;
+									userpfp.classList.remove("loading");
+									usernamelbl.classList.remove("loading");
 								});
 								urow.appendChild(uname);
 								let urole = document.createElement("td");
@@ -826,10 +838,13 @@ function loadmainarea() {
 		chatitems[id] = itmcont;
 		let pfpimg = document.createElement("img")
 		pfpimg.loading = "lazy";
+		pfpimg.classList.add("loading");
 		itmcont.appendChild(pfpimg);
 		let infocnt = document.createElement("infoarea");
 		let namecont = document.createElement("titlecont");
 		let nameh4 = document.createElement("h4");
+		nameh4.innerText = "Loading...";
+		nameh4.classList.add("loading");
 		namecont.appendChild(nameh4)
 		let lmt = document.createElement("time");
 		let dt = new Date(item.lastmessage.time);
@@ -844,15 +859,17 @@ function loadmainarea() {
 		//}catch {}
 		namecont.appendChild(lmt);
 		infocnt.appendChild(namecont);
-		let lastmsgcontent = document.createElement("label")
+		let lastmsgcontent = document.createElement("label");
+		lastmsgcontent.classList.add("loading");
+		lastmsgcontent.innerText = "User: " + item.lastmessage.content.split("\n")[0];
 		getuserinfo(item.lastmessage.sender, function(sender) {
 			lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
+			lastmsgcontent.classList.remove("loading");
 		});
 
 		infocnt.appendChild(lastmsgcontent)
 		itmcont.appendChild(infocnt);
 
-		let cinfo = {};
 		itmcont.addEventListener("click",function() {
 			if (currentchatview) {
 				currentchatview.kill();
@@ -860,8 +877,23 @@ function loadmainarea() {
 			}
 			currentchatview = createchatarea(id, (item.type == "user" ? item.user : item.group));
 			currentchatid = id;
-			currentchatview.titlelabel.innerText = cinfo.name;
-			currentchatview.pfp.src = getpfp(cinfo.picture, item.type == "user" ? "person.svg" : "group.svg");
+			//callback for get*info
+			currentchatview.titlelabel.classList.add("loading");
+			currentchatview.titlelabel.innerText = "loading...";
+			currentchatview.pfp.classList.add("loading");
+			function callback(cinfo) {
+				currentchatview.titlelabel.innerText = cinfo.name;
+				currentchatview.pfp.src = getpfp(cinfo.picture, item.type == "user" ? "person.svg" : "group.svg");
+				currentchatview.titlelabel.classList.remove("loading");
+				currentchatview.pfp.classList.remove("loading");
+			}
+			//make the correct call
+			if (item.type == "user") {
+				getuserinfo(item.user, callback);
+			}else if (item.type == "group") {
+				getgroupinfo(item.group, callback);
+			}
+
 			rightarea.appendChild(currentchatview.chat)
 			if (document.body.clientWidth <= 800) {
 				rightarea.style.display = "flex";
@@ -897,7 +929,8 @@ function loadmainarea() {
 		function callback(info) {
 			pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
 			nameh4.innerText = info.name;
-			cinfo = info;
+			nameh4.classList.remove("loading");
+			pfpimg.classList.remove("loading");
 		}
 		//make the correct call
 		if (item.type == "user") {
@@ -1373,6 +1406,7 @@ function loadmainarea() {
 		let isuserchat = chatid.includes("-");
 		let ocp = {};
 		let messageflexes = {};
+		let pinnedmessages = {};
 		let mchat = document.createElement("mchat");
 		let titlebar = document.createElement("titlebar");
 		let backbtn = document.createElement("button");
@@ -1386,11 +1420,13 @@ function loadmainarea() {
 		pfpimg.style.margin = "2px";
 		titlebar.appendChild(pfpimg);
 		let titletxt = document.createElement("h4");
-		titletxt.style.paddingLeft = "4px";
+		titletxt.style.marginLeft = "4px";
 		titlebar.appendChild(titletxt);
 		let infotxt = document.createElement("label");
 		infotxt.style.fontSize = "10px";
-		infotxt.style.padding = "6px";
+		infotxt.style.margin = "6px";
+		infotxt.innerText = "loading";
+		infotxt.classList.add("loading");
 		titlebar.appendChild(infotxt);
 		titlebar.appendChild(document.createElement("ma"));
 		
@@ -1404,9 +1440,124 @@ function loadmainarea() {
 		
 		titlebar.appendChild(infobtn);
 		mchat.appendChild(titlebar);
-		
+
+
 		let messageslist = document.createElement("messageslist");
+		let pinnedmessageslist = document.createElement("messageslist");
+		pinnedmessageslist.style.display = "none";
+
+		let pinnedbar = document.createElement("pinbar");
+		let mpint = document.createElement("replycont");
+		pinnedbar.appendChild(mpint);
+		let pinsbtn = document.createElement("button");
+		addRipple(pinsbtn,"rgba(255,200,0,0.6)");
+		pinsbtn.classList.add("cb")
+		pinsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
+		pinnedbar.appendChild(pinsbtn);
+		mchat.appendChild(pinnedbar);
+
+		function updatepinnedmessageslist() {
+			pinnedmessageslist.innerHTML = "";
+			for (const [key, msg] of Object.entries(pinnedmessages)) {
+				let msgd = createmsg(msg,key);
+				pinnedmessageslist.appendChild(msgd.message);
+				let reactions = msg.reactions;
+				if (reactions) {
+					Object.keys(reactions).forEach(function(ir) {
+						let react = reactions[ir];
+						let reacc = document.createElement("div");
+						reacc.style.cursor = "pointer";
+						reacc.addEventListener("click",function() {
+							fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': key, reaction: ir}),method: 'POST'}).then((res) => {
+
+							})
+						})
+						let reace = document.createElement("label");
+						reace.innerText = ir;
+						let cnter = document.createElement("label");
+						cnter.innerText = "0";
+						reacc.appendChild(reace);
+						reacc.appendChild(cnter);
+						msgd.msgreactions.appendChild(reacc);
+
+						msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
+
+						let rkk = Object.keys(react);
+						let doescontaincurr = false;
+						Object.keys(react).forEach(function(aa) {
+							let a = react[aa];
+							if (a.sender == logininfo.uid) {
+								doescontaincurr = true;
+							}
+						})
+
+						if (doescontaincurr) {
+							msgd.reactions[ir].container.classList.add("rcted")
+						}
+
+						msgd.reactions[ir].counter.innerText = rkk.length;
+					});
+
+				}
+			}
+		}
+
+		pinsbtn.addEventListener("click",function() {
+			if (messageslist.style.display == "") {
+				pinnedmessageslist.style.display = "";
+				messageslist.style.display = "none";
+				mgb.style.display = "none";
+				updatepinnedmessageslist();
+			}else {
+				pinnedmessageslist.style.display = "none";
+				messageslist.style.display = "";
+				if (crole.AllowSending == true) {
+					mgb.style.display = "";
+				}else {
+					mgb.style.display = "none";
+				}
+			}
+		});
+
+		let pinsender = document.createElement("b");
+		let pincontent = document.createElement("label");
+		mpint.appendChild(pinsender);
+		mpint.appendChild(pincontent);
+		function updatepinnedbar() {
+			let k = Object.keys(pinnedmessages);
+			if (k.length > 0) {
+				pinnedbar.style.display = "";
+				let msg = pinnedmessages[k[k.length - 1]];
+				pincontent.innerText = msg.content;
+				pinsender.classList.add("loading");
+				pinsender.innerText = "loading...";
+				getuserinfo(msg.sender,function(info) {
+					pinsender.classList.remove("loading");
+					pinsender.innerText = info.name;
+				})
+				if (pinnedmessageslist.style.display == "") {
+					updatepinnedmessageslist();
+				}
+			}else {
+				pinnedbar.style.display = "none";
+				if (pinnedmessageslist.style.display == "") {
+					pinsbtn.click();
+				}
+			}
+		}
+
+		fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
+			if (res.ok) {
+				res.text().then((text) => {
+					pinnedmessages = JSON.parse(text);
+					updatepinnedbar();
+				});
+			}
+		});
+		
+		mchat.appendChild(pinnedmessageslist);
 		mchat.appendChild(messageslist);
+
 		
 		let mgb = document.createElement("msgbar");
 		let rc = document.createElement("replycont");
@@ -1548,7 +1699,7 @@ function loadmainarea() {
 		let msgscont;
 		let selectedMessages = [];
 		let sendedmessages = [];
-		let crole = {"AdminOrder":0,"AllowMessageDeleting":true,"AllowEditingSettings":true,"AllowKicking":true,"AllowBanning":true,"AllowSending":true,"AllowEditingUsers":true,"AllowSendingReactions":true};
+		let crole = {"AdminOrder":0,"AllowMessageDeleting":true,"AllowEditingSettings":true,"AllowKicking":true,"AllowBanning":true,"AllowSending":true,"AllowEditingUsers":true,"AllowSendingReactions":true,"AllowPinningMessages":true};
 		let replymsgid = undefined;
 		
 		if (!isuserchat) {
@@ -1567,6 +1718,7 @@ function loadmainarea() {
 			fetch(currserver + "getgroupmemberscount", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
+						infotxt.classList.remove("loading");
 						infotxt.innerText = text + " Members";
 					})
 				}
@@ -1605,8 +1757,16 @@ function loadmainarea() {
 				lastmsgsender = msg.sender;
 			}
 			let senderuser = {};
+
+			let r = createmsg(msg,id);
+			messageflexes[id] = r.message;
+			msgscont.appendChild(r.message);
+			return {message: r.message, status: r.status,msgreactions: r.msgreactions,reactions: r.reactions, pinned: r.pinned};
+		}
+
+		function createmsg(msg,id) {
+			let dt = new Date(msg.time);
 			let msgc = document.createElement("msgcont");
-			messageflexes[id] = msgc;
 			function selectmessage() {
 				if (selectedMessages.includes(id)) {
 					selectedMessages.splice(selectedMessages.indexOf(id),1);
@@ -1812,73 +1972,86 @@ function loadmainarea() {
 						sb.onclick = function() {
 							let messages = selectedMessages;
 							if (messages.length == 0) messages = [id];
-							fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
+												   fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
 
-							})
-							diag.closebtn.click();
+												   })
+												   diag.closebtn.click();
 						}
 					})
-					cnt.appendChild(forwardbutton);
-					let selectbutton = document.createElement("button");
-					selectbutton.innerText = "Multi-Select";
-					addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
-					selectbutton.addEventListener("click", function() {
-						selectmessage();
-					})
-					cnt.appendChild(selectbutton);
-					let savebtn = document.createElement("button");
-					savebtn.innerText = "Save Message";
-					addRipple(savebtn,"rgba(255,200,0,0.6)",true);
-					savebtn.addEventListener("click", function() {
-						let messages = selectedMessages;
-						if (messages.length == 0) messages = [id];
-						fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-
+						cnt.appendChild(forwardbutton);
+						let selectbutton = document.createElement("button");
+						selectbutton.innerText = "Multi-Select";
+						addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
+						selectbutton.addEventListener("click", function() {
+							selectmessage();
 						})
-					})
-					cnt.appendChild(savebtn);
-					let deletebutton = document.createElement("button");
-					addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
-					deletebutton.innerText = "Delete Message";
-					deletebutton.addEventListener("click", () => {
-						if (confirm("Do you really want to delete?")) {
+						cnt.appendChild(selectbutton);
+						let savebtn = document.createElement("button");
+						savebtn.innerText = "Save Message";
+						addRipple(savebtn,"rgba(255,200,0,0.6)",true);
+						savebtn.addEventListener("click", function() {
 							let messages = selectedMessages;
 							if (messages.length == 0) messages = [id];
-							fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+							fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
 
 							})
+						})
+						cnt.appendChild(savebtn);
+						let pinbtn = document.createElement("button");
+						pinbtn.innerText = "Pin Message";
+						addRipple(pinbtn,"rgba(255,200,0,0.6)",true);
+						pinbtn.addEventListener("click", function() {
+							let messages = selectedMessages;
+							if (messages.length == 0) messages = [id];
+							fetch(currserver + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+
+							})
+						})
+						pinbtn.disabled = !crole.AllowPinningMessages;
+						cnt.appendChild(pinbtn);
+						let copybutton = document.createElement("button");
+						addRipple(copybutton,"rgba(255,200,0,0.6)",true);
+						copybutton.innerText = "Copy selected text";
+						copybutton.addEventListener("click", function() {
+							document.execCommand('copy');
+						})
+						cnt.appendChild(copybutton);
+						let deletebutton = document.createElement("button");
+						addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
+						deletebutton.innerText = "Delete Message";
+						deletebutton.addEventListener("click", () => {
+							if (confirm("Do you really want to delete?")) {
+								let messages = selectedMessages;
+								if (messages.length == 0) messages = [id];
+								fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+
+								})
+							}
+						})
+						cnt.appendChild(deletebutton);
+						let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
+						if (selectedMessages.length > 0) {
+							deletebutton.disabled = false;
+						}else {
+							deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
 						}
-					})
-					let copybutton = document.createElement("button");
-					addRipple(copybutton,"rgba(255,200,0,0.6)",true);
-					copybutton.innerText = "Copy selected text";
-					copybutton.addEventListener("click", function() {
-						document.execCommand('copy');
-					})
-					cnt.appendChild(copybutton);
-					let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
-					if (selectedMessages.length > 0) {
-						deletebutton.disabled = false;
-					}else {
-						deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
-					}
-					cnt.appendChild(deletebutton);
-					ctxdiv.style.opacity = "0";
-					document.body.appendChild(ctxdiv);
-					requestAnimationFrame(function() {
-						ctxdiv.style.opacity = "";
-					});
-					document.body.addEventListener("click",clik)
-					setTimeout(function() {
-						document.body.addEventListener("contextmenu",clik)
-					},0)
-					if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
-						ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
-					}
-					if (event.clientY > document.body.clientHeight - ctxdiv.offsetHeight) {
-						ctxdiv.style.top = (document.body.clientHeight - ctxdiv.offsetHeight) + "px";
-					}
-					event.preventDefault();
+
+						ctxdiv.style.opacity = "0";
+						document.body.appendChild(ctxdiv);
+						requestAnimationFrame(function() {
+							ctxdiv.style.opacity = "";
+						});
+						document.body.addEventListener("click",clik)
+						setTimeout(function() {
+							document.body.addEventListener("contextmenu",clik)
+						},0)
+						if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
+							ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
+						}
+						if (event.clientY > document.body.clientHeight - ctxdiv.offsetHeight) {
+							ctxdiv.style.top = (document.body.clientHeight - ctxdiv.offsetHeight) + "px";
+						}
+						event.preventDefault();
 				}
 			});
 			let msgm = document.createElement("msgmain");
@@ -1890,6 +2063,9 @@ function loadmainarea() {
 			let msgsender = document.createElement("msgsender");
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
+			msgpfp.classList.add("loading");
+			msgsendertxt.innerText = "loading..."
+			msgsendertxt.classList.add("loading");
 			msgcontent.style.overflowWrap = "break-word";
 			msgcontent.innerHTML = linkify(msg.content);
 			msgtimelbl.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
@@ -1899,12 +2075,15 @@ function loadmainarea() {
 				il.style.fontSize = "12px";
 				il.innerText = "Forwarded From "
 				let fu = document.createElement("b");
+				fu.classList.add("loading");
 				fu.style.cursor = "pointer";
+				fu.innerText = "loading..."
 				fu.addEventListener("click",function() {
 					viewuginfo(msg.forwardedfrom, "user")
 				})
 				getuserinfo(msg.forwardedfrom,function(user) {
 					fu.innerText = user.name;
+					fu.classList.remove("loading");
 				})
 				il.appendChild(fu);
 				msgbuble.appendChild(il);
@@ -1917,8 +2096,11 @@ function loadmainarea() {
 
 				})
 				let replysname = document.createElement("b");
+				replysname.innerText = "loading...";
+				replysname.classList.add("loading");
 				getuserinfo(msg.replymsgsender,function(user) {
 					replysname.innerText = user.name;
+					replysname.classList.remove("loading");
 				})
 
 				rc.appendChild(replysname);
@@ -1933,6 +2115,8 @@ function loadmainarea() {
 			if (msg.sender != 0) {
 				msgm.appendChild(msgsender);
 				getuserinfo(msg.sender,(user) => {
+					msgpfp.classList.remove("loading");
+					msgsendertxt.classList.remove("loading");
 					msgsendertxt.innerText = user.name;
 					msgpfp.src = getpfp(user.picture);
 					msgpfp.title = user.name;
@@ -2035,7 +2219,9 @@ function loadmainarea() {
 			}
 
 			let msgstatus = null;
-
+			let msgpinned = document.createElement("div");
+			msgpinned.style.display = msg.pinned ? "" : "none";
+			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
 
 
 			if (msg.sender == logininfo.uid) {
@@ -2065,8 +2251,8 @@ function loadmainarea() {
 					msgtime.appendChild(document.createElement("ma"));
 				}
 			}
-			msgscont.appendChild(msgc);
-			return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: {}};
+			msgtime.appendChild(msgpinned);
+			return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: {}, pinned:msgpinned};;
 		}
 
 		/*function addmsg(msg,id) {
@@ -2224,6 +2410,7 @@ function loadmainarea() {
 				fetch(currserver + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.text().then((text) => {
+							infotxt.classList.remove("loading");
 							if (text == "Online") {
 								infotxt.innerText = "Online";
 							}else {
@@ -2260,10 +2447,18 @@ function loadmainarea() {
 									if (index >= 0) {
 										selectedMessages.splice(index,1);
 									}
+									if (pinnedmessages[i]) {
+										delete pinnedmessages[i];
+										updatepinnedbar();
+									}
 								}
 								if (val.event == "REACTIONS") {
 									let msgd = msgcdatas[i];
 									let reactions = val.rect;
+									if (pinnedmessages[i]) { //&& pinnedmessages[i].reactions != val.rect
+										pinnedmessages[i].reactions = val.rect;
+										updatepinnedbar();
+									}
 									let rkeys = Object.keys(reactions);
 									let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
 									news.forEach(function(ir) {
@@ -2319,6 +2514,24 @@ function loadmainarea() {
 											delete v;
 										}
 									})
+								}
+								if (val.event == "PINNED") {
+									if (pinnedmessages[i] == undefined) {
+										let msgd = msgcdatas[i];
+										msgd.pinned.style.display = "";
+										pinnedmessages[i] = val;
+										updatepinnedbar();
+									}
+									//alert(i + " was pinned")
+								}
+								if (val.event == "UNPINNED") {
+									if (pinnedmessages[i]) {
+										let msgd = msgcdatas[i];
+										msgd.pinned.style.display = "none";
+										delete pinnedmessages[i];
+										updatepinnedbar();
+									}
+									//alert(i + " was unpinned")
 								}
 							})
 							sendedmessages.forEach(function(i) {
@@ -2516,9 +2729,13 @@ function createDynamicList(innertype = "div") {
 
 
 function getpfp(url,fallback = "person.svg") {
-	if (url.trim() == "") {
-		return fallback;
+	if (url) {
+		if (url.trim() == "") {
+			return fallback;
+		}else {
+			return url.replace(/%SERVER%/g,currserver) + (url.includes("%SERVER%") ? "&type=thumb" : "");
+		}
 	}else {
-		return url.replace(/%SERVER%/g,currserver) + (url.includes("%SERVER%") ? "&type=thumb" : "");
+		return "";
 	}
 }
