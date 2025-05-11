@@ -748,8 +748,9 @@ flex {
 	messageslist {
 		overflow:visible;
 	}
-	html,body {
+	html,body,main {
 		overflow:visible;
+		background:white;
 	}
 	
 }
