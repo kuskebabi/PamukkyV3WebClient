@@ -520,6 +520,22 @@ function loadmainarea() {
 										})
 										uacts.appendChild(kickbtn);
 									}
+									if (crole.AllowBanning) {
+										let banbtn = document.createElement("button");
+										banbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q54 0 104-17.5t92-50.5L228-676q-33 42-50.5 92T160-480q0 134 93 227t227 93Zm252-124q33-42 50.5-92T800-480q0-134-93-227t-227-93q-54 0-104 17.5T284-732l448 448Z"/></svg>';
+										banbtn.addEventListener("click",function() {
+											if (confirm("Do you really want to ban this user?")) {
+												fetch(currserver + "banuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user.user}),method: 'POST'}).then((res) => {
+													if (res.ok) {
+														urow.remove();
+													}else {
+
+													}
+												})
+											}
+										})
+										uacts.appendChild(banbtn);
+									}
 									urow.appendChild(uacts);
 								}
 								return urow;
@@ -547,6 +563,78 @@ function loadmainarea() {
 							});
 						})
 						diag.inner.appendChild(membersbtn);
+
+						let bannedusersbtn = document.createElement("button");
+						bannedusersbtn.innerText = "Banned Members";
+						bannedusersbtn.addEventListener("click",function() {
+							let users = {};
+							let rokeys = {};
+							let diag = opendialog();
+							diag.inner.style.overflow = "hidden";
+							diag.inner.style.display = "flex";
+							diag.inner.style.flexDirection = "column";
+							diag.title.innerText = "Banned members";
+							let userstable = createDynamicList("table");
+							userstable.element.style.height = "100%";
+							userstable.setItemGenerator(function(ukeys,e) {
+								let user = ukeys[e];
+								if (user == undefined) return;
+								let urow = document.createElement("tr");
+								urow.style.width = "100%";
+								let uname = document.createElement("td");
+								uname.style.display = "flex";
+								uname.style.alignItems = "center";
+								let userpfp = document.createElement("img");
+								userpfp.classList.add("circleimg");
+								userpfp.classList.add("loading");
+								userpfp.loading = "lazy";
+								let usernamelbl = document.createElement("label");
+								usernamelbl.classList.add("loading");
+								usernamelbl.innerText = "loading..."
+								usernamelbl.style.marginLeft = "4px";
+								uname.appendChild(userpfp);
+								uname.appendChild(usernamelbl);
+								getinfo(user,function(uii) {
+									userpfp.src = getpfp(uii.picture);
+									usernamelbl.innerText = uii.name;
+									userpfp.classList.remove("loading");
+									usernamelbl.classList.remove("loading");
+								});
+								urow.appendChild(uname);
+
+								if (crole.AllowBanning) {
+									let uacts = document.createElement("td");
+									let unbanbtn = document.createElement("button");
+									unbanbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>';
+									unbanbtn.addEventListener("click",function() {
+										if (confirm("Do you really want to unban this user?")) {
+											fetch(currserver + "unbanuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user}),method: 'POST'}).then((res) => {
+												if (res.ok) {
+													urow.remove();
+												}else {
+
+												}
+											})
+										}
+									})
+									uacts.appendChild(unbanbtn);
+
+									urow.appendChild(uacts);
+								}
+								return urow;
+							});
+							userstable.setGetSize(function(list,idx) {return 52});
+							diag.inner.appendChild(userstable.element);
+							fetch(currserver + "getbannedgroupmembers", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+								if (res.ok) {
+									res.text().then((text) => {
+										let users = JSON.parse(text);
+										userstable.setList(users);
+									});
+								}
+							});
+						})
+						diag.inner.appendChild(bannedusersbtn);
 
 						
 						let savebtn = document.createElement("button");
