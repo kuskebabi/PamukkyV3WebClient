@@ -27,31 +27,31 @@ let logininfo = {};
 let currentuser = {};
 let chats = []
 let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉","🔥", "💀","😘","😐","😡","👌","😆","😱","😋"];
-let cacheduserinfo = {};
-let uidcallbacks = {};
-function getuserinfo(uid, callback) {
-	if (cacheduserinfo.hasOwnProperty(uid)) { // Return the cached
-		callback(cacheduserinfo[uid]);
+let cachedinfo = {};
+let idcallbacks = {};
+function getinfo(id, callback) {
+	if (cachedinfo.hasOwnProperty(id)) { // Return the cached
+		callback(cachedinfo[id]);
 	}else {
-		if (uidcallbacks.hasOwnProperty(uid)) {
-			uidcallbacks[uid].push(callback); //Just add this in callback list
+		if (idcallbacks.hasOwnProperty(id)) {
+			idcallbacks[id].push(callback); //Just add this in callback list
 		}else { //New request
-			uidcallbacks[uid] = [callback]; //create the array
-			fetch(currserver + "getuser", {body: JSON.stringify({'token': logininfo.token, 'uid': uid}),method: 'POST'}).then((res) => {
+			idcallbacks[id] = [callback]; //create the array
+			fetch(currserver + "getinfo", {body: JSON.stringify({'token': logininfo.token, 'id': id}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						//Yay! now we attempt to parse it then callback all of them
 						let info = JSON.parse(text);
-						cacheduserinfo[uid] = info;
-						uidcallbacks[uid].forEach((callback) => {
+						cachedinfo[id] = info;
+						idcallbacks[id].forEach((callback) => {
 							callback(info);
 						})
-						delete uidcallbacks[uid];
+						delete idcallbacks[id];
 					})
 				}else { // non 200 response
 					uidcallbacks[uid].forEach((callback) => {
 						callback({
-							name: "Unknown User",
+							name: "Unknown",
 							picture: "",
 							info: ""
 						});
@@ -59,60 +59,18 @@ function getuserinfo(uid, callback) {
 					delete uidcallbacks[uid];
 				}
 			}).catch(() => { //Error in response
-				uidcallbacks[uid].forEach((callback) => {
+				idcallbacks[id].forEach((callback) => {
 					callback({
-						name: "Unknown User",
+						name: "Unknown",
 						picture: "",
 						info: ""
 					});
 				})
-				delete uidcallbacks[uid];
+				delete idcallbacks[id];
 			});
 		}
 	}
 }
-let cachedgroupinfo = {};
-let gidcallbacks = {};
-function getgroupinfo(gid, callback) {
-	if (cachedgroupinfo.hasOwnProperty(gid)) { // Return the cached
-		callback(cachedgroupinfo[gid]);
-	}else {
-		if (gidcallbacks.hasOwnProperty(gid)) {
-			gidcallbacks[gid].push(callback); //Just add this in callback list
-		}else { //New request
-			gidcallbacks[gid] = [callback]; //create the array
-			fetch(currserver + "getgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': gid}),method: 'POST'}).then((res) => {
-				if (res.ok) {
-					res.text().then((text) => {
-						//Yay! now we attempt to parse it then callback all of them
-						let info = JSON.parse(text);
-						cachedgroupinfo[gid] = info;
-						gidcallbacks[gid].forEach((callback) => {
-							callback(info);
-						})
-					})
-				}else { // non 200 response
-					gidcallbacks[gid].forEach((callback) => {
-						callback({
-							name: "Unknown Group",
-							picture: "",
-							info: ""
-						});
-					})
-				}
-			}).catch(() => { //Error in response
-				gidcallbacks[gid].forEach((callback) => {
-					callback({
-						name: "Unknown Group",
-						picture: "",
-						info: ""
-					});
-				})
-			});
-		}
-	}
-}
-
 
 const searchParams = new URLSearchParams(window.location.search);
 if (searchParams.has("server")) {
@@ -279,6 +237,14 @@ function openloginarea() {
 
 function loadmainarea() {
 	Notification.requestPermission();
+
+	document.body.innerHTML = "";
+	let maincont = document.createElement("main");
+	let leftarea = document.createElement("leftarea");
+	let titlebar = document.createElement("titlebar");
+	let rightarea = document.createElement("rightarea");
+	titlebar.classList.add("grd");
+
 	function viewuginfo(ugid,type,grole) {
 		let diag = opendialog();
 		diag.title.innerText = "Info";
@@ -502,7 +468,7 @@ function loadmainarea() {
 								usernamelbl.style.marginLeft = "4px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
-								getuserinfo(user.user,function(uii) {
+								getinfo(user.user,function(uii) {
 									userpfp.src = getpfp(uii.picture);
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
@@ -793,13 +759,92 @@ function loadmainarea() {
 		}
 		
 	})
-	
-	document.body.innerHTML = "";
-	let maincont = document.createElement("main");
-	let leftarea = document.createElement("leftarea");
-	let titlebar = document.createElement("titlebar");
-	titlebar.classList.add("grd");
+
 	let chatslist = createDynamicList();
+	let currentchatid = 0;
+	function openchat(chatid) {
+		let infoid = "0";
+		let type;
+		if (chatid.includes("-")) {
+			let spl = chatid.split("-");
+			if (spl[0] != logininfo.uid) {
+				infoid = spl[0];
+			}else {
+				infoid = spl[1];
+			}
+			type = "user";
+		}else {
+			infoid = chatid;
+			type = "group";
+		}
+
+		location.href = "#chat:" + chatid;
+
+		if (currentchatview) {
+			currentchatview.kill();
+			rightarea.removeChild(currentchatview.chat);
+		}
+		currentchatview = createchatarea(chatid, infoid);
+		currentchatid = chatid;
+		//callback for get*info
+		currentchatview.titlelabel.classList.add("loading");
+		currentchatview.titlelabel.innerText = "loading...";
+		currentchatview.pfp.classList.add("loading");
+		getinfo(infoid, function callback(cinfo) {
+			currentchatview.titlelabel.innerText = cinfo.name;
+			currentchatview.pfp.src = getpfp(cinfo.picture, type == "user" ? "person.svg" : "group.svg");
+			currentchatview.titlelabel.classList.remove("loading");
+			currentchatview.pfp.classList.remove("loading");
+		});
+
+		rightarea.appendChild(currentchatview.chat)
+		if (document.body.clientWidth <= 800) {
+			rightarea.style.display = "flex";
+			currentchatview.backbutton.style.display = ""
+			currentchatview.backbutton.onclick = function() {
+				rightarea.style.left = "";
+				leftarea.style.display = "";
+				requestAnimationFrame(function() {leftarea.style.opacity = "1";})
+				setTimeout(function() {
+					rightarea.style.display = "none";
+					leftarea.style.display = "";
+					currentchatview.chat.innerHTML = "";
+				},500)
+			}
+			requestAnimationFrame(function() {
+				setTimeout(function() {
+					rightarea.style.left = "0px";
+					leftarea.style.opacity = "0";
+					setTimeout(function() {
+						leftarea.style.display = "none";
+					},500)
+				},100)
+			})
+		}else {
+			currentchatview.backbutton.style.display = "none"
+			rightarea.style.display = "";
+			leftarea.style.display = "";
+		}
+		chatslist.render();
+	}
+
+	function hashchange(url) {
+		if (url.includes("#")) {
+			let hash = url.split("#")[1];
+			if (hash.startsWith("chat:")) {
+				let chat = hash.split(":")[1];
+				if (chat != currentchatid) {
+					openchat(chat);
+				}
+			}
+		}
+	}
+
+	window.addEventListener("hashchange", function(e) {
+		hashchange(e.newURL);
+	});
+	hashchange(location.href);
+
 	chatslist.element.classList.add("clist");
 	chatslist.setGetSize(function(list,index) {
 		if (index == 0) {
@@ -831,7 +876,7 @@ function loadmainarea() {
 							   sender: 0
 			}
 		}
-		let id = item["chatid"] + "";
+		let id = item["chatid"] ?? item.group;
 		let itmcont = document.createElement("button");
 		itmcont.classList.add("chatitem");
 		addRipple(itmcont,"rgba(255,200,0,0.6)");
@@ -862,7 +907,7 @@ function loadmainarea() {
 		let lastmsgcontent = document.createElement("label");
 		lastmsgcontent.classList.add("loading");
 		lastmsgcontent.innerText = "User: " + item.lastmessage.content.split("\n")[0];
-		getuserinfo(item.lastmessage.sender, function(sender) {
+		getinfo(item.lastmessage.sender, function(sender) {
 			lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
 			lastmsgcontent.classList.remove("loading");
 		});
@@ -871,73 +916,17 @@ function loadmainarea() {
 		itmcont.appendChild(infocnt);
 
 		itmcont.addEventListener("click",function() {
-			if (currentchatview) {
-				currentchatview.kill();
-				rightarea.removeChild(currentchatview.chat);
-			}
-			currentchatview = createchatarea(id, (item.type == "user" ? item.user : item.group));
-			currentchatid = id;
-			//callback for get*info
-			currentchatview.titlelabel.classList.add("loading");
-			currentchatview.titlelabel.innerText = "loading...";
-			currentchatview.pfp.classList.add("loading");
-			function callback(cinfo) {
-				currentchatview.titlelabel.innerText = cinfo.name;
-				currentchatview.pfp.src = getpfp(cinfo.picture, item.type == "user" ? "person.svg" : "group.svg");
-				currentchatview.titlelabel.classList.remove("loading");
-				currentchatview.pfp.classList.remove("loading");
-			}
-			//make the correct call
-			if (item.type == "user") {
-				getuserinfo(item.user, callback);
-			}else if (item.type == "group") {
-				getgroupinfo(item.group, callback);
-			}
-
-			rightarea.appendChild(currentchatview.chat)
-			if (document.body.clientWidth <= 800) {
-				rightarea.style.display = "flex";
-				currentchatview.backbutton.style.display = ""
-				currentchatview.backbutton.onclick = function() {
-					rightarea.style.left = "";
-					leftarea.style.display = "";
-					requestAnimationFrame(function() {leftarea.style.opacity = "1";})
-					setTimeout(function() {
-						rightarea.style.display = "none";
-						leftarea.style.display = "";
-						currentchatview.chat.innerHTML = "";
-					},500)
-				}
-				requestAnimationFrame(function() {
-					setTimeout(function() {
-						rightarea.style.left = "0px";
-						leftarea.style.opacity = "0";
-						setTimeout(function() {
-							leftarea.style.display = "none";
-						},500)
-					},100)
-				})
-			}else {
-				currentchatview.backbutton.style.display = "none"
-				rightarea.style.display = "";
-				leftarea.style.display = "";
-			}
-			chatslist.render();
+			openchat(id);
 		})
 
-		//callback for get*info
-		function callback(info) {
+
+		getinfo(item.type == "user" ? item.user : item.group, function(info) {
 			pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
 			nameh4.innerText = info.name;
 			nameh4.classList.remove("loading");
 			pfpimg.classList.remove("loading");
-		}
-		//make the correct call
-		if (item.type == "user") {
-			getuserinfo(item.user, callback);
-		}else if (item.type == "group") {
-			getgroupinfo(item.group, callback);
-		}
+		});
+
 
 		if (document.body.clientWidth > 800 && currentchatid == id) {
 			itmcont.style.background = "orange"
@@ -968,7 +957,7 @@ function loadmainarea() {
 	let namelbl = document.createElement("label");
 	namelbl.style.margin = "4px";
 	profilebtn.appendChild(namelbl);
-	getuserinfo(logininfo.uid, (info) => {
+	getinfo(logininfo.uid, (info) => {
 		namelbl.innerText = info.name;
 		pfpimg.src = getpfp(info.picture);
 		currentuser = info;
@@ -1372,7 +1361,6 @@ function loadmainarea() {
 			}
 		}
 	});
-	let currentchatid = 0;
 	function loadchats() {
 		fetch(currserver + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 			if (res.ok) {
@@ -1391,13 +1379,15 @@ function loadmainarea() {
 	leftarea.appendChild(titlebar);
 	leftarea.appendChild(chatslist.element);
 	maincont.appendChild(leftarea);
-	let rightarea = document.createElement("rightarea");
 	maincont.appendChild(rightarea);
 	
 	document.body.appendChild(maincont);
 
 
 	function createchatarea(chatid,ugid) {
+		function kill() {
+			clearInterval(chatupdatetimer);
+		}
 		let f = document.createElement('input');
 		f.type='file';
 		f.multiple = true;
@@ -1447,6 +1437,7 @@ function loadmainarea() {
 		pinnedmessageslist.style.display = "none";
 
 		let pinnedbar = document.createElement("pinbar");
+		pinnedbar.style.display = "none";
 		let mpint = document.createElement("replycont");
 		pinnedbar.appendChild(mpint);
 		let pinsbtn = document.createElement("button");
@@ -1531,7 +1522,7 @@ function loadmainarea() {
 				pincontent.innerText = msg.content;
 				pinsender.classList.add("loading");
 				pinsender.innerText = "loading...";
-				getuserinfo(msg.sender,function(info) {
+				getinfo(msg.sender,function(info) {
 					pinsender.classList.remove("loading");
 					pinsender.innerText = info.name;
 				})
@@ -1545,15 +1536,6 @@ function loadmainarea() {
 				}
 			}
 		}
-
-		fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
-			if (res.ok) {
-				res.text().then((text) => {
-					pinnedmessages = JSON.parse(text);
-					updatepinnedbar();
-				});
-			}
-		});
 		
 		mchat.appendChild(pinnedmessageslist);
 		mchat.appendChild(messageslist);
@@ -1581,10 +1563,9 @@ function loadmainarea() {
 				let att = document.createElement("uploaditm");
 				let ui = document.createElement("div");
 				let rb = document.createElement("button")
-				rb.innerText = "x";
+				rb.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
 				let img = document.createElement("img");
 				img.style.background = "white";
-				img.classList.add("loading");
 				let imgs = new Image();
 				imgs.src = reader.result;
 				if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -1597,31 +1578,24 @@ function loadmainarea() {
 				imgs.onload = function() {
 					img.src = imgs.src;
 				}
-				//img.src = reader.result;
 				ui.appendChild(img)
 				att.appendChild(ui);
 				att.appendChild(rb);
 				atc.appendChild(att);
-				fetch(currserver + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-					console.log(data);
-					if (data.status == "success") {
-						fileslist.push(data.url);
-						sendbtn.disabled = false;
-						img.classList.remove("loading");
-						rb.addEventListener("click",function() {
-							const index = fileslist.indexOf(data.url);
-							if (index > -1) { 
-								fileslist.splice(index, 1); 
-								if (fileslist.length > 0) {
-									sendbtn.disabled = false;
-								}else {
-									sendbtn.disabled = true;
-								}
-							}
-							atc.removeChild(att);
-						})
+				fileslist.push(file);
+				rb.addEventListener("click",function() {
+					const index = fileslist.indexOf(file);
+					if (index > -1) {
+						fileslist.splice(index, 1);
+						if (fileslist.length > 0) {
+							sendbtn.disabled = false;
+						}else {
+							sendbtn.disabled = true;
+						}
 					}
-				})}).catch(function(error) {console.error(error);});
+					atc.removeChild(att);
+				})
+				sendbtn.disabled = false;
 			};
 
 			reader.readAsDataURL(file); 
@@ -1922,13 +1896,13 @@ function loadmainarea() {
 							namecont.appendChild(lmt);
 							infocnt.appendChild(namecont);
 							let lastmsgcontent = document.createElement("label")
-							getuserinfo(item.lastmessage.sender, function(sender) {
+							getinfo(item.lastmessage.sender, function(sender) {
 								lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
 							});
 							infocnt.appendChild(lastmsgcontent)
 							itmcont.appendChild(infocnt);
 							let cinfo = {};
-							let id = item["chatid"] + "";
+							let id = item["chatid"] ?? item.group;
 							itmcont.addEventListener("click",function() {
 								if (fchatselectsid.includes(id)) {
 									gous.splice(fchatselectsid.indexOf(id),1);
@@ -1940,18 +1914,11 @@ function loadmainarea() {
 								refreshlabel();
 								chatslist.render();
 							})
-							//callback for get*info
-							function callback(info) {
+							getinfo(item.type == "user" ? item.user : item.group, function(info) {
 								pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
 								nameh4.innerText = info.name;
 								cinfo = info;
-							}
-							//make the correct call
-							if (item.type == "user") {
-								getuserinfo(item.user, callback);
-							}else if (item.type == "group") {
-								getgroupinfo(item.group, callback);
-							}
+							});
 
 							if (fchatselectsid.includes(id)) {
 								itmcont.style.background = "orange";
@@ -1972,10 +1939,10 @@ function loadmainarea() {
 						sb.onclick = function() {
 							let messages = selectedMessages;
 							if (messages.length == 0) messages = [id];
-												   fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
+							fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
 
-												   })
-												   diag.closebtn.click();
+							})
+							diag.closebtn.click();
 						}
 					})
 						cnt.appendChild(forwardbutton);
@@ -2081,7 +2048,7 @@ function loadmainarea() {
 				fu.addEventListener("click",function() {
 					viewuginfo(msg.forwardedfrom, "user")
 				})
-				getuserinfo(msg.forwardedfrom,function(user) {
+				getinfo(msg.forwardedfrom,function(user) {
 					fu.innerText = user.name;
 					fu.classList.remove("loading");
 				})
@@ -2098,7 +2065,7 @@ function loadmainarea() {
 				let replysname = document.createElement("b");
 				replysname.innerText = "loading...";
 				replysname.classList.add("loading");
-				getuserinfo(msg.replymsgsender,function(user) {
+				getinfo(msg.replymsgsender,function(user) {
 					replysname.innerText = user.name;
 					replysname.classList.remove("loading");
 				})
@@ -2114,7 +2081,7 @@ function loadmainarea() {
 
 			if (msg.sender != 0) {
 				msgm.appendChild(msgsender);
-				getuserinfo(msg.sender,(user) => {
+				getinfo(msg.sender,(user) => {
 					msgpfp.classList.remove("loading");
 					msgsendertxt.classList.remove("loading");
 					msgsendertxt.innerText = user.name;
@@ -2292,36 +2259,54 @@ function loadmainarea() {
 		})
 		
 		sendbtn.addEventListener("click",function() {
-			sendingmessage = true;
+			let content = msginput.value.trim();
 			sendbtn.disabled = true;
+
 			let msg = addmsg({
 				sender:logininfo.uid,
-				content: msginput.value,
+				content: content,
 				time: new Date()
 			},0);
-			
 			msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m614-310 51-51-149-149v-210h-72v240l170 170ZM480-96q-79.376 0-149.188-30Q261-156 208.5-208.5T126-330.958q-30-69.959-30-149.5Q96-560 126-630t82.5-122q52.5-52 122.458-82 69.959-30 149.5-30 79.542 0 149.548 30.24 70.007 30.24 121.792 82.08 51.786 51.84 81.994 121.92T864-480q0 79.376-30 149.188Q804-261 752-208.5T629.869-126Q559.738-96 480-96Zm0-384Zm.477 312q129.477 0 220.5-91.5T792-480.477q0-129.477-91.023-220.5T480.477-792Q351-792 259.5-700.977t-91.5 220.5Q168-351 259.5-259.5T480.477-168Z"/></svg>';
-			fetch(currserver + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': msginput.value.trim(),replymsg: replymsgid,files: (fileslist.length > 0 ? fileslist : null)}),method: 'POST'}).then((res) => {
-				if (res.ok) {
-					res.text().then((text) => {
-						res = JSON.parse(text);
-						if (res.result == "error") {
-							
-						}else {
-							msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
+
+			let files = [];
+			let fll = Object.assign([], fileslist);
+			function upload() {
+				if (fll.length > 0) {
+					let file = fll.shift();
+					fetch(currserver + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
+						console.log(data);
+						if (data.status == "success") {
+							files.push(data.url);
+							upload();
 						}
-						
-						sendedmessages.push(msg.message);
-						updatechat();
-					})
+					})}).catch(function(error) {console.error(error);});
 				}else {
-					msgscont.removeChild(msg.message);
+					send();
 				}
-				sendingmessage = false;
-			}).catch(() => {
-				msgscont.removeChild(msg.message);
-				sendingmessage = false;
-			});
+			}
+			function send() {
+				fetch(currserver + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': content,replymsg: replymsgid,files: (files.length > 0 ? files : null)}),method: 'POST'}).then((res) => {
+					if (res.ok) {
+						res.text().then((text) => {
+							res = JSON.parse(text);
+							if (res.result == "error") {
+
+							}else {
+								msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
+							}
+
+							sendedmessages.push(msg.message);
+							updatechat();
+						})
+					}else {
+						msgscont.removeChild(msg.message);
+					}
+				}).catch(() => {
+					msgscont.removeChild(msg.message);
+				});
+			}
+			upload();
 			fileslist = [];
 			atc.innerHTML = "";
 			msginput.value = "";
@@ -2391,16 +2376,24 @@ function loadmainarea() {
 									msgd.reactions[ir].counter.innerText = rkk.length;
 								});
 								
-							}	
-								
-							
+							}
 						});
 						
 						messageslist.scrollTop = messageslist.scrollHeight;
 						ocp = chatpage;
+
+						fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
+							if (res.ok) {
+								res.text().then((text) => {
+									pinnedmessages = JSON.parse(text);
+									updatepinnedbar();
+								});
+							}
+						});
 					})
 				}else {
-					openloginarea();
+					alert("Invalid chat");
+					kill();
 				}
 			})
 		function updatechat() {
@@ -2422,156 +2415,152 @@ function loadmainarea() {
 				});
 			}
 			
-			if (sendingmessage == false) {
-				fetch(currserver + "getupdates", {body: JSON.stringify({'token': logininfo.token, 'id': chatid}),method: 'POST'}).then((res) => {
-					if (res.ok) {
-						res.json().then((json) => {
-							isready = true;
-							let kys = Object.keys(json);
-							kys.forEach((i) => {
-								let val = json[i];
-								if (val.event == "NEWMESSAGE") {
-									
-									if (chatpage[i] == undefined) {
-										chatpage[i] = val;
-										//mkeys[x] = i;
-										let msg = val;
-										msgcdatas[i] = addmsg(msg,i);
-										lastmessagekey = i;
-										messageslist.scrollTop = messageslist.scrollHeight;
-									}
-								}
-								if (val.event == "DELETED") {
-									messageflexes[i].remove();
-									let index = selectedMessages.indexOf(i);
-									if (index >= 0) {
-										selectedMessages.splice(index,1);
-									}
-									if (pinnedmessages[i]) {
-										delete pinnedmessages[i];
-										updatepinnedbar();
-									}
-								}
-								if (val.event == "REACTIONS") {
-									let msgd = msgcdatas[i];
-									let reactions = val.rect;
-									if (pinnedmessages[i]) { //&& pinnedmessages[i].reactions != val.rect
-										pinnedmessages[i].reactions = val.rect;
-										updatepinnedbar();
-									}
-									let rkeys = Object.keys(reactions);
-									let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
-									news.forEach(function(ir) {
-										let react = reactions[ir];
-										let reacc = document.createElement("div");
-										reacc.addEventListener("click",function() {
-											fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
-												
-											})
-										})
-										let reace = document.createElement("label");
-										reace.innerText = ir;
-										let cnter = document.createElement("label");
-										cnter.innerText = "0";
-										reacc.appendChild(reace);
-										reacc.appendChild(cnter);
-										msgd.msgreactions.appendChild(reacc);
-										
-										msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-									});
-									
-									let nurl = [];
-									Object.keys(msgd.reactions).forEach((i) => {
-										let v = msgd.reactions[i];
-										nurl.push(v.container);
-									})
-									
-									rkeys.forEach(function(i) {
-										let rk = reactions[i];
-										let rkk = Object.keys(rk);
-										let doescontaincurr = false;
-										rkk.forEach(function(aa) {
-											let a = rk[aa];
-											if (a.sender == logininfo.uid) {
-												doescontaincurr = true;
-											}
-										})
-										nurl.splice(nurl.indexOf(msgd.reactions[i].container),1)
-										if (doescontaincurr == true) {
-											msgd.reactions[i].container.classList.add("rcted")
-										}else {
-											msgd.reactions[i].container.classList.remove("rcted")
-										}
-										
-										msgd.reactions[i].counter.innerText = rkk.length;
-									})
-									nurl.forEach((i) => {
-										try {i.remove();delete msgd.reactions[i];}catch {}
-									})
-									Object.keys(msgd.reactions).forEach((i) => {
-										let v = msgd.reactions[i];
-										if (nurl.indexOf(v.container) > -1) {
-											delete v;
-										}
-									})
-								}
-								if (val.event == "PINNED") {
-									if (pinnedmessages[i] == undefined) {
-										let msgd = msgcdatas[i];
-										msgd.pinned.style.display = "";
-										pinnedmessages[i] = val;
-										updatepinnedbar();
-									}
-									//alert(i + " was pinned")
-								}
-								if (val.event == "UNPINNED") {
-									if (pinnedmessages[i]) {
-										let msgd = msgcdatas[i];
-										msgd.pinned.style.display = "none";
-										delete pinnedmessages[i];
-										updatepinnedbar();
-									}
-									//alert(i + " was unpinned")
-								}
-							})
-							sendedmessages.forEach(function(i) {
-								i.remove();
-							})
-							sendedmessages = [];
-						})
-					}else {
-						//openloginarea();
+			fetch(currserver + "getupdates", {body: JSON.stringify({'token': logininfo.token, 'id': chatid}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					res.json().then((json) => {
 						isready = true;
-					}
-				})
-				fetch(currserver + "gettyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
-					if (res.ok) {
-						res.json().then((json) => {
-							let index = json.indexOf(logininfo.uid);
-							if (index >= 0) {
-								json.splice(index,1);
+						let kys = Object.keys(json);
+						kys.forEach((i) => {
+							let val = json[i];
+							if (val.event == "NEWMESSAGE") {
+
+								if (chatpage[i] == undefined) {
+									chatpage[i] = val;
+									//mkeys[x] = i;
+									let msg = val;
+									msgcdatas[i] = addmsg(msg,i);
+									lastmessagekey = i;
+									messageslist.scrollTop = messageslist.scrollHeight;
+								}
 							}
-							if (json.length == 0) {
-								typinglabel.innerText = "Nobody is typing";
-								typinglabel.style.opacity = "0";
-							}else {
-								let usernameslist = [];
-								json.forEach(function(i) {
-									getuserinfo(i,function(u) {
-										usernameslist.push(u.name);
-										if (json.length == usernameslist.length) {
-											typinglabel.innerText = usernameslist.join(",") + " is typing...";
-											typinglabel.style.opacity = "";
+							if (val.event == "DELETED") {
+								messageflexes[i].remove();
+								let index = selectedMessages.indexOf(i);
+								if (index >= 0) {
+									selectedMessages.splice(index,1);
+								}
+								if (pinnedmessages[i]) {
+									delete pinnedmessages[i];
+									updatepinnedbar();
+								}
+							}
+							if (val.event == "REACTIONS") {
+								let msgd = msgcdatas[i];
+								let reactions = val.rect;
+								if (pinnedmessages[i]) { //&& pinnedmessages[i].reactions != val.rect
+									pinnedmessages[i].reactions = val.rect;
+									updatepinnedbar();
+								}
+								let rkeys = Object.keys(reactions);
+								let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
+								news.forEach(function(ir) {
+									let react = reactions[ir];
+									let reacc = document.createElement("div");
+									reacc.addEventListener("click",function() {
+										fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
+
+										})
+									})
+									let reace = document.createElement("label");
+									reace.innerText = ir;
+									let cnter = document.createElement("label");
+									cnter.innerText = "0";
+									reacc.appendChild(reace);
+									reacc.appendChild(cnter);
+									msgd.msgreactions.appendChild(reacc);
+
+									msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
+								});
+
+								let nurl = [];
+								Object.keys(msgd.reactions).forEach((i) => {
+									let v = msgd.reactions[i];
+									nurl.push(v.container);
+								})
+
+								rkeys.forEach(function(i) {
+									let rk = reactions[i];
+									let rkk = Object.keys(rk);
+									let doescontaincurr = false;
+									rkk.forEach(function(aa) {
+										let a = rk[aa];
+										if (a.sender == logininfo.uid) {
+											doescontaincurr = true;
 										}
 									})
-								});
+									nurl.splice(nurl.indexOf(msgd.reactions[i].container),1)
+									if (doescontaincurr == true) {
+										msgd.reactions[i].container.classList.add("rcted")
+									}else {
+										msgd.reactions[i].container.classList.remove("rcted")
+									}
+
+									msgd.reactions[i].counter.innerText = rkk.length;
+								})
+								nurl.forEach((i) => {
+									try {i.remove();delete msgd.reactions[i];}catch {}
+								})
+								Object.keys(msgd.reactions).forEach((i) => {
+									let v = msgd.reactions[i];
+									if (nurl.indexOf(v.container) > -1) {
+										delete v;
+									}
+								})
 							}
-						});
-					}
-				})
-			}else {
-				isready = true;
-			}
+							if (val.event == "PINNED") {
+								if (pinnedmessages[i] == undefined) {
+									let msgd = msgcdatas[i];
+									msgd.pinned.style.display = "";
+									pinnedmessages[i] = val;
+									updatepinnedbar();
+								}
+								//alert(i + " was pinned")
+							}
+							if (val.event == "UNPINNED") {
+								if (pinnedmessages[i]) {
+									let msgd = msgcdatas[i];
+									msgd.pinned.style.display = "none";
+									delete pinnedmessages[i];
+									updatepinnedbar();
+								}
+								//alert(i + " was unpinned")
+							}
+						})
+						sendedmessages.forEach(function(i) {
+							i.remove();
+						})
+						sendedmessages = [];
+					})
+				}else {
+					//openloginarea();
+					isready = true;
+				}
+			})
+			fetch(currserver + "gettyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					res.json().then((json) => {
+						let index = json.indexOf(logininfo.uid);
+						if (index >= 0) {
+							json.splice(index,1);
+						}
+						if (json.length == 0) {
+							typinglabel.innerText = "Nobody is typing";
+							typinglabel.style.opacity = "0";
+						}else {
+							let usernameslist = [];
+							json.forEach(function(i) {
+								getinfo(i,function(u) {
+									usernameslist.push(u.name);
+									if (json.length == usernameslist.length) {
+										typinglabel.innerText = usernameslist.join(",") + " is typing...";
+										typinglabel.style.opacity = "";
+									}
+								})
+							});
+						}
+					});
+				}
+			})
 		}
 		
 		//updatechat();
@@ -2585,9 +2574,7 @@ function loadmainarea() {
 			infolabel: infotxt,
 			addmsg: addmsg,
 			backbutton:backbtn,
-			kill: function() {
-				clearInterval(chatupdatetimer);
-			}
+			kill: kill
 		};
 	}
 }

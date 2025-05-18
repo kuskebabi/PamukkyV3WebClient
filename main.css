@@ -273,10 +273,16 @@ uploaditm > div > img {
 }
 uploaditm > button {
 	position:absolute;
-	top: 10px;
-	right: 10px;
+	top: 5px;
+	right: 5px;
 	background: rgba(0,0,0,0.1);
 	border-radius:100%;
+	width:30px;
+	height:30px;
+}
+
+uploaditm > button:hover {
+	background: rgba(255,0,0,0.2);
 }
 
 msgbar {
