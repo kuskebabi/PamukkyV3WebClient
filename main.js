@@ -364,6 +364,19 @@ function loadmainarea() {
 						desval.appendChild(desinp);
 						desrow.appendChild(desval);
 						infotable.appendChild(desrow);
+
+						let pubrow = document.createElement("tr");
+						let pubttl = document.createElement("td");
+						pubttl.innerText = "Public";
+						pubrow.appendChild(pubttl);
+						let pubval = document.createElement("td");
+						let pubinp = document.createElement("input");
+						pubinp.type = "checkbox";
+						pubinp.checked = infod.publicgroup;
+						pubval.appendChild(pubinp);
+						pubrow.appendChild(pubval);
+						infotable.appendChild(pubrow);
+
 						diag.inner.appendChild(infotable);
 						
 						let roles = {};
@@ -426,16 +439,23 @@ function loadmainarea() {
 											});
 										})
 										diag.inner.appendChild(editrolesbtn);
+										fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+											if (res.ok) {
+												res.text().then((text) => {
+													roles = JSON.parse(text);
+													diag.inner.appendChild(savebtn);
+												});
+											}
+										});
+									}else {
+										nameinp.readOnly = true;
+										desinp.readOnly = true;
+										pubinp.disabled = true;
+									}
+									if (crole.AdminOrder != -1) {
+										diag.inner.appendChild(leavebtn);
 									}
 								})
-							}
-						});
-						fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
-							if (res.ok) {
-								res.text().then((text) => {
-									roles = JSON.parse(text);
-									diag.inner.appendChild(savebtn);
-								});
 							}
 						});
 						let membersbtn = document.createElement("button");
@@ -553,7 +573,9 @@ function loadmainarea() {
 													users = JSON.parse(text);
 													let ukeys = Object.keys(users);
 													let cuser = users[logininfo.uid];
-													crole = roles[cuser.role];
+													if (cuser) {
+														crole = roles[cuser.role];
+													}
 													userstable.setList(ukeys);
 												});
 											}
@@ -644,11 +666,9 @@ function loadmainarea() {
 								fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 									console.log(data);
 									if (data.status == "success") {
-										fetch(currserver + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles }),method: 'POST'}).then((res) => {
+										fetch(currserver + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
 											if (res.ok) {
-												res.text().then((text) => {
-													
-												})
+
 											}else {
 												
 											}
@@ -656,7 +676,7 @@ function loadmainarea() {
 									}
 								})}).catch(function(error) {console.error(error);});
 							}else {
-								fetch(currserver + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles  }),method: 'POST'}).then((res) => {
+								fetch(currserver + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
 									if (res.ok) {
 
 									}else {
@@ -679,7 +699,7 @@ function loadmainarea() {
 								})
 							}
 						})
-						diag.inner.appendChild(leavebtn);
+
 						
 						f.onchange = function() {
 							if (f.files && f.files[0]) {
@@ -1772,7 +1792,28 @@ function loadmainarea() {
 						if (crole.AllowSending == true) {
 
 						}else {
-							mgb.style.display = "none";
+							if (crole.AdminOrder == -1) {
+								mgbd.innerHTML = "";
+								let joinbtn = document.createElement("button");
+								joinbtn.innerText = "Join Group";
+								joinbtn.style.width = "100%";
+								joinbtn.style.height = "100%";
+								joinbtn.style.borderRadius = "0px";
+								joinbtn.classList.add("transparentbtn");
+								addRipple(joinbtn,"rgba(255,200,0,0.6)",true);
+								mgbd.appendChild(joinbtn);
+								joinbtn.addEventListener("click",function() {
+									joinbtn.disabled = true;
+									fetch(currserver + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': ugid}),method: 'POST'}).then((res) => {
+										if (res.ok) {
+											loadchats();
+											openchat(chatid);
+										}
+									});
+								})
+							}else {
+								mgbd.style.display = "none";
+							}
 						}
 					})
 				}
