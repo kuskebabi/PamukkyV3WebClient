@@ -243,7 +243,6 @@ function loadmainarea() {
 	let leftarea = document.createElement("leftarea");
 	let titlebar = document.createElement("titlebar");
 	let rightarea = document.createElement("rightarea");
-	titlebar.classList.add("grd");
 
 	function viewuginfo(ugid,type,grole) {
 		let diag = opendialog();
@@ -468,16 +467,18 @@ function loadmainarea() {
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
 							diag.title.innerText = "Members";
-							let userstable = createDynamicList("table");
-							userstable.element.style.height = "100%";
+							let userstable = createDynamicList();
 							userstable.setItemGenerator(function(ukeys,e) {
 								let user = users[ukeys[e]];
 								if (user == undefined) return;
-								let urow = document.createElement("tr");
+								let urow = document.createElement("div");
+								urow.style.display = "flex";
 								urow.style.width = "100%";
-								let uname = document.createElement("td");
+								urow.style.height = "40px";
+								let uname = document.createElement("div");
 								uname.style.display = "flex";
 								uname.style.alignItems = "center";
+								uname.style.width = "100%";
 								let userpfp = document.createElement("img");
 								userpfp.classList.add("circleimg");
 								userpfp.classList.add("loading");
@@ -495,21 +496,25 @@ function loadmainarea() {
 									usernamelbl.classList.remove("loading");
 								});
 								urow.appendChild(uname);
-								let urole = document.createElement("td");
+								let urole = document.createElement("div");
+								urole.style.minWidth = "100px";
+								urole.style.display = "flex";
+								urole.style.alignItems = "center";
 								if (!crole.AllowEditingUsers) {
 									urole.innerText = user.role;
 								}else {
-									let ri = document.createElement("select");
+									let roleselect = document.createElement("select");
+									roleselect.style.width = "100%";
 									rokeys.forEach(function(i) {
 										let opt = document.createElement("option");
 										opt.value = i;
 										opt.innerText = i;
-										ri.appendChild(opt);
+										roleselect.appendChild(opt);
 									})
-									ri.value = user.role;
-									ri.addEventListener("change",function() {
+									roleselect.value = user.role;
+									roleselect.addEventListener("change",function() {
 										//alert("wait..")
-										fetch(currserver + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'userid': user.user, 'role': ri.value }),method: 'POST'}).then((res) => {
+										fetch(currserver + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'userid': user.user, 'role': roleselect.value }),method: 'POST'}).then((res) => {
 											if (res.ok) {
 												res.text().then((text) => {
 
@@ -519,13 +524,17 @@ function loadmainarea() {
 											}
 										})
 									});
-									urole.appendChild(ri);
+									urole.appendChild(roleselect);
 								}
 								urow.appendChild(urole);
 								if (crole.AllowKicking || crole.AllowBanning) {
-									let uacts = document.createElement("td");
+									let uacts = document.createElement("div");
+									uacts.style.width = "68px";
+									uacts.style.display = "flex";
+									uacts.style.flexShrink = "0";
 									if (crole.AllowKicking) {
 										let kickbtn = document.createElement("button");
+										kickbtn.classList.add("cb");
 										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
 										kickbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to kick this user?")) {
@@ -542,6 +551,7 @@ function loadmainarea() {
 									}
 									if (crole.AllowBanning) {
 										let banbtn = document.createElement("button");
+										banbtn.classList.add("cb");
 										banbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q54 0 104-17.5t92-50.5L228-676q-33 42-50.5 92T160-480q0 134 93 227t227 93Zm252-124q33-42 50.5-92T800-480q0-134-93-227t-227-93q-54 0-104 17.5T284-732l448 448Z"/></svg>';
 										banbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to ban this user?")) {
@@ -972,7 +982,8 @@ function loadmainarea() {
 		if (index == list.length - 1) {
 			let fabhint = document.createElement("label");
 			fabhint.style.display = "block";
-			fabhint.innerText = "Click on the \"+\" button to add a new chat > > ";
+			fabhint.style.margin = "8px";
+			fabhint.innerText = "Click on the \"+\" button to add a new chat.";
 			return fabhint;
 		}
 		let item = list[index];
@@ -1037,9 +1048,7 @@ function loadmainarea() {
 
 
 		if (document.body.clientWidth > 800 && currentchatid == id) {
-			itmcont.style.background = "orange"
-			itmcont.style.borderRadius = "5px 0px 0px 5px";
-			itmcont.style.transform = "translateX(4px)";
+			itmcont.classList.add("active");
 		}
 		return itmcont;
 	});
@@ -2627,14 +2636,14 @@ function loadmainarea() {
 									msgd.reactions[i].counter.innerText = rkk.length;
 								})
 								nurl.forEach((i) => {
-									try {i.remove();delete msgd.reactions[i];}catch {}
+									try {i.remove();delete msgd.reactions[i]; delete msgd.msgreactions[i];}catch {}
 								})
-								Object.keys(msgd.reactions).forEach((i) => {
+								/*Object.keys(msgd.reactions).forEach((i) => {
 									let v = msgd.reactions[i];
 									if (nurl.indexOf(v.container) > -1) {
 										delete v;
 									}
-								})
+								})*/
 							}
 							if (val.event == "PINNED") {
 								if (pinnedmessages[i] == undefined) {
@@ -2763,6 +2772,7 @@ function createDynamicList(innertype = "div") {
 	let innerelement = document.createElement(innertype);
 	innerelement.style.overflow = "hidden";
 	innerelement.style.width = "100%";
+	innerelement.style.position = "relative";
 	listelement.appendChild(innerelement);
 	let pos = 0;
 	listelement.addEventListener("scroll",function() {
@@ -2810,7 +2820,7 @@ function createDynamicList(innertype = "div") {
 			idx++;
 		}
 		let offset = pos - size;
-		let visibleitemidx = 0;
+		//let visibleitemidx = 0;
 		while (pos + listelement.clientHeight >= size) {
 			if (idx > list.length - 1) {
 				return;
@@ -2818,12 +2828,13 @@ function createDynamicList(innertype = "div") {
 			let elem = itemgenerator(list,idx);
 			if (elem) {
 				innerelement.appendChild(elem);
-				if (visibleitemidx == 0) {
+				elem.style.position = "absolute";
+				/*if (visibleitemidx == 0) {
 					elem.style.marginTop = size + "px";
-				}
-				//elem.style.top = (size) + "px";
+				}*/
+				elem.style.top = (size) + "px";
 			}
-			visibleitemidx++;
+			//visibleitemidx++;
 			size += getsize(list,idx);
 			idx++;
 		}

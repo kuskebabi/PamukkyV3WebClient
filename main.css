@@ -1,3 +1,7 @@
+* {
+box-sizing: border-box;
+}
+
 body,html {
 	display:flex;
 	margin:0px;
@@ -23,7 +27,9 @@ button:disabled {
 	cursor: default;
 }
 
-img{border:0;}
+flex {
+	display:flex;
+}
 
 td {
 	padding:5px;
@@ -44,7 +50,7 @@ body {
 }
 
 .cb:hover {
-	background:rgba(255,255,255,0.1);
+	background:rgba(255,255,255,0.2);
 }
 
 svg {
@@ -74,7 +80,7 @@ centeredPopup {
 	min-width: 300px;
 	max-width: 100%;
 	max-height: 100%;
-	background-color: #dbdbdb;
+	background-color: var(--main-bg);
 	border-radius: 8px;
 	padding:8px;
 	animation-name: dialogappear;
@@ -82,17 +88,13 @@ centeredPopup {
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 centeredPopup.docked {
-	background-color: #ebebeb;
+	background-color: var(--main-bg);
 	border-radius:0;
 	animation-name: dialogappeardocked;
 	animation-duration: 0.5s;
 	max-width:100%;
 	max-height:100%;
 	box-shadow: none;
-}
-
-centeredPopup > div > * {
-	/*flex-shrink:0;*/
 }
 
 h1,h2,h3,h4,h5 {
@@ -112,12 +114,11 @@ main {
 leftarea {
 	height:100%;
 	width:30%;
-	background-color: #ebebeb;
+	background-color: var(--main-bg);
 	display:flex;
 	flex-direction: column;
 	position:relative;
 	transition: opacity 1s;
-	background-image: radial-gradient(circle at left top, rgba(255,160,0,0.6628851369649422) 10%, rgba(255,255,255,0) 24%);
 }
 
 rightarea {
@@ -134,10 +135,6 @@ mchat {
 	height:100%;
 	display:flex;
 	flex-direction: column;
-}
-
-* {
-	box-sizing: border-box;
 }
 
 input,textarea {
@@ -191,7 +188,7 @@ titlebar {
 	display:flex;
 	height: 48px;
 	width:100%;
-	background-color: #ebebeb;
+	background-color: var(--main-bg);
 	align-items:center;
 	flex-shrink:0;
 }
@@ -200,16 +197,12 @@ pinbar {
 	display:flex;
 	height: 56px;
 	width:100%;
-	background-color: #ebebeb;
+	background-color: var(--main-bg);
 	align-items:center;
 	flex-shrink:0;
 }
 pinbar > replycont {
 	flex-shrink: initial;
-}
-
-.grd {
-	background: linear-gradient(90deg, rgba(255,255,255,0) 42%, rgba(235,235,235,1) 100%);
 }
 
 replycont {
@@ -290,7 +283,7 @@ msgbar {
 	width:100%;
 	flex-direction:column;
 	flex-shrink:0;
-	background-color: #ebebeb;
+	background-color: var(--main-bg);
 }
 
 msgbar > div {
@@ -339,11 +332,19 @@ msgbar > div > textarea {
 	transition: background 300ms, border-radius 300ms, transform 300ms;
 	text-align: inherit;
 	font-size: inherit;
+	border: 1px solid gray;
 	background:transparent;
+}
+
+.chatitem.active {
+	background: orange;
+	border: 1px solid transparent;
+	border-radius: 5px 0px 0px 5px;
 }
 
 .chatitem:hover {
 	background: rgba(0,0,0,0.2);
+	border: 1px solid transparent;
 }
 
 .chatitem > img {
@@ -477,6 +478,11 @@ msgreacts > div.rcted {
 	color:black;
 }
 
+msgreacts > div.rcted > label:first-child {
+	animation-name: reactappear;
+	animation-duration: 0.5s;
+}
+
 .errorlabel {
 	color: red;
 	padding: 2px;
@@ -504,22 +510,20 @@ button.fab {
 	right: 20px;
 	z-index:1;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-	transition: transform 0.2s, box-shadow 0.2s;
+	transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
 }
 button.fab:hover {
 	background:orange;
 	box-shadow: none;
 }
-button.fab:active {
+button.fab:hover:active {
 	transform:scale(0.8);
 }
 
-.contextmenu > * {
-	width:100%;
-}
 .contextmenu > *, .customctx > div > * {
 	width:100%;
 }
+
 .contextmenu button, .customctx button {
 	border:none;
 	white-space: nowrap;
@@ -618,16 +622,13 @@ filed > div > label {
 }
 
 @keyframes mainappear {
-	from {transform:scale(1.2);opacity:0;}
-	to {transform:scale(1);}
+	from {transform:translateX(100%);opacity:0;}
 }
 
-
-flex {
-	display:flex;
+@keyframes reactappear {
+	0% {transform:scale(0.8);opacity:0;}
+	50% {transform:scale(1.1);}
 }
-
-
 
 @media only screen and (min-width: 2000px) {
 	messageslist {
@@ -680,16 +681,6 @@ flex {
 	rightarea {
 		background: rgb(20,20,20);
 	}
-	
-	centeredPopup,leftarea,.bbar {
-		background-color: #171717;
-	}
-	titlebar, msgbar, pinbar {
-		background-color: #262626;
-	}
-	.grd {
-		background: linear-gradient(90deg, rgba(255,255,255,0) 42%, rgba(38,38,38,1) 100%);
-	}
 
 	msgmain > msgbuble {
 		background: #262626;
@@ -697,49 +688,23 @@ flex {
 	.contextmenu, .customctx > div {
 		background: rgb(40,40,40);
 	}
-	centeredPopup.docked {
-		background-color: #262626;
-	}
-	.chatitem:hover {
+	.chatitem:hover, .transparentbtn:hover {
 		background: rgba(255,255,255,0.2);
 	}
-	.transparentbtn:hover {
-		background: rgba(255,255,255,0.3);
-	}
-	filed > div > label {
-		color:white;
-	}
-	a {
+	filed > div > label, a {
 		color:white;
 	}
 }
 
 @media (prefers-reduced-motion) {
-	.contextmenu {
-		transition: none;
-	}
-	.chatitem {
-		transition: none;
-	}
-	button {
+	* {
 		transition: none !important;
-	}
-	centeredPopup, msgbuble, body, html, main {
 		animation:none !important;
-	}
-	.infolabel {
-		transition: none;
 	}
 }
 
 @media print {
-	leftarea {
-		display:none !important;
-	}
-	titlebar, pinbar {
-		display:none !important;
-	}
-	msgbar {
+	leftarea, customctx, titlebar, pinbar, msgbar {
 		display:none !important;
 	}
 	rightarea {
