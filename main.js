@@ -250,27 +250,38 @@ function loadmainarea() {
 		diag.inner.style.display = "flex";
 		diag.inner.style.flexDirection = "column";
 		diag.inner.style.alignItems = "center";
+
+		//Content
+		let pfpimge = document.createElement("img");
+		pfpimge.style.boxShadow = "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)";
+		pfpimge.classList.add("circleimg");
+		pfpimge.loading = "lazy";
+		pfpimge.style.width = "80px";
+		pfpimge.style.height = "80px";
+		pfpimge.classList.add("loading");
+		diag.inner.appendChild(pfpimge);
+
+		let infotxt = document.createElement("label");
+		infotxt.style.margin = "6px";
+		infotxt.style.fontSize = "10px";
+		infotxt.innerText = "loading...";
+		infotxt.classList.add("loading");
+		diag.inner.appendChild(infotxt);
+
+		let infotable = document.createElement("table");
+		diag.inner.appendChild(infotable);
+
 		if (type == "user") {
 			fetch(currserver + "getuser", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						let infod = JSON.parse(text);
-						
-						let pfpimge = document.createElement("img");
-						pfpimge.style.boxShadow = "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)";
-						pfpimg.loading = "lazy";
-						pfpimge.classList.add("circleimg");
-						pfpimge.style.width = "80px";
-						pfpimge.style.height = "80px";
-						pfpimge.src = getpfp(infod.picture);
-						diag.inner.appendChild(pfpimge);
 
-						let infotxt = document.createElement("label");
-						infotxt.style.margin = "6px";
-						infotxt.style.fontSize = "10px";
-						infotxt.innerText = "loading...";
-						infotxt.classList.add("loading");
-						diag.inner.appendChild(infotxt);
+						pfpimge.classList.remove("loading");
+						pfpimge.src = getpfp(infod.picture);
+
+
+
 
 						fetch(currserver + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
 							if (res.ok) {
@@ -286,7 +297,6 @@ function loadmainarea() {
 							}
 						});
 						
-						let infotable = document.createElement("table");
 						let namerow = document.createElement("tr");
 						let namettl = document.createElement("td");
 						namettl.innerText = "Name";
@@ -295,7 +305,7 @@ function loadmainarea() {
 						let nameval = document.createElement("td");
 						nameval.innerText = infod.name;
 						namerow.appendChild(nameval);
-						
+
 						let desrow = document.createElement("tr");
 						let desttl = document.createElement("td");
 						desttl.style.fontWeight = "bold";
@@ -304,11 +314,11 @@ function loadmainarea() {
 						let desval = document.createElement("td");
 						desval.innerText = infod.description;
 						desrow.appendChild(desval);
-						
-						
+
+
 						infotable.appendChild(namerow);
 						infotable.appendChild(desrow);
-						diag.inner.appendChild(infotable);
+
 					})
 				}
 			})
@@ -325,23 +335,15 @@ function loadmainarea() {
 						let ufl = false;
 						let file;
 						
-						let pfpimge = document.createElement("img");
-						pfpimge.style.boxShadow = "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)";
-						pfpimge.classList.add("circleimg");
-						pfpimge.loading = "lazy";
-						pfpimge.style.width = "80px";
-						pfpimge.style.height = "80px";
+						pfpimge.classList.remove("loading");
 						pfpimge.style.cursor = "pointer";
 						pfpimge.title = "Click to upload";
 						pfpimge.src = getpfp(infod.picture,"group.svg");
 						pfpimge.addEventListener("click",function () {f.click();})
-						diag.inner.appendChild(pfpimge);
 						
-						let idlabel = document.createElement("label");
-						idlabel.innerText = ugid;
-						diag.inner.appendChild(idlabel);
-						
-						let infotable = document.createElement("table");
+						infotxt.innerText = ugid;
+						infotxt.classList.remove("loading");
+
 						let namerow = document.createElement("tr");
 						let namettl = document.createElement("td");
 						namettl.innerText = "Name";
@@ -375,8 +377,6 @@ function loadmainarea() {
 						pubval.appendChild(pubinp);
 						pubrow.appendChild(pubval);
 						infotable.appendChild(pubrow);
-
-						diag.inner.appendChild(infotable);
 						
 						let roles = {};
 						let crole = {};
@@ -922,12 +922,18 @@ function loadmainarea() {
 			currentchatview.backbutton.onclick = function() {
 				rightarea.style.left = "";
 				leftarea.style.display = "";
+				currentchatid = "";
+				location.href = "#mainarea";
 				requestAnimationFrame(function() {leftarea.style.opacity = "1";})
-				setTimeout(function() {
-					rightarea.style.display = "none";
-					leftarea.style.display = "";
-					currentchatview.chat.innerHTML = "";
-				},500)
+				if (document.body.clientWidth <= 800) {
+					setTimeout(function() {
+						rightarea.style.display = "none";
+						leftarea.style.display = "";
+						currentchatview.chat.innerHTML = "";
+					},500)
+				}else {
+					currentchatview.backbutton.style.display = "none";
+				}
 			}
 			requestAnimationFrame(function() {
 				setTimeout(function() {
@@ -954,6 +960,10 @@ function loadmainarea() {
 				if (chat != currentchatid) {
 					openchat(chat);
 				}
+			}else if (hash == "mainarea") {
+				if (currentchatview) {
+					currentchatview.backbutton.click();
+				}
 			}
 		}
 	}
@@ -968,7 +978,7 @@ function loadmainarea() {
 		if (index == 0) {
 			return 32;
 		}
-		return 58;
+		return 60;
 	});
 	chatslist.setItemGenerator(function(list,index) {
 		if (index == 0) {
@@ -1999,7 +2009,7 @@ function loadmainarea() {
 						let chatslist = createDynamicList();
 						chatslist.element.classList.add("clist");
 						chatslist.setGetSize(function(list,index) {
-							return 58;
+							return 60;
 						});
 						chatslist.setItemGenerator(function(list,index) {
 							let item = list[index];
