@@ -87,7 +87,7 @@ function openconnectarea(err) {
 	it.innerText = "Enter Server URL To Begin:\n"
 	connectcnt.appendChild(it);
 	let servertb = document.createElement("input");
-	servertb.placeholder = "URL or IP";
+	servertb.placeholder = "URL or IP address";
 	servertb.style.display = "block";
 	servertb.style.width = "100%";
 	servertb.style.marginTop = "5px";
@@ -106,7 +106,7 @@ function openconnectarea(err) {
 	addRipple(connectbtn,"rgba(255,200,0,0.6)");
 	
 	if (err) {
-		errlbl.innerText = "Failled Connecting"
+		errlbl.innerText = "Connection failed."
 	}
 	
 	connectbtn.addEventListener("click",function() {
@@ -130,7 +130,7 @@ function openconnectarea(err) {
 			connectbtn.disabled = false;
 			errlbl.classList.add("errorlabel");
 			errlbl.classList.remove("infolabel");
-			errlbl.innerText = "Failled Connecting"
+			errlbl.innerText = "Connection failed."
 		})
 	})
 }
@@ -1645,6 +1645,7 @@ function loadmainarea() {
 			let k = Object.keys(pinnedmessages);
 			if (k.length > 0) {
 				pinnedbar.style.display = "";
+				messageslist.scrollTop += 56;
 				let msg = pinnedmessages[k[k.length - 1]];
 				pincontent.innerText = msg.content;
 				pinsender.classList.add("loading");
