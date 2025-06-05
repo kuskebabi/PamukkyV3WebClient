@@ -732,16 +732,9 @@ function loadmainarea() {
 	
 	function opendialog() {
 		let bgcover = document.createElement("div");
-		bgcover.style.background = "rgba(0,0,0,0.3)";
-		bgcover.style.right = "0";
-		bgcover.style.bottom = "0";
-		bgcover.style.top = "0";
-		bgcover.style.left = "0";
-		bgcover.style.display = "flex";
-		bgcover.style.position = "fixed";
+		bgcover.classList.add("bgcover");
 		bgcover.style.alignItems = "center";
 		bgcover.style.justifyContent = "center";
-		bgcover.style.zIndex = "6";
 		bgcover.addEventListener("pointerdown",function(e) {
 			if (e.target == bgcover) {
 				document.body.removeChild(bgcover);
@@ -1926,7 +1919,7 @@ function loadmainarea() {
 							let reactionbtn = document.createElement("button");
 							reactionbtn.style.border = "none";
 							reactionbtn.style.background = "none";
-							reactionbtn.classList.add("orangebgonhover");
+							reactionbtn.classList.add("reactionbtn");
 							reactionbtn.style.padding = "4px";
 							reactionbtn.style.width = "35px";
 							reactionbtn.style.height = "35px";
@@ -1937,6 +1930,7 @@ function loadmainarea() {
 								fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'}).then((res) => {
 
 								})
+								clik();
 							});
 						});
 						ctxdiv.appendChild(reactionsdiv);
@@ -1969,25 +1963,17 @@ function loadmainarea() {
 					replybutton.addEventListener("click", function() {
 						replymsgid = id;
 						rc.style.display = "";
-						//requestAnimationFrame(function() {
-						//	getid("repcont").style.maxHeight = "100%";
-						//});
-						if (msg.sender == 0) {
-							replycnt.innerText = msg.content.replace(/JOINED_GROUP/g,"Joined This Group").replace(/LEAVED_GROUP/g,"Leaved This Group").replace(/EDITED_GROUP/g,"Edited This Group").replace(/CREATED_GROUP/g,"Created This Group").replace(/KICKED_FROM_GROUP_END/g,"").replace(/KICKED_FROM_GROUP/g,"Kicked From This Group By ");
-						}else {
-							replycnt.innerText = msg.content;
-						}
-
+						replycnt.innerText = msg.content;
 						replysname.innerText = senderuser.name;
+						clik();
 					})
 					cnt.appendChild(replybutton);
 					let forwardbutton = document.createElement("button");
 					addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
 					forwardbutton.innerText = "Forward Message...";
-					let chatinfs = {};
 					forwardbutton.addEventListener("click", function() {
 						let diag = opendialog();
-						diag.title.innerText = "Forward";
+						diag.title.innerText = "Forward message";
 						diag.inner.style.overflow = "hidden";
 						//diag.inner.style.height = "calc(100% - 68px)";
 						diag.inner.style.display = "flex";
@@ -2093,81 +2079,84 @@ function loadmainarea() {
 							})
 							diag.closebtn.click();
 						}
+						clik();
 					})
-						cnt.appendChild(forwardbutton);
-						let selectbutton = document.createElement("button");
-						selectbutton.innerText = "Multi-Select";
-						addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
-						selectbutton.addEventListener("click", function() {
-							selectmessage();
+					cnt.appendChild(forwardbutton);
+					let selectbutton = document.createElement("button");
+					selectbutton.innerText = "Multi-Select";
+					addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
+					selectbutton.addEventListener("click", function() {
+						selectmessage();
+						clik();
+					})
+					cnt.appendChild(selectbutton);
+					let savebtn = document.createElement("button");
+					savebtn.innerText = "Save Message";
+					addRipple(savebtn,"rgba(255,200,0,0.6)",true);
+					savebtn.addEventListener("click", function() {
+						let messages = selectedMessages;
+						if (messages.length == 0) messages = [id];
+						fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+
 						})
-						cnt.appendChild(selectbutton);
-						let savebtn = document.createElement("button");
-						savebtn.innerText = "Save Message";
-						addRipple(savebtn,"rgba(255,200,0,0.6)",true);
-						savebtn.addEventListener("click", function() {
+						clik();
+					})
+					cnt.appendChild(savebtn);
+					let pinbtn = document.createElement("button");
+					pinbtn.innerText = "Pin Message";
+					addRipple(pinbtn,"rgba(255,200,0,0.6)",true);
+					pinbtn.addEventListener("click", function() {
+						let messages = selectedMessages;
+						if (messages.length == 0) messages = [id];
+						fetch(currserver + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+
+						})
+						clik();
+					})
+					pinbtn.disabled = !crole.AllowPinningMessages;
+					cnt.appendChild(pinbtn);
+					let copybutton = document.createElement("button");
+					addRipple(copybutton,"rgba(255,200,0,0.6)",true);
+					copybutton.innerText = "Copy selected text";
+					copybutton.addEventListener("click", function() {
+						document.execCommand('copy');
+						clik();
+					})
+					cnt.appendChild(copybutton);
+					let deletebutton = document.createElement("button");
+					addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
+					deletebutton.innerText = "Delete Message";
+					deletebutton.addEventListener("click", () => {
+						if (confirm("Do you really want to delete?")) {
 							let messages = selectedMessages;
 							if (messages.length == 0) messages = [id];
-							fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+							fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
 
 							})
-						})
-						cnt.appendChild(savebtn);
-						let pinbtn = document.createElement("button");
-						pinbtn.innerText = "Pin Message";
-						addRipple(pinbtn,"rgba(255,200,0,0.6)",true);
-						pinbtn.addEventListener("click", function() {
-							let messages = selectedMessages;
-							if (messages.length == 0) messages = [id];
-							fetch(currserver + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-
-							})
-						})
-						pinbtn.disabled = !crole.AllowPinningMessages;
-						cnt.appendChild(pinbtn);
-						let copybutton = document.createElement("button");
-						addRipple(copybutton,"rgba(255,200,0,0.6)",true);
-						copybutton.innerText = "Copy selected text";
-						copybutton.addEventListener("click", function() {
-							document.execCommand('copy');
-						})
-						cnt.appendChild(copybutton);
-						let deletebutton = document.createElement("button");
-						addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
-						deletebutton.innerText = "Delete Message";
-						deletebutton.addEventListener("click", () => {
-							if (confirm("Do you really want to delete?")) {
-								let messages = selectedMessages;
-								if (messages.length == 0) messages = [id];
-								fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-
-								})
-							}
-						})
-						cnt.appendChild(deletebutton);
-						let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); document.body.removeEventListener("click", clik);document.body.removeEventListener("contextmenu", clik)},200)}
-						if (selectedMessages.length > 0) {
-							deletebutton.disabled = false;
-						}else {
-							deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
 						}
+						clik();
+					})
+					cnt.appendChild(deletebutton);
+					let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); maincont.removeEventListener("pointerdown", clik);},200)}
+					if (selectedMessages.length > 0) {
+						deletebutton.disabled = false;
+					}else {
+						deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
+					}
 
-						ctxdiv.style.opacity = "0";
-						document.body.appendChild(ctxdiv);
-						requestAnimationFrame(function() {
-							ctxdiv.style.opacity = "";
-						});
-						document.body.addEventListener("click",clik)
-						setTimeout(function() {
-							document.body.addEventListener("contextmenu",clik)
-						},0)
-						if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
-							ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
-						}
-						if (event.clientY > document.body.clientHeight - ctxdiv.offsetHeight) {
-							ctxdiv.style.top = (document.body.clientHeight - ctxdiv.offsetHeight) + "px";
-						}
-						event.preventDefault();
+					ctxdiv.style.opacity = "0";
+					document.body.appendChild(ctxdiv);
+					requestAnimationFrame(function() {
+						ctxdiv.style.opacity = "";
+					});
+					maincont.addEventListener("pointerdown",clik)
+					if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
+						ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
+					}
+					if (event.clientY > document.body.clientHeight - ctxdiv.offsetHeight) {
+						ctxdiv.style.top = (document.body.clientHeight - ctxdiv.offsetHeight) + "px";
+					}
+					event.preventDefault();
 				}
 			});
 			let msgm = document.createElement("msgmain");
@@ -2471,80 +2460,83 @@ function loadmainarea() {
 		})
 		
 		let isready = true;
-		fetch(currserver + "getchatpage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'page': 0}),method: 'POST'}).then((res) => {
-				if (res.ok) {
-					res.text().then((text) => {
-						isready = true;
-						chatpage = JSON.parse(text);
-						let mkeys = Object.keys(chatpage);
-						
-						mkeys.forEach(i => {
-							let msg = chatpage[i];
-							msgcdatas[i] = addmsg(msg,i);
-							lastmessagekey = i;
-						})
+		let updatessince = 0;
+		fetch(currserver + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': "#0-#48"}),method: 'POST'}).then((res) => {
+			if (res.ok) {
+				res.text().then((text) => {
+					isready = true;
+					chatpage = JSON.parse(text);
+					let mkeys = Object.keys(chatpage);
 
-						
-						mkeys.forEach(function(i) {
-							let msgd = msgcdatas[i];
-							
-							let reactions = chatpage[i].reactions;
-							if (reactions) {
-								Object.keys(reactions).forEach(function(ir) {
-									let react = reactions[ir];
-									let reacc = document.createElement("div");
-									reacc.style.cursor = "pointer";
-									reacc.addEventListener("click",function() {
-										fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
-											
-										})
-									})
-									let reace = document.createElement("label");
-									reace.innerText = ir;
-									let cnter = document.createElement("label");
-									cnter.innerText = "0";
-									reacc.appendChild(reace);
-									reacc.appendChild(cnter);
-									msgd.msgreactions.appendChild(reacc);
-									
-									msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-
-									let rkk = Object.keys(react);
-									let doescontaincurr = false;
-									Object.keys(react).forEach(function(aa) {
-										let a = react[aa];
-										if (a.sender == logininfo.uid) {
-											doescontaincurr = true;
-										}
-									})
-
-									if (doescontaincurr) {
-										msgd.reactions[ir].container.classList.add("rcted")
-									}
-
-									msgd.reactions[ir].counter.innerText = rkk.length;
-								});
-								
-							}
-						});
-						
-						messageslist.scrollTop = messageslist.scrollHeight;
-						ocp = chatpage;
-
-						fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
-							if (res.ok) {
-								res.text().then((text) => {
-									pinnedmessages = JSON.parse(text);
-									updatepinnedbar();
-								});
-							}
-						});
+					mkeys.forEach(i => {
+						let msg = chatpage[i];
+						msgcdatas[i] = addmsg(msg,i);
+						lastmessagekey = i;
+						updatessince = i;
 					})
-				}else {
-					alert("Invalid chat");
-					kill();
-				}
-			})
+
+
+					mkeys.forEach(function(i) {
+						let msgd = msgcdatas[i];
+
+						let reactions = chatpage[i].reactions;
+						if (reactions) {
+							Object.keys(reactions).forEach(function(ir) {
+								let react = reactions[ir];
+								let reacc = document.createElement("div");
+								reacc.style.cursor = "pointer";
+								reacc.addEventListener("click",function() {
+									fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
+
+									})
+								})
+								let reace = document.createElement("label");
+								reace.innerText = ir;
+								let cnter = document.createElement("label");
+								cnter.innerText = "0";
+								reacc.appendChild(reace);
+								reacc.appendChild(cnter);
+								msgd.msgreactions.appendChild(reacc);
+
+								msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
+
+								let rkk = Object.keys(react);
+								let doescontaincurr = false;
+								Object.keys(react).forEach(function(aa) {
+									let a = react[aa];
+									if (a.sender == logininfo.uid) {
+										doescontaincurr = true;
+									}
+								})
+
+								if (doescontaincurr) {
+									msgd.reactions[ir].container.classList.add("rcted")
+								}
+
+								msgd.reactions[ir].counter.innerText = rkk.length;
+							});
+
+						}
+					});
+
+					messageslist.scrollTop = messageslist.scrollHeight;
+					ocp = chatpage;
+
+					fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
+						if (res.ok) {
+							res.text().then((text) => {
+								pinnedmessages = JSON.parse(text);
+								updatepinnedbar();
+							});
+						}
+					});
+				})
+			}else {
+				alert("Invalid chat");
+				kill();
+			}
+		})
+		let readupdates = [];
 		function updatechat() {
 			if (!isready) return;
 			isready = false;
@@ -2563,116 +2555,123 @@ function loadmainarea() {
 					}
 				});
 			}
-			
-			fetch(currserver + "getupdates", {body: JSON.stringify({'token': logininfo.token, 'id': chatid}),method: 'POST'}).then((res) => {
+
+			fetch(currserver + "getupdates", {body: JSON.stringify({'token': logininfo.token, 'id': chatid, 'since': updatessince}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.json().then((json) => {
 						isready = true;
-						let kys = Object.keys(json);
-						kys.forEach((i) => {
+						let keys = Object.keys(json);
+						keys.forEach((i) => {
+							updatessince = i;
+
 							let val = json[i];
-							if (val.event == "NEWMESSAGE") {
-
-								if (chatpage[i] == undefined) {
-									chatpage[i] = val;
-									//mkeys[x] = i;
-									let msg = val;
-									msgcdatas[i] = addmsg(msg,i);
-									lastmessagekey = i;
-									messageslist.scrollTop = messageslist.scrollHeight;
+							let key = val.id;
+							if (!readupdates.includes(key)) {
+								readupdates.push(key);
+								if (val.event == "NEWMESSAGE") {
+									if (messageflexes[key] == undefined) {
+										chatpage[key] = val;
+										//mkeys[x] = i;
+										let msg = val;
+										msgcdatas[key] = addmsg(msg,key);
+										lastmessagekey = key;
+										messageslist.scrollTop = messageslist.scrollHeight;
+									}
 								}
-							}
-							if (val.event == "DELETED") {
-								messageflexes[i].remove();
-								let index = selectedMessages.indexOf(i);
-								if (index >= 0) {
-									selectedMessages.splice(index,1);
-								}
-								if (pinnedmessages[i]) {
-									delete pinnedmessages[i];
-									updatepinnedbar();
-								}
-							}
-							if (val.event == "REACTIONS") {
-								let msgd = msgcdatas[i];
-								let reactions = val.rect;
-								if (pinnedmessages[i]) { //&& pinnedmessages[i].reactions != val.rect
-									pinnedmessages[i].reactions = val.rect;
-									updatepinnedbar();
-								}
-								let rkeys = Object.keys(reactions);
-								let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
-								news.forEach(function(ir) {
-									let react = reactions[ir];
-									let reacc = document.createElement("div");
-									reacc.addEventListener("click",function() {
-										fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
-
-										})
-									})
-									let reace = document.createElement("label");
-									reace.innerText = ir;
-									let cnter = document.createElement("label");
-									cnter.innerText = "0";
-									reacc.appendChild(reace);
-									reacc.appendChild(cnter);
-									msgd.msgreactions.appendChild(reacc);
-
-									msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-								});
-
-								let nurl = [];
-								Object.keys(msgd.reactions).forEach((i) => {
-									let v = msgd.reactions[i];
-									nurl.push(v.container);
-								})
-
-								rkeys.forEach(function(i) {
-									let rk = reactions[i];
-									let rkk = Object.keys(rk);
-									let doescontaincurr = false;
-									rkk.forEach(function(aa) {
-										let a = rk[aa];
-										if (a.sender == logininfo.uid) {
-											doescontaincurr = true;
+								if (val.event == "DELETED") {
+									if (messageflexes[key]) {
+										messageflexes[key].remove();
+										let index = selectedMessages.indexOf(key);
+										if (index >= 0) {
+											selectedMessages.splice(index,1);
 										}
-									})
-									nurl.splice(nurl.indexOf(msgd.reactions[i].container),1)
-									if (doescontaincurr == true) {
-										msgd.reactions[i].container.classList.add("rcted")
-									}else {
-										msgd.reactions[i].container.classList.remove("rcted")
+										if (pinnedmessages[key]) {
+											delete pinnedmessages[key];
+											updatepinnedbar();
+										}
 									}
+								}
+								if (val.event == "REACTIONS") {
+									let msgd = msgcdatas[key];
+									if (msgd) {
+										let reactions = val.rect;
+										if (pinnedmessages[key]) { //&& pinnedmessages[i].reactions != val.rect
+											pinnedmessages[key].reactions = val.rect;
+											updatepinnedbar();
+										}
+										let rkeys = Object.keys(reactions);
+										let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
+										news.forEach(function(ir) {
+											let react = reactions[ir];
+											let reacc = document.createElement("div");
+											reacc.addEventListener("click",function() {
+												fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': key, reaction: ir}),method: 'POST'}).then((res) => {
 
-									msgd.reactions[i].counter.innerText = rkk.length;
-								})
-								nurl.forEach((i) => {
-									try {i.remove();delete msgd.reactions[i]; delete msgd.msgreactions[i];}catch {}
-								})
-								/*Object.keys(msgd.reactions).forEach((i) => {
-									let v = msgd.reactions[i];
-									if (nurl.indexOf(v.container) > -1) {
-										delete v;
+												})
+											})
+											let reace = document.createElement("label");
+											reace.innerText = ir;
+											let cnter = document.createElement("label");
+											cnter.innerText = "0";
+											reacc.appendChild(reace);
+											reacc.appendChild(cnter);
+											msgd.msgreactions.appendChild(reacc);
+
+											msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
+										});
+
+										let nurl = [];
+										Object.keys(msgd.reactions).forEach((i) => {
+											let v = msgd.reactions[i];
+											nurl.push(v.container);
+										})
+
+										rkeys.forEach(function(i) {
+											let rk = reactions[i];
+											let rkk = Object.keys(rk);
+											let doescontaincurr = false;
+											rkk.forEach(function(aa) {
+												let a = rk[aa];
+												if (a.sender == logininfo.uid) {
+													doescontaincurr = true;
+												}
+											})
+											nurl.splice(nurl.indexOf(msgd.reactions[i].container),1)
+											if (doescontaincurr == true) {
+												msgd.reactions[i].container.classList.add("rcted")
+											}else {
+												msgd.reactions[i].container.classList.remove("rcted")
+											}
+
+											msgd.reactions[i].counter.innerText = rkk.length;
+										})
+										nurl.forEach((i) => {
+											try {i.remove();delete msgd.reactions[i]; delete msgd.msgreactions[i];}catch {}
+										})
+										/*Object.keys(msgd.reactions).forEach((i) => {
+											let v = msgd.reactions[i];
+											if (nurl.indexOf(v.container) > -1) {
+												delete v;
+											}
+										})*/
 									}
-								})*/
-							}
-							if (val.event == "PINNED") {
-								if (pinnedmessages[i] == undefined) {
-									let msgd = msgcdatas[i];
-									msgd.pinned.style.display = "";
-									pinnedmessages[i] = val;
-									updatepinnedbar();
 								}
-								//alert(i + " was pinned")
-							}
-							if (val.event == "UNPINNED") {
-								if (pinnedmessages[i]) {
-									let msgd = msgcdatas[i];
-									msgd.pinned.style.display = "none";
-									delete pinnedmessages[i];
-									updatepinnedbar();
+								if (val.event == "PINNED") {
+									if (pinnedmessages[key] == undefined) {
+										let msgd = msgcdatas[key];
+										msgd.pinned.style.display = "";
+										pinnedmessages[key] = val;
+										updatepinnedbar();
+									}
 								}
-								//alert(i + " was unpinned")
+								if (val.event == "UNPINNED") {
+									if (pinnedmessages[key]) {
+										let msgd = msgcdatas[key];
+										msgd.pinned.style.display = "none";
+										delete pinnedmessages[key];
+										updatepinnedbar();
+									}
+								}
 							}
 						})
 						sendedmessages.forEach(function(i) {
@@ -2681,7 +2680,6 @@ function loadmainarea() {
 						sendedmessages = [];
 					})
 				}else {
-					//openloginarea();
 					isready = true;
 				}
 			})

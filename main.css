@@ -22,11 +22,6 @@ body,html {
 	--main-bg: #ebebeb;
 }
 
-button:disabled {
-	opacity:0.5;
-	cursor: default;
-}
-
 flex {
 	display:flex;
 }
@@ -150,6 +145,10 @@ button {
 	border-radius:8px;
 	cursor:pointer;
 	margin:2px;
+}
+button:disabled {
+	opacity:0.5;
+	cursor: default;
 }
 
 .clist {
@@ -293,7 +292,6 @@ msgbar > div {
 	align-items:center;
 	flex-shrink:0;
 }
-.orangebgonhover:hover {background-color:orange !important;}
 
 
 msgbar > div > textarea {
@@ -398,6 +396,17 @@ msgbar > div > textarea {
 ma {
 	display:block;
 	margin:auto;
+}
+.reactionbtn {
+	transition: transform 100ms;
+}
+.reactionbtn:hover {
+	transform: scale(1.2);
+	background: orange !important;
+}
+
+.reactionbtn:active {
+	transform: scale(0.9);
 }
 
 msgcont {
@@ -545,18 +554,19 @@ button.fab:hover:active {
 	transition: opacity 200ms;
 }
 .customctx {
-	z-index:100000;
+	z-index:100;
 	transition: opacity 200ms;
 	display:inline-block;
 }
 .customctx > div {
 	outline: 1px solid gray;
-	z-index:100000;
 	border-radius:8px;
 	overflow:hidden;
 	background: rgb(240,240,240);
 	transition: opacity 200ms;
 	display:inline-block;
+	animation-name: ctxappear;
+	animation-duration: 200ms;
 }
 
 .loading {
@@ -601,6 +611,25 @@ filed > div > label {
 	transition: opacity 0.5s;
 }
 
+.bgcover {
+	background: rgba(0,0,0,0.3);
+	display:flex;
+	position:fixed;
+	top:0;
+	left:0;
+	right:0;
+	bottom:0;
+	z-index:6;
+	animation-name: bgappear;
+	animation-duration: 200ms;
+}
+
+@keyframes bgappear {
+	from {opacity:0;}
+}
+@keyframes ctxappear {
+	from {transform:scale(0.8);}
+}
 @keyframes loading {
 	0%   {opacity:0.3;}
 	50%  {opacity:0.8;}
@@ -608,19 +637,15 @@ filed > div > label {
 }
 @keyframes msgbappear {
   from {transform:scale(0.8);}
-  to {transform:scale(1);}
 }
 @keyframes msgcappear {
 	from {opacity:0;}
 }
-
 @keyframes dialogappear {
   from {transform:scale(0.8);opacity:0;}
-  to {transform:scale(1);}
 }
 @keyframes dialogappeardocked {
 	from {transform:scale(0.8) translateX(100%);opacity:0;}
-	to {transform:scale(1);}
 }
 
 @keyframes mainappear {
