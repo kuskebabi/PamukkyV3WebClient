@@ -244,7 +244,7 @@ function loadmainarea() {
 	let titlebar = document.createElement("titlebar");
 	let rightarea = document.createElement("rightarea");
 
-	function viewuginfo(ugid,type,grole) {
+	function viewuginfo(ugid,type) {
 		let diag = opendialog();
 		diag.title.innerText = "Info";
 		diag.inner.style.display = "flex";
@@ -258,6 +258,7 @@ function loadmainarea() {
 		pfpimge.loading = "lazy";
 		pfpimge.style.width = "80px";
 		pfpimge.style.height = "80px";
+		pfpimge.style.flexShrink = "0";
 		pfpimge.classList.add("loading");
 		diag.inner.appendChild(pfpimge);
 
@@ -279,9 +280,6 @@ function loadmainarea() {
 
 						pfpimge.classList.remove("loading");
 						pfpimge.src = getpfp(infod.picture);
-
-
-
 
 						fetch(currserver + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
 							if (res.ok) {
@@ -315,13 +313,16 @@ function loadmainarea() {
 						desval.innerText = infod.description;
 						desrow.appendChild(desval);
 
-
 						infotable.appendChild(namerow);
 						infotable.appendChild(desrow);
 
 					})
+				}else {
+					diag.inner.innerText = "Error";
 				}
-			})
+			}).catch(function() {
+				diag.inner.innerText = "Error";
+			});
 		}else {
 			fetch(currserver + "getgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 				if (res.ok) {
@@ -467,11 +468,10 @@ function loadmainarea() {
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
 							diag.title.innerText = "Members";
-							let userstable = createDynamicList();
-							userstable.setItemGenerator(function(ukeys,e) {
+							let userstable = createLazyList("div","div");
+							userstable.setItemGenerator(function(ukeys,e,urow) {
 								let user = users[ukeys[e]];
 								if (user == undefined) return;
-								let urow = document.createElement("div");
 								urow.style.display = "flex";
 								urow.style.width = "100%";
 								urow.style.height = "40px";
@@ -483,6 +483,10 @@ function loadmainarea() {
 								userpfp.classList.add("circleimg");
 								userpfp.classList.add("loading");
 								userpfp.loading = "lazy";
+								userpfp.style.cursor = "pointer";
+								userpfp.addEventListener("click",function() {
+									viewuginfo(user.user,"user");
+								});
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
 								usernamelbl.innerText = "loading..."
@@ -494,6 +498,7 @@ function loadmainarea() {
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
 									usernamelbl.classList.remove("loading");
+									userpfp.title = "View profile of " + uii.name;
 								});
 								urow.appendChild(uname);
 								let urole = document.createElement("div");
@@ -504,6 +509,7 @@ function loadmainarea() {
 									urole.innerText = user.role;
 								}else {
 									let roleselect = document.createElement("select");
+									roleselect.title = "Change role of this user";
 									roleselect.style.width = "100%";
 									rokeys.forEach(function(i) {
 										let opt = document.createElement("option");
@@ -529,20 +535,24 @@ function loadmainarea() {
 								urow.appendChild(urole);
 								if (crole.AllowKicking || crole.AllowBanning) {
 									let uacts = document.createElement("div");
+									function remove() { //When user is removed
+										urow.style.opacity = "0.5";
+										urole.remove();
+										uacts.remove();
+									}
 									uacts.style.width = "68px";
 									uacts.style.display = "flex";
 									uacts.style.flexShrink = "0";
 									if (crole.AllowKicking) {
 										let kickbtn = document.createElement("button");
 										kickbtn.classList.add("cb");
+										kickbtn.title = "Kick";
 										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
 										kickbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to kick this user?")) {
 												fetch(currserver + "kickuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user.user}),method: 'POST'}).then((res) => {
 													if (res.ok) {
-														urow.remove();
-													}else {
-
+														remove();
 													}
 												})
 											}
@@ -552,14 +562,13 @@ function loadmainarea() {
 									if (crole.AllowBanning) {
 										let banbtn = document.createElement("button");
 										banbtn.classList.add("cb");
+										banbtn.title = "Ban";
 										banbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q54 0 104-17.5t92-50.5L228-676q-33 42-50.5 92T160-480q0 134 93 227t227 93Zm252-124q33-42 50.5-92T800-480q0-134-93-227t-227-93q-54 0-104 17.5T284-732l448 448Z"/></svg>';
 										banbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to ban this user?")) {
 												fetch(currserver + "banuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user.user}),method: 'POST'}).then((res) => {
 													if (res.ok) {
-														urow.remove();
-													}else {
-
+														remove();
 													}
 												})
 											}
@@ -568,7 +577,6 @@ function loadmainarea() {
 									}
 									urow.appendChild(uacts);
 								}
-								return urow;
 							});
 							userstable.setGetSize(function(list,idx) {return 52});
 							diag.inner.appendChild(userstable.element);
@@ -606,20 +614,26 @@ function loadmainarea() {
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
 							diag.title.innerText = "Banned members";
-							let userstable = createDynamicList("table");
+							let userstable = createLazyList("div","div");
 							userstable.element.style.height = "100%";
-							userstable.setItemGenerator(function(ukeys,e) {
+							userstable.setItemGenerator(function(ukeys,e,urow) {
 								let user = ukeys[e];
 								if (user == undefined) return;
-								let urow = document.createElement("tr");
+								urow.style.display = "flex";
 								urow.style.width = "100%";
-								let uname = document.createElement("td");
+								urow.style.height = "40px";
+								let uname = document.createElement("div");
 								uname.style.display = "flex";
 								uname.style.alignItems = "center";
+								uname.style.width = "100%";
 								let userpfp = document.createElement("img");
 								userpfp.classList.add("circleimg");
 								userpfp.classList.add("loading");
 								userpfp.loading = "lazy";
+								userpfp.style.cursor = "pointer";
+								userpfp.addEventListener("click",function() {
+									viewuginfo(user,"user");
+								});
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
 								usernamelbl.innerText = "loading..."
@@ -631,18 +645,27 @@ function loadmainarea() {
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
 									usernamelbl.classList.remove("loading");
+									userpfp.title = "View profile of " + uii.name;
 								});
 								urow.appendChild(uname);
-
 								if (crole.AllowBanning) {
-									let uacts = document.createElement("td");
+									let uacts = document.createElement("div");
+									function remove() { //When user is removed
+										urow.style.opacity = "0.5";
+										uacts.remove();
+									}
+									uacts.style.width = "34px";
+									uacts.style.display = "flex";
+									uacts.style.flexShrink = "0";
 									let unbanbtn = document.createElement("button");
+									unbanbtn.classList.add("cb");
+									unbanbtn.title = "Unban";
 									unbanbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>';
 									unbanbtn.addEventListener("click",function() {
 										if (confirm("Do you really want to unban this user?")) {
 											fetch(currserver + "unbanuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user}),method: 'POST'}).then((res) => {
 												if (res.ok) {
-													urow.remove();
+													remove();
 												}else {
 
 												}
@@ -650,10 +673,8 @@ function loadmainarea() {
 										}
 									})
 									uacts.appendChild(unbanbtn);
-
 									urow.appendChild(uacts);
 								}
-								return urow;
 							});
 							userstable.setGetSize(function(list,idx) {return 52});
 							diag.inner.appendChild(userstable.element);
@@ -675,6 +696,7 @@ function loadmainarea() {
 							if (ufl) {
 								fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 									console.log(data);
+									ufl = false;
 									if (data.status == "success") {
 										fetch(currserver + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
 											if (res.ok) {
@@ -725,8 +747,12 @@ function loadmainarea() {
 							}
 						}
 					})
+				}else {
+					diag.inner.innerText = "Error";
 				}
-			})
+			}).catch(function() {
+				diag.inner.innerText = "Error";
+			});
 		}
 	}
 	
@@ -754,6 +780,7 @@ function loadmainarea() {
 		titlelbl.style.marginRight = "auto";
 		let closebtn = document.createElement("button");
 		addRipple(closebtn,"rgba(255,200,0,0.6)");
+		closebtn.title = "Close";
 		closebtn.style.flexShrink = "0";
 		closebtn.style.width = "25px";
 		closebtn.style.height = "25px";
@@ -778,6 +805,7 @@ function loadmainarea() {
 		
 		let dockbtn = document.createElement("button");
 		addRipple(dockbtn,"rgba(255,200,0,0.6)");
+		dockbtn.title = "Dock to right";
 		dockbtn.style.flexShrink = "0";
 		dockbtn.style.width = "25px";
 		dockbtn.style.height = "25px";
@@ -787,13 +815,11 @@ function loadmainarea() {
 			if (isatdock == true) {
 				document.body.appendChild(bgcover);
 				bgcover.appendChild(dialoginside);
-				innercont.style.maxHeight = (document.body.clientHeight * 0.7) + "px";
 				dialoginside.classList.remove("docked")
 			}else {
 				document.body.removeChild(bgcover);
 				bgcover.removeChild(dialoginside);
 				maincont.appendChild(dialoginside);
-				innercont.style.maxHeight = (document.body.clientHeight - 33) + "px";
 				dialoginside.classList.add("docked")
 			}
 			isatdock = !isatdock;
@@ -806,7 +832,6 @@ function loadmainarea() {
 		let innercont = document.createElement("div");
 		innercont.style.overflow = "auto";
 		innercont.style.minWidth = "100%";
-		//innercont.style.maxHeight = "100%";
 		innercont.style.flexGrow = "1";
 		dialoginside.appendChild(innercont);
 		
@@ -871,7 +896,7 @@ function loadmainarea() {
 		
 	})
 
-	let chatslist = createDynamicList();
+	let chatslist = createLazyList();
 	let currentchatid = 0;
 	function openchat(chatid) {
 		let infoid = "0";
@@ -942,7 +967,7 @@ function loadmainarea() {
 			rightarea.style.display = "";
 			leftarea.style.display = "";
 		}
-		chatslist.render();
+		chatslist.updateItem();
 	}
 
 	function hashchange(url) {
@@ -973,21 +998,23 @@ function loadmainarea() {
 		}
 		return 60;
 	});
-	chatslist.setItemGenerator(function(list,index) {
+	chatslist.setItemGenerator(function(list,index,element) {
 		if (index == 0) {
 			let rfb = document.createElement("button");
 			rfb.addEventListener("click",function() {
 				loadchats();
 			})
 			rfb.innerText = "Refresh"
-			return rfb;
+			element.appendChild(rfb);
+			return;
 		}
 		if (index == list.length - 1) {
 			let fabhint = document.createElement("label");
 			fabhint.style.display = "block";
 			fabhint.style.margin = "8px";
 			fabhint.innerText = "Click on the \"+\" button to add a new chat.";
-			return fabhint;
+			element.appendChild(fabhint);
+			return;
 		}
 		let item = list[index];
 		if (item == undefined) return;
@@ -1041,19 +1068,23 @@ function loadmainarea() {
 			openchat(id);
 		})
 
-
 		getinfo(item.type == "user" ? item.user : item.group, function(info) {
 			pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
 			nameh4.innerText = info.name;
 			nameh4.classList.remove("loading");
 			pfpimg.classList.remove("loading");
 		});
+		element.appendChild(itmcont);
+	});
 
-
-		if (document.body.clientWidth > 800 && currentchatid == id) {
-			itmcont.classList.add("active");
+	chatslist.setItemUpdater(function(list,index,element) {
+		let itmcont = element.children[0];
+		if (itmcont.classList.contains("chatitem")) {
+			let item = list[index];
+			if (item == undefined) return;
+			let id = item["chatid"] ?? item.group;
+			itmcont.classList.toggle("active", document.body.clientWidth > 800 && currentchatid == id);
 		}
-		return itmcont;
 	});
 	/*let clbtm = document.createElement("div");
 	clbtm.style.height = "24px";
@@ -1061,9 +1092,11 @@ function loadmainarea() {
 	//chatslist.style.paddingBottom = "24px";
 	let fab = document.createElement("button");
 	fab.classList.add("fab");
+	fab.title = "Add new chat";
 	fab.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 -960 960 960" width="40"><path d="M446.667-446.667H200v-66.666h246.667V-760h66.666v246.667H760v66.666H513.333V-200h-66.666v-246.667Z"/></svg>';
 	leftarea.appendChild(fab);
 	let profilebtn = document.createElement("button");
+	profilebtn.title = "Edit profile...";
 	profilebtn.style.height = "100%";
 	profilebtn.classList.add("transparentbtn")
 	profilebtn.style.display = "flex";
@@ -1179,6 +1212,7 @@ function loadmainarea() {
 							fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
 								loadchats();
 								diag.closebtn.click();
+								diaga.closebtn.click();
 							})
 						}
 					})}).catch(function(error) {console.error(error);});
@@ -1186,6 +1220,7 @@ function loadmainarea() {
 					fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': "", 'info': desinp.value }),method: 'POST'}).then((res) => {
 						loadchats();
 						diag.closebtn.click();
+						diaga.closebtn.click();
 					})
 				}
 			})
@@ -1352,14 +1387,12 @@ function loadmainarea() {
 				fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 					console.log(data);
 					if (data.status == "success") {
-						info.picture = data.url;
-						fetch(currserver + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': info.picture,'description': desinp.value }),method: 'POST'}).then((res) => {
+						ufl = false;
+						currentuser.picture = data.url;
+						fetch(currserver + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value }),method: 'POST'}).then((res) => {
 							if (res.ok) {
-								res.text().then((text) => {
-									namelbl.innerText = info.name;
-									pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
-									currentuser = info;
-								})
+								namelbl.innerText = nameinp.value;
+								pfpimg.src = getpfp(currentuser.picture);
 							}
 						})
 					}
@@ -1367,12 +1400,7 @@ function loadmainarea() {
 			}else {
 				fetch(currserver + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value  }),method: 'POST'}).then((res) => {
 					if (res.ok) {
-						res.text().then((text) => {
-							info = JSON.parse(text);
-							namelbl.innerText = info.name;
-							pfpimg.src = info.picture.replace(/%SERVER%/g,currserver);
-							currentuser = info;
-						})
+						namelbl.innerText = nameinp.value;
 					}else {
 						openloginarea();
 					}
@@ -1400,8 +1428,6 @@ function loadmainarea() {
 
 				let reader = new FileReader();
 				reader.onload = function (e) {
-					
-					
 					let cic = document.createElement("div");
 					cic.style.width = "256px";
 					cic.style.height = "256px";
@@ -1410,12 +1436,12 @@ function loadmainarea() {
 					let ci = document.createElement("img");
 					ci.setAttribute("src",reader.result);
 					ci.onload = function() {
-						if (ci.naturalWidth < 256 && ci.naturalHeight < 256) {
+						//if (ci.naturalWidth < 256 && ci.naturalHeight < 256) {
 							file = f.files[0];
 							ufl = true;
 							pfpimge.setAttribute("src",reader.result);
 							return;
-						}
+						/*}
 						alert("Sorry! cropping is TODO, please upload a picture that is smaller than 256x256")
 						return;
 						ci.style.position = "absolute";
@@ -1471,7 +1497,7 @@ function loadmainarea() {
 							
 							diag.closebtn.click();	
 						})
-						cdiag.inner.appendChild(cbtn);
+						cdiag.inner.appendChild(cbtn);*/
 					}
 					
 					
@@ -1514,7 +1540,6 @@ function loadmainarea() {
 		
 		let fileslist = [];
 		let isuserchat = chatid.includes("-");
-		let ocp = {};
 		let messageflexes = {};
 		let pinnedmessages = {};
 		let mchat = document.createElement("mchat");
@@ -1542,10 +1567,11 @@ function loadmainarea() {
 		
 		let infobtn = document.createElement("button");
 		addRipple(infobtn,"rgba(255,200,0,0.6)");
+		infobtn.title = "Info";
 		infobtn.classList.add("cb")
 		infobtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M444-288h72v-240h-72v240Zm35.789-312Q495-600 505.5-610.289q10.5-10.29 10.5-25.5Q516-651 505.711-661.5q-10.29-10.5-25.5-10.5Q465-672 454.5-661.711q-10.5 10.29-10.5 25.5Q444-621 454.289-610.5q10.29 10.5 25.5 10.5Zm.487 504Q401-96 331-126q-70-30-122.5-82.5T126-330.958q-30-69.959-30-149.5Q96-560 126-629.5t82.5-122Q261-804 330.958-834q69.959-30 149.5-30Q560-864 629.5-834t122 82.5Q804-699 834-629.276q30 69.725 30 149Q864-401 834-331q-30 70-82.5 122.5T629.276-126q-69.725 30-149 30ZM480-168q130 0 221-91t91-221q0-130-91-221t-221-91q-130 0-221 91t-91 221q0 130 91 221t221 91Zm0-312Z"/></svg>';
 		infobtn.addEventListener("click",function() {
-			viewuginfo(ugid,isuserchat ? "user" : "group",crole)
+			viewuginfo(ugid,isuserchat ? "user" : "group")
 		})
 		
 		titlebar.appendChild(infobtn);
@@ -1561,6 +1587,7 @@ function loadmainarea() {
 		let mpint = document.createElement("replycont");
 		pinnedbar.appendChild(mpint);
 		let pinsbtn = document.createElement("button");
+		pinsbtn.title = "Pinned messages";
 		addRipple(pinsbtn,"rgba(255,200,0,0.6)");
 		pinsbtn.classList.add("cb")
 		pinsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
@@ -1572,44 +1599,6 @@ function loadmainarea() {
 			for (const [key, msg] of Object.entries(pinnedmessages)) {
 				let msgd = createmsg(msg,key);
 				pinnedmessageslist.appendChild(msgd.message);
-				let reactions = msg.reactions;
-				if (reactions) {
-					Object.keys(reactions).forEach(function(ir) {
-						let react = reactions[ir];
-						let reacc = document.createElement("div");
-						reacc.style.cursor = "pointer";
-						reacc.addEventListener("click",function() {
-							fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': key, reaction: ir}),method: 'POST'}).then((res) => {
-
-							})
-						})
-						let reace = document.createElement("label");
-						reace.innerText = ir;
-						let cnter = document.createElement("label");
-						cnter.innerText = "0";
-						reacc.appendChild(reace);
-						reacc.appendChild(cnter);
-						msgd.msgreactions.appendChild(reacc);
-
-						msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-
-						let rkk = Object.keys(react);
-						let doescontaincurr = false;
-						Object.keys(react).forEach(function(aa) {
-							let a = react[aa];
-							if (a.sender == logininfo.uid) {
-								doescontaincurr = true;
-							}
-						})
-
-						if (doescontaincurr) {
-							msgd.reactions[ir].container.classList.add("rcted")
-						}
-
-						msgd.reactions[ir].counter.innerText = rkk.length;
-					});
-
-				}
 			}
 		}
 
@@ -1763,6 +1752,7 @@ function loadmainarea() {
 		let attachbtn = document.createElement("button");
 		attachbtn.addEventListener("click", function() {f.click();})
 		addRipple(attachbtn,"rgba(255,200,0,0.6)");
+		attachbtn.title = "Add attachment";
 		attachbtn.classList.add("cb")
 		attachbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M640-520v-200h80v200h-80ZM440-244q-35-10-57.5-39T360-350v-370h80v476Zm30 164q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v300h-80v-300q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q25 0 47.5-6.5T560-186v89q-21 8-43.5 12.5T470-80Zm170-40v-120H520v-80h120v-120h80v120h120v80H720v120h-80Z"/></svg>';
 		mgbd.appendChild(attachbtn)
@@ -1772,7 +1762,8 @@ function loadmainarea() {
 		
 		let sendbtn = document.createElement("button");
 		addRipple(sendbtn,"rgba(255,200,0,0.6)");
-		sendbtn.classList.add("cb")
+		sendbtn.classList.add("cb");
+		sendbtn.title = "Send";
 		sendbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
 		mgbd.appendChild(sendbtn)
 		
@@ -1786,8 +1777,6 @@ function loadmainarea() {
 
 		mchat.appendChild(mgb)
 		
-
-		let lastmessagekey = "";
 		let chatpage;
 		let lastmsgsender;
 		let lastmsgtime = new Date(0);
@@ -1857,7 +1846,6 @@ function loadmainarea() {
 		function addmsg(msg,id) {
 			let dt = new Date(msg.time);
 			let dtt = new Date(msg.time);
-			let nowdate = new Date();
 			if (dtt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
 				lastmsgtime = new Date(msg.time);
 				addmsg({
@@ -1865,19 +1853,19 @@ function loadmainarea() {
 					content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
 					   time: dt
 				})
-				lastmsgsender = msg.sender;
+				//lastmsgsender = msg.sender;
 			}
 			if (msg.sender != lastmsgsender) {
 				msgscont = document.createElement("msgscont");
 				messageslist.appendChild(msgscont)
 				lastmsgsender = msg.sender;
 			}
-			let senderuser = {};
 
 			let r = createmsg(msg,id);
 			messageflexes[id] = r.message;
 			msgscont.appendChild(r.message);
-			return {message: r.message, status: r.status,msgreactions: r.msgreactions,reactions: r.reactions, pinned: r.pinned};
+			msgcdatas[id] = {message: r.message, status: r.status,msgreactions: r.msgreactions,reactions: r.reactions, pinned: r.pinned};
+			return msgcdatas[id];
 		}
 
 		function createmsg(msg,id) {
@@ -1909,21 +1897,16 @@ function loadmainarea() {
 					ctxdiv.style.top = event.clientY + "px";
 					ctxdiv.style.left = event.clientX + "px";
 					ctxdiv.classList.add("customctx");
-					ctxdiv.style.minWidth = "315px";
-					ctxdiv.style.maxWidth = "315px";
+					ctxdiv.style.width = "315px";
 					if (crole.AllowSendingReactions == true) {
 						let reactionsdiv = document.createElement("div");
 						reactionsdiv.style.maxWidth = "315px";
+						reactionsdiv.style.overflow = "visible";
+						reactionsdiv.style.marginBottom = "8px";
 						reactionemojis.forEach((item) => {
 							let itm = item.toString();
 							let reactionbtn = document.createElement("button");
-							reactionbtn.style.border = "none";
-							reactionbtn.style.background = "none";
 							reactionbtn.classList.add("reactionbtn");
-							reactionbtn.style.padding = "4px";
-							reactionbtn.style.width = "35px";
-							reactionbtn.style.height = "35px";
-							reactionbtn.style.fontSize = "20px";
 							reactionbtn.innerText = itm;
 							reactionsdiv.appendChild(reactionbtn);
 							reactionbtn.addEventListener("click",function() {
@@ -1937,25 +1920,6 @@ function loadmainarea() {
 					}
 					let cnt = document.createElement("div");
 					ctxdiv.appendChild(cnt);
-					if (msg.issearch == true) { // Was used in v2 area, and yes this entire logic looks like it needs a refactor
-						let gomsgbutton = document.createElement("button");
-						addRipple(gomsgbutton,"rgba(255,200,0,0.6)",true);
-						gomsgbutton.innerText = "Go To Message";
-						gomsgbutton.addEventListener("click", function() {
-							init();
-							messagespage = Math.floor( (messages.indexOf(key) - 1) / messagespagesize );
-							console.log(messagespage);
-							loadmessages();
-							setTimeout(function() {
-								getid("messagesList").scrollTop = messageflexes[key].offsetTop - 80;
-								messageflexes[key].style.background = "rgba(255,200,0,0.5)";
-								setTimeout(function() {
-									messageflexes[key].style.background = "";
-								},200);
-							},200)
-						})
-						cnt.appendChild(gomsgbutton);
-					}
 					let replybutton = document.createElement("button");
 					addRipple(replybutton,"rgba(255,200,0,0.6)",true);
 					replybutton.innerText = "Reply";
@@ -1975,7 +1939,6 @@ function loadmainarea() {
 						let diag = opendialog();
 						diag.title.innerText = "Forward message";
 						diag.inner.style.overflow = "hidden";
-						//diag.inner.style.height = "calc(100% - 68px)";
 						diag.inner.style.display = "flex";
 						diag.inner.style.flexDirection = "column";
 						let fcb = document.createElement("div");
@@ -1993,12 +1956,12 @@ function loadmainarea() {
 						function refreshlabel() {
 							cst.innerText = gous.join(", ");
 						}
-						let chatslist = createDynamicList();
+						let chatslist = createLazyList("div","button");
 						chatslist.element.classList.add("clist");
 						chatslist.setGetSize(function(list,index) {
 							return 60;
 						});
-						chatslist.setItemGenerator(function(list,index) {
+						chatslist.setItemGenerator(function(list,index,itmcont) {
 							let item = list[index];
 							if (item == undefined) return;
 							if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
@@ -2008,7 +1971,6 @@ function loadmainarea() {
 												   sender: "0"
 								}
 							}
-							let itmcont = document.createElement("button");
 							itmcont.classList.add("chatitem");
 							addRipple(itmcont,"rgba(255,200,0,0.6)");
 							let pfpimg = document.createElement("img")
@@ -2047,19 +2009,22 @@ function loadmainarea() {
 									gous.push(cinfo.name);
 								}
 								refreshlabel();
-								chatslist.render();
+								chatslist.updateItem();
 							})
 							getinfo(item.type == "user" ? item.user : item.group, function(info) {
 								pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
 								nameh4.innerText = info.name;
 								cinfo = info;
 							});
-
-							if (fchatselectsid.includes(id)) {
-								itmcont.style.background = "orange";
-							}
-							return itmcont;
 						});
+
+						chatslist.setItemUpdater(function(list,index,itmcont) {
+							let item = list[index];
+							if (item == undefined) return;
+							let id = item["chatid"] ?? item.group;
+							itmcont.style.background = fchatselectsid.includes(id) ? "orange" : "";
+						});
+
 						fetch(currserver + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								res.text().then((text) => {
@@ -2160,7 +2125,7 @@ function loadmainarea() {
 				}
 			});
 			let msgm = document.createElement("msgmain");
-			let msgbuble = document.createElement("msgbuble");
+			let msgbubble = document.createElement("msgbubble");
 			let msgcontent = document.createElement("msgcontent");
 			let msgreactions = document.createElement("msgreacts");
 			let msgtime = document.createElement("msgtime");
@@ -2191,7 +2156,7 @@ function loadmainarea() {
 					fu.classList.remove("loading");
 				})
 				il.appendChild(fu);
-				msgbuble.appendChild(il);
+				msgbubble.appendChild(il);
 			}
 
 			if (msg.replymsgcontent != undefined) {
@@ -2212,7 +2177,7 @@ function loadmainarea() {
 				let replycnt = document.createElement("label");
 				replycnt.innerText = msg.replymsgcontent;
 				rc.appendChild(replycnt);
-				msgbuble.appendChild(rc);
+				msgbubble.appendChild(rc);
 			}
 
 
@@ -2233,12 +2198,9 @@ function loadmainarea() {
 					viewuginfo(msg.sender,"user")
 				})
 			}
-			msgm.appendChild(msgbuble);
+			msgm.appendChild(msgbubble);
 			if (msg.files != undefined) {
 				msg.gImages.forEach(function(i) {
-					let a = document.createElement("a");
-					a.href = i.url.replace(/%SERVER%/g,currserver);
-					a.target = "_blank";
 					let imgs = new Image();
 					imgs.src = i.url.replace(/%SERVER%/g,currserver) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
 					let img = document.createElement("img");
@@ -2251,6 +2213,9 @@ function loadmainarea() {
 					}
 					img.classList.add("msgimg");
 					img.onclick = function() {
+						let a = document.createElement("a");
+						a.href = i.url.replace(/%SERVER%/g,currserver);
+						a.target = "_blank";
 						a.click();
 					}
 					imgs.onload = function() {
@@ -2262,12 +2227,9 @@ function loadmainarea() {
 					img.style.width = img.style.height = Math.max(240 / msg.gImages.length,64) + "px";
 					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
 					img.title = filename;
-					//a.appendChild(img)
-					msgbuble.appendChild(img);
-
+					msgbubble.appendChild(img);
 				})
 				msg.gVideos.forEach(function(i) {
-
 					let vid = document.createElement("video");
 					//vid.muted = true;
 					//vid.autoplay = true;
@@ -2277,17 +2239,15 @@ function loadmainarea() {
 					vid.style.width = "100%";
 					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
 					vid.title = filename;
-					msgbuble.appendChild(vid);
-
+					msgbubble.appendChild(vid);
 				})
-				if (msg.gImages.length > 0) msgbuble.appendChild(document.createElement("br"));
+				if (msg.gImages.length > 0) msgbubble.appendChild(document.createElement("br"));
 				msg.gFiles.forEach(function(i) {
 					let a = document.createElement("a");
 					a.style.position = "relative";
 					a.download = i.name;
 					a.target = "_blank";
 					a.href = i.url.replace(/%SERVER%/g,currserver);
-					//a.target = "_blank";
 					let fd = document.createElement("filed");
 					addRipple(a,"rgba(255,255,255,0.6)");
 					let img = document.createElement("img");
@@ -2311,13 +2271,13 @@ function loadmainarea() {
 					il.appendChild(sizel);
 					fd.appendChild(il);
 					a.appendChild(fd)
-					msgbuble.appendChild(a);
+					msgbubble.appendChild(a);
 				})
 
 			}
 
-			msgbuble.appendChild(msgcontent);
-			msgbuble.appendChild(msgreactions);
+			msgbubble.appendChild(msgcontent);
+			msgbubble.appendChild(msgreactions);
 
 			if (msg.sender != 0) {
 				msgm.appendChild(msgtime);
@@ -2325,6 +2285,7 @@ function loadmainarea() {
 
 			let msgstatus = null;
 			let msgpinned = document.createElement("div");
+			msgpinned.title = "Pinned";
 			msgpinned.style.display = msg.pinned ? "" : "none";
 			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
 
@@ -2357,7 +2318,48 @@ function loadmainarea() {
 				}
 			}
 			msgtime.appendChild(msgpinned);
-			return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: {}, pinned:msgpinned};;
+
+			let reactions = msg.reactions;
+			let rdata = {};
+			if (reactions) {
+				Object.keys(reactions).forEach(function(ir) {
+					let react = reactions[ir];
+					let reacc = document.createElement("div");
+					reacc.style.cursor = "pointer";
+					reacc.addEventListener("click",function() {
+						fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: ir}),method: 'POST'}).then((res) => {
+
+						})
+					})
+					let reace = document.createElement("label");
+					reace.innerText = ir;
+					let cnter = document.createElement("label");
+					cnter.innerText = "0";
+					reacc.appendChild(reace);
+					reacc.appendChild(cnter);
+					msgreactions.appendChild(reacc);
+
+					rdata[ir] = {reaction: ir, container: reacc, counter:cnter}
+
+					let rkk = Object.keys(react);
+					let doescontaincurr = false;
+					Object.keys(react).forEach(function(aa) {
+						let a = react[aa];
+						if (a.sender == logininfo.uid) {
+							doescontaincurr = true;
+						}
+					})
+
+					if (doescontaincurr) {
+						rdata[ir].container.classList.add("rcted")
+					}
+
+					rdata[ir].counter.innerText = rkk.length;
+				});
+
+			}
+
+			return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: rdata, pinned:msgpinned};;
 		}
 
 		/*function addmsg(msg,id) {
@@ -2379,7 +2381,6 @@ function loadmainarea() {
 			return {};
 		}*/
 		
-		let sendingmessage = false;
 		let msgcdatas = {};
 		sendbtn.disabled = true;
 		let sendtyping = true;
@@ -2460,7 +2461,7 @@ function loadmainarea() {
 		})
 		
 		let isready = true;
-		let updatessince = 0;
+		let updatessince = "0";
 		fetch(currserver + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': "#0-#48"}),method: 'POST'}).then((res) => {
 			if (res.ok) {
 				res.text().then((text) => {
@@ -2470,57 +2471,11 @@ function loadmainarea() {
 
 					mkeys.forEach(i => {
 						let msg = chatpage[i];
-						msgcdatas[i] = addmsg(msg,i);
-						lastmessagekey = i;
+						addmsg(msg,i);
 						updatessince = i;
 					})
 
-
-					mkeys.forEach(function(i) {
-						let msgd = msgcdatas[i];
-
-						let reactions = chatpage[i].reactions;
-						if (reactions) {
-							Object.keys(reactions).forEach(function(ir) {
-								let react = reactions[ir];
-								let reacc = document.createElement("div");
-								reacc.style.cursor = "pointer";
-								reacc.addEventListener("click",function() {
-									fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': i, reaction: ir}),method: 'POST'}).then((res) => {
-
-									})
-								})
-								let reace = document.createElement("label");
-								reace.innerText = ir;
-								let cnter = document.createElement("label");
-								cnter.innerText = "0";
-								reacc.appendChild(reace);
-								reacc.appendChild(cnter);
-								msgd.msgreactions.appendChild(reacc);
-
-								msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-
-								let rkk = Object.keys(react);
-								let doescontaincurr = false;
-								Object.keys(react).forEach(function(aa) {
-									let a = react[aa];
-									if (a.sender == logininfo.uid) {
-										doescontaincurr = true;
-									}
-								})
-
-								if (doescontaincurr) {
-									msgd.reactions[ir].container.classList.add("rcted")
-								}
-
-								msgd.reactions[ir].counter.innerText = rkk.length;
-							});
-
-						}
-					});
-
 					messageslist.scrollTop = messageslist.scrollHeight;
-					ocp = chatpage;
 
 					fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
 						if (res.ok) {
@@ -2532,7 +2487,13 @@ function loadmainarea() {
 					});
 				})
 			}else {
-				alert("Invalid chat");
+				messageslist.innerHTML = "";
+				let errormsg = document.createElement("h3");
+				errormsg.innerText = "Couldn't open chat.";
+				messageslist.style.alignItems = "center";
+				messageslist.style.justifyContent = "center";
+				messageslist.appendChild(errormsg);
+				mgb.remove();
 				kill();
 			}
 		})
@@ -2566,20 +2527,19 @@ function loadmainarea() {
 
 							let val = json[i];
 							let key = val.id;
-							if (!readupdates.includes(key)) {
+							if (!readupdates.includes(i)) {
 								readupdates.push(key);
 								if (val.event == "NEWMESSAGE") {
 									if (messageflexes[key] == undefined) {
 										chatpage[key] = val;
-										//mkeys[x] = i;
 										let msg = val;
-										msgcdatas[key] = addmsg(msg,key);
-										lastmessagekey = key;
+										addmsg(msg,key);
 										messageslist.scrollTop = messageslist.scrollHeight;
 									}
 								}
 								if (val.event == "DELETED") {
 									if (messageflexes[key]) {
+										delete chatpage[key];
 										messageflexes[key].remove();
 										let index = selectedMessages.indexOf(key);
 										if (index >= 0) {
@@ -2595,6 +2555,7 @@ function loadmainarea() {
 									let msgd = msgcdatas[key];
 									if (msgd) {
 										let reactions = val.rect;
+										chatpage[key].reactions = reactions;
 										if (pinnedmessages[key]) { //&& pinnedmessages[i].reactions != val.rect
 											pinnedmessages[key].reactions = val.rect;
 											updatepinnedbar();
@@ -2622,8 +2583,7 @@ function loadmainarea() {
 
 										let nurl = [];
 										Object.keys(msgd.reactions).forEach((i) => {
-											let v = msgd.reactions[i];
-											nurl.push(v.container);
+											nurl.push(i);
 										})
 
 										rkeys.forEach(function(i) {
@@ -2636,7 +2596,7 @@ function loadmainarea() {
 													doescontaincurr = true;
 												}
 											})
-											nurl.splice(nurl.indexOf(msgd.reactions[i].container),1)
+											nurl.splice(nurl.indexOf(i),1)
 											if (doescontaincurr == true) {
 												msgd.reactions[i].container.classList.add("rcted")
 											}else {
@@ -2646,14 +2606,10 @@ function loadmainarea() {
 											msgd.reactions[i].counter.innerText = rkk.length;
 										})
 										nurl.forEach((i) => {
-											try {i.remove();delete msgd.reactions[i]; delete msgd.msgreactions[i];}catch {}
+											msgd.reactions[i].container.remove();
+											delete msgd.reactions[i];
+											delete msgd.msgreactions[i];
 										})
-										/*Object.keys(msgd.reactions).forEach((i) => {
-											let v = msgd.reactions[i];
-											if (nurl.indexOf(v.container) > -1) {
-												delete v;
-											}
-										})*/
 									}
 								}
 								if (val.event == "PINNED") {
@@ -2710,8 +2666,6 @@ function loadmainarea() {
 			})
 		}
 		
-		//updatechat();
-		
 		let chatupdatetimer = setInterval(updatechat,500)
 		return {
 			chat: mchat,
@@ -2751,29 +2705,29 @@ if (currserver == "") {
 	})
 }
 function humanFileSize(bytes, si=false, dp=1) {
-  const thresh = si ? 1000 : 1024;
+ 	const thresh = si ? 1000 : 1024;
 
-  if (Math.abs(bytes) < thresh) {
-	return bytes + ' B';
-  }
+  	if (Math.abs(bytes) < thresh) {
+		return bytes + ' B';
+  	}
 
-  const units = si 
-	? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
-	: ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-  let u = -1;
-  const r = 10**dp;
+  	const units = si 
+		? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+		: ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+  	let u = -1;
+  	const r = 10**dp;
 
-  do {
-	bytes /= thresh;
-	++u;
-  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+  	do {
+		bytes /= thresh;
+		++u;
+  	} while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
 
 
-  return bytes.toFixed(dp) + ' ' + units[u];
+  	return bytes.toFixed(dp) + ' ' + units[u];
 }
 }
 
-//something i made
+//something I made
 function createDynamicList(innertype = "div") {
 	let list = [];
 	let listelement = document.createElement("div");
@@ -2863,6 +2817,77 @@ function createDynamicList(innertype = "div") {
 	}
 }
 
+function createLazyList(elemtype = "div",innertype = "div") {
+	let list = [];
+	let listelement = document.createElement(elemtype);
+	listelement.style.overflow = "auto";
+
+	let itemgenerator = function(list,index,element) {};
+	let itemupdater = function(list,index,element) {};
+	let getsize = function(list,index) {};
+
+
+	function setitemgenerator(f) {
+		itemgenerator = f;
+	}
+	function setitemupdater(f) {
+		itemupdater = f;
+	}
+	function setgetsize(f) {
+		getsize = f;
+	}
+	function setlist(l) {
+		list = l;
+		init();
+	}
+
+	function init() {
+		elements = {};
+		listelement.innerHTML = "";
+		list.forEach(function(i,idx) {
+			let size = getsize(list,idx);
+			let element = document.createElement(innertype);
+			element.style.height = size + "px"; //Assumed size, will be removed when element loads.
+			listelement.appendChild(element);
+			let viewobserver = new IntersectionObserver(onintersection, {root: null, threshold: 0})
+			let loaded = false;
+			viewobserver.observe(element);
+			function onintersection(entries, opts){
+				entries.forEach(function (entry) {
+					let visible = entry.isIntersecting;
+					if (visible) {
+						if (loaded == false) {
+							viewobserver.unobserve(element);
+							element.style.height = "";
+							itemgenerator(list, idx, element);
+							loaded = true;
+							itemupdater(list, idx, element);
+						}
+					}
+				})
+			}
+		});
+	}
+
+	function updateitem(index = -1) {
+		if (index > 0) {
+			itemupdater(list, index, listelement.children[index]);
+		}else {
+			list.forEach(function(i,idx) {
+				itemupdater(list, idx, listelement.children[idx]);
+			});
+		}
+	}
+
+	return {
+		element: listelement,
+		setList: setlist,
+		setItemGenerator: setitemgenerator,
+		setItemUpdater: setitemupdater,
+		setGetSize: setgetsize,
+		updateItem: updateitem
+	}
+}
 
 function getpfp(url,fallback = "person.svg") {
 	if (url) {

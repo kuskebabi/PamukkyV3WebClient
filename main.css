@@ -175,6 +175,14 @@ msgscont {
 	flex-direction: column;
 }
 
+msgscont > msgcont:not(:first-child) > img {
+	visibility: hidden;
+}
+
+msgscont > msgcont:not(:first-child) > msgmain > msgsender {
+	display: none;
+}
+
 .bbar {
 	display:flex;
 	flex-shrink:0;
@@ -330,16 +338,12 @@ msgbar > div > textarea {
 	text-align: inherit;
 	font-size: inherit;
 	background:transparent;
-}
-
-.chatitem:not(:last-child) {
 	border-bottom: 1px solid gray;
 }
 
 .chatitem.active {
-	background: orange;
+	background: rgba(255,170,0,0.4);
 	border-bottom: 1px solid transparent;
-	/*border-radius: 5px 0px 0px 5px;*/
 }
 
 .chatitem:hover {
@@ -399,10 +403,16 @@ ma {
 }
 .reactionbtn {
 	transition: transform 100ms;
+	border-radius: 100%;
+	font-size: 20px;
+	width: 35px !important;
+	height: 35px;
+	padding: 4px !important;
+	background: none;
 }
 .reactionbtn:hover {
 	transform: scale(1.2);
-	background: orange !important;
+	background: rgba(255,200,0,0.2) !important;
 }
 
 .reactionbtn:active {
@@ -431,18 +441,18 @@ msgmain {
 	max-width: 80%;
 }
 
-msgmain > msgbuble {
+msgmain > msgbubble {
 	display:block;
 	border-radius: 6px;
 	padding: 5px;
-	background: #ababab;
+	background: rgba(100,100,100,0.4);
 	width:auto;
 	animation-name: msgbappear;
 	animation-duration: 0.5s;
 }
 
-msgmain.sender > msgbuble {
-	background: orange;
+msgmain.sender > msgbubble {
+	background: rgba(255,170,0,0.4);
 }
 
 msgmain.sender > msgsender {
@@ -706,10 +716,6 @@ filed > div > label {
 	}
 	rightarea {
 		background: rgb(20,20,20);
-	}
-
-	msgmain > msgbuble {
-		background: #262626;
 	}
 	.contextmenu, .customctx > div {
 		background: rgb(40,40,40);
