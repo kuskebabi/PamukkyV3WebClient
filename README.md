@@ -1,5 +1,8 @@
 # PamukkyV3WebClient
-Web client for pamukky v3
+Web(Javascript) client for Pamukky v3.
 
-![resim](https://github.com/HAKANKOKCU/PamukkyV3WebClient/assets/103432992/38634414-9cf7-4c9a-950f-434160e55626)
-![resim](https://github.com/HAKANKOKCU/PamukkyV3WebClient/assets/103432992/5ae90e53-8c58-4f9f-b50e-709cabf34f19)
+# Images
+![image](https://github.com/user-attachments/assets/a95c0f41-b63c-4618-a8be-a7a95954dcc2)
+![image](https://github.com/user-attachments/assets/a3fe3cc1-f34f-4eeb-9c22-7a59928464e1)
+![image](https://github.com/user-attachments/assets/6dbd9663-d81b-4258-b7d4-29b993bd9b6c)
+
