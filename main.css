@@ -108,12 +108,13 @@ main {
 
 leftarea {
 	height:100%;
-	width:35%;
+	width:25%;
 	background-color: var(--main-bg);
 	display:flex;
 	flex-direction: column;
 	position:relative;
 	transition: opacity 1s;
+	flex-shrink: 0;
 }
 
 rightarea {
