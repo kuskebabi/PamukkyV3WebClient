@@ -579,6 +579,43 @@ button.fab:hover:active {
 	animation-duration: 200ms;
 }
 
+.popupmenu {
+	position: fixed;
+	outline: 1px solid gray;
+	z-index:100000;
+	border-radius:8px;
+	overflow: auto;
+	background: rgb(240,240,240);
+	transition: opacity 200ms, max-height 200ms;
+	/*max-height: 0px;*/
+	opacity: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.popupmenu > button {
+	display: flex;
+	align-items: center;
+	background: transparent;
+}
+
+.popupmenu > button:hover {
+	background: rgba(0,0,0,0.4);
+}
+
+.popupmenu > button > div {
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
+}
+
+.popupmenu > button > label {
+	padding-left: 8px;
+	padding-right: 32px;
+	display: block;
+	cursor: pointer;
+}
+
 .loading {
 	animation-name: loading;
 	animation-duration: 2s;
@@ -717,7 +754,7 @@ filed > div > label {
 	rightarea {
 		background: rgb(20,20,20);
 	}
-	.contextmenu, .customctx > div {
+	.contextmenu, .customctx > div, .popupmenu {
 		background: rgb(40,40,40);
 	}
 	.chatitem:hover, .transparentbtn:hover {

@@ -849,10 +849,66 @@ function loadmainarea() {
 			closebtn:closebtn
 		}
 	}
+
+	function openmenu(menuitems, element) {
+		let popupmenu = document.createElement("div");
+		popupmenu.classList.add("popupmenu");
+		popupmenu.tabIndex = "0";
+
+		let rect = element.getBoundingClientRect();
+		popupmenu.style.top = rect.top + rect.height + "px";
+		popupmenu.style.left = rect.left + "px";
+
+		menuitems.forEach(function(item) {
+			let menuitem = document.createElement("button");
+			let menuitemicon = document.createElement("div");
+			let menuitemlabel = document.createElement("label");
+			menuitem.appendChild(menuitemicon);
+			menuitem.appendChild(menuitemlabel);
+			menuitemlabel.innerText = item.content;
+			if (item.icon) {
+				menuitemicon.innerHTML = item.icon;
+			}
+			popupmenu.appendChild(menuitem);
+
+			menuitem.addEventListener("click",function() {
+				close();
+				item.callback();
+			})
+		});
+
+		function close() {
+			//popupmenu.style.maxHeight = "0px";
+			popupmenu.style.opacity = "";
+			setTimeout(function() {
+				popupmenu.remove();
+			},200)
+		}
+
+		document.body.appendChild(popupmenu);
+		popupmenu.focus();
+		requestAnimationFrame(function() {
+			let popuprect = popupmenu.getBoundingClientRect();
+			if (popuprect.width + popuprect.left > document.body.clientWidth) {
+				popupmenu.style.left = "";
+				popupmenu.style.right = (document.body.clientWidth - rect.right) + "px";
+			}
+			popupmenu.style.opacity = "1";
+			//popupmenu.style.maxHeight = "calc(100% - " + popupmenu.style.top + ")";
+		});
+		maincont.addEventListener("mousedown",function() {
+			close();
+		})
+		popupmenu.addEventListener("keydown",function(e) {
+			if (e.key == "Escape") close();
+		})
+	}
 	
 	let currentchatview;
 	let chatitems = {};
 	let readnotifications = [];
+	let mutedchats = [];
+	let servermutedchats = [];
 	let ttimer = setInterval(function() {
 		if (logininfo == undefined || logininfo == null) {
 			clearTimeout(ttimer);
@@ -868,10 +924,10 @@ function loadmainarea() {
 			res.json().then((nots) => {
 				let list = Object.keys(nots);
 				list.forEach(function(i) {
-					if (readnotifications.indexOf(i) <= -1) {
+					if (!readnotifications.includes(i)) {
 						let notif = nots[i];
-						Notification.requestPermission();
-						if (document.hasFocus() == false || currentchatid != notif.chatid) {
+						if ((document.hasFocus() == false || currentchatid != notif.chatid) && !mutedchats.includes(notif.chatid)) {
+							Notification.requestPermission();
 							var notification = new Notification(notif.user.name + ' - Pamukky', { body: notif.content, icon: getpfp(notif.user.picture) });
 							var audio = new Audio('notif.mp3');
 							audio.play();
@@ -883,17 +939,28 @@ function loadmainarea() {
 					}
 				})
 			})
-		}).catch(() => {
-			openloginarea();
-			clearTimeout(ttimer);
 		})
-	},1000)
+	},2000)
 	fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 		if (!res.ok) {
 			openloginarea();
 			clearTimeout(ttimer);
+			return;
 		}
-		
+		loadchats();
+		getinfo(logininfo.uid, (info) => {
+			namelbl.innerText = info.name;
+			pfpimg.src = getpfp(info.picture);
+			currentuser = info;
+		})
+		fetch(currserver + "getmutedchats", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => { //Get server-side muted chats.
+			if (res.ok) {
+				res.text().then((text) => {
+					servermutedchats = JSON.parse(text);
+				});
+			}
+		})
+		mutedchats = JSON.parse(localStorage.getItem("mutedchats") ?? "[]");
 	})
 
 	let chatslist = createLazyList();
@@ -1110,11 +1177,6 @@ function loadmainarea() {
 	let namelbl = document.createElement("label");
 	namelbl.style.margin = "4px";
 	profilebtn.appendChild(namelbl);
-	getinfo(logininfo.uid, (info) => {
-		namelbl.innerText = info.name;
-		pfpimg.src = getpfp(info.picture);
-		currentuser = info;
-	})
 	
 	fab.addEventListener("click",function() {
 		let diag = opendialog();
@@ -1141,8 +1203,6 @@ function loadmainarea() {
 						diag.closebtn.click();
 					})
 				}
-			}).catch(() => {
-				//openloginarea();
 			})
 		})
 		bflex.appendChild(adduserchatbtn);
@@ -1250,8 +1310,6 @@ function loadmainarea() {
 					loadchats();
 					diag.closebtn.click();
 				}
-			}).catch(() => {
-				//openloginarea();
 			})
 		})
 		bflex.appendChild(joingroupbtn);
@@ -1401,8 +1459,6 @@ function loadmainarea() {
 				fetch(currserver + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value  }),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						namelbl.innerText = nameinp.value;
-					}else {
-						openloginarea();
 					}
 				})
 			}
@@ -1514,13 +1570,10 @@ function loadmainarea() {
 					chats = JSON.parse(text);
 					chatslist.setList([{}, ...chats, {}]);
 				})
-			}else {
-				openloginarea();
 			}
 		})
 	}
 	
-	loadchats();
 	titlebar.appendChild(profilebtn);
 	leftarea.appendChild(titlebar);
 	leftarea.appendChild(chatslist.element);
@@ -1575,6 +1628,51 @@ function loadmainarea() {
 		})
 		
 		titlebar.appendChild(infobtn);
+		let optionsbtn = document.createElement("button");
+		addRipple(optionsbtn,"rgba(255,200,0,0.6)");
+		optionsbtn.title = "Options";
+		optionsbtn.classList.add("cb")
+		optionsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M479.79-192Q450-192 429-213.21t-21-51Q408-294 429.21-315t51-21Q510-336 531-314.79t21 51Q552-234 530.79-213t-51 21Zm0-216Q450-408 429-429.21t-21-51Q408-510 429.21-531t51-21Q510-552 531-530.79t21 51Q552-450 530.79-429t-51 21Zm0-216Q450-624 429-645.21t-21-51Q408-726 429.21-747t51-21Q510-768 531-746.79t21 51Q552-666 530.79-645t-51 21Z"/></svg>';
+		optionsbtn.addEventListener("click",function(e) {
+			openmenu([{
+				content: "Mute...",
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
+				callback: function() {
+					openmenu([
+						{
+							content: mutedchats.includes(chatid) ? "Unmute for this client" : "Mute for this client",
+							icon: mutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
+							callback: function() {
+								let index = mutedchats.indexOf(chatid);
+								if (index > -1) {
+									mutedchats.splice(index, 1);
+								}else {
+									mutedchats.push(chatid);
+								}
+								localStorage.setItem("mutedchats", JSON.stringify(mutedchats));
+							}
+						}, {
+							content: servermutedchats.includes(chatid) ? "Unmute for this account" : "Mute for this account",
+							icon: servermutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
+							callback: function() {
+								fetch(currserver + "mutechat", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'toggle': !servermutedchats.includes(chatid)}),method: 'POST'}).then((res) => {
+									if (res.ok) {
+										let index = servermutedchats.indexOf(chatid);
+										if (index > -1) {
+											servermutedchats.splice(index, 1);
+										}else {
+											servermutedchats.push(chatid);
+										}
+									}
+								})
+							}
+						}
+					], optionsbtn);
+				}
+			}], optionsbtn);
+		})
+		
+		titlebar.appendChild(optionsbtn);
 		mchat.appendChild(titlebar);
 
 
@@ -1830,7 +1928,7 @@ function loadmainarea() {
 			});
 		}
 
-		let sizecache = {};
+		//let sizecache = {};
 
 		/*messageslist.setGetSize(function(list,id) {
 			if (list[id]) {
