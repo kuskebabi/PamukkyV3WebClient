@@ -914,33 +914,46 @@ function loadmainarea() {
 			clearTimeout(ttimer);
 			return;
 		}
-		fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
-			if (!res.ok) {
-				clearTimeout(ttimer);
-				openloginarea();
-			}
-		})
-		fetch(currserver + "getnotifications", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
-			res.json().then((nots) => {
-				let list = Object.keys(nots);
-				list.forEach(function(i) {
-					if (!readnotifications.includes(i)) {
-						let notif = nots[i];
-						if ((document.hasFocus() == false || currentchatid != notif.chatid) && !mutedchats.includes(notif.chatid)) {
-							Notification.requestPermission();
-							var notification = new Notification(notif.user.name + ' - Pamukky', { body: notif.content, icon: getpfp(notif.user.picture) });
-							var audio = new Audio('notif.mp3');
-							audio.play();
-							notification.addEventListener('click', (event) => {
-								chatitems[notif.chatid].click();
-							});
-						}
-						readnotifications.push(i);
+		let req = {
+			"getnotifications": JSON.stringify({'token': logininfo.token})
+		};
+		if (document.hasFocus()) {
+			req["setonline"] = JSON.stringify({'token': logininfo.token});
+		}
+		fetch(currserver + "multi", {body: JSON.stringify(req),method: 'POST'}).then((res) => {
+			res.json().then((json) => {
+				{
+					let getnotificationsrequest = json["getnotifications"];
+					if (getnotificationsrequest.statuscode == 200) {
+						let nots = JSON.parse(getnotificationsrequest.res);
+						let list = Object.keys(nots);
+						list.forEach(function(i) {
+							if (!readnotifications.includes(i)) {
+								let notif = nots[i];
+								if ((document.hasFocus() == false || currentchatid != notif.chatid) && !mutedchats.includes(notif.chatid)) {
+									Notification.requestPermission();
+									var notification = new Notification(notif.user.name + ' - Pamukky', { body: notif.content, icon: getpfp(notif.user.picture) });
+									var audio = new Audio('notif.mp3');
+									audio.play();
+									notification.addEventListener('click', (event) => {
+										chatitems[notif.chatid].click();
+									});
+								}
+								readnotifications.push(i);
+							}
+						})
 					}
-				})
+				}
+				if (json["setonline"]) {
+					let setonlinerequest = json["setonline"];
+					if (setonlinerequest.statuscode != 200) {
+						clearTimeout(ttimer);
+						openloginarea();
+					}
+				}
 			})
 		})
-	},2000)
+	},3000)
 	fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 		if (!res.ok) {
 			openloginarea();
@@ -1584,6 +1597,7 @@ function loadmainarea() {
 
 
 	function createchatarea(chatid,ugid) {
+		let chatupdatetimer;
 		function kill() {
 			clearInterval(chatupdatetimer);
 		}
@@ -2583,14 +2597,20 @@ function loadmainarea() {
 							});
 						}
 					});
+					chatupdatetimer = setInterval(updatechat,1000)
 				})
 			}else {
 				messageslist.innerHTML = "";
-				let errormsg = document.createElement("h3");
-				errormsg.innerText = "Couldn't open chat.";
+				let errorcont = document.createElement("div");
+				let errortitle = document.createElement("h3");
+				errortitle.innerText = "Couldn't open chat.";
+				errorcont.appendChild(errortitle);
+				let errormsg = document.createElement("label");
+				errormsg.innerText = "Please tell the issue to server's owner if this is not normal.";
+				errorcont.appendChild(errormsg);
 				messageslist.style.alignItems = "center";
 				messageslist.style.justifyContent = "center";
-				messageslist.appendChild(errormsg);
+				messageslist.appendChild(errorcont);
 				mgb.remove();
 				kill();
 			}
@@ -2599,10 +2619,163 @@ function loadmainarea() {
 		function updatechat() {
 			if (!isready) return;
 			isready = false;
+			let req = {
+				"getupdates": JSON.stringify({'token': logininfo.token, 'id': chatid, 'since': updatessince}),
+				"gettyping": JSON.stringify({'token': logininfo.token, 'chatid': chatid})
+			};
 			if (isuserchat) {
-				fetch(currserver + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
-					if (res.ok) {
-						res.text().then((text) => {
+				req["getonline"] = JSON.stringify({'token': logininfo.token, 'uid': ugid});
+			}
+			fetch(currserver + "multi", {body: JSON.stringify(req), method: "POST"}).then((res) => {
+				res.json().then((resp) => {
+					isready = true;
+					{
+						let getupdatesrequest = resp["getupdates"];
+						if (getupdatesrequest.statuscode == 200) {
+							let json = JSON.parse(getupdatesrequest.res);
+							let keys = Object.keys(json);
+							keys.forEach((i) => {
+								updatessince = i;
+								let val = json[i];
+								let key = val.id;
+								if (!readupdates.includes(i)) {
+									readupdates.push(key);
+									if (val.event == "NEWMESSAGE") {
+										if (messageflexes[key] == undefined) {
+											chatpage[key] = val;
+											let msg = val;
+											addmsg(msg,key);
+											messageslist.scrollTop = messageslist.scrollHeight;
+										}
+									}
+									if (val.event == "DELETED") {
+										if (messageflexes[key]) {
+											delete chatpage[key];
+											messageflexes[key].remove();
+											let index = selectedMessages.indexOf(key);
+											if (index >= 0) {
+												selectedMessages.splice(index,1);
+											}
+											if (pinnedmessages[key]) {
+												delete pinnedmessages[key];
+												updatepinnedbar();
+											}
+										}
+									}
+									if (val.event == "REACTIONS") {
+										let msgd = msgcdatas[key];
+										if (msgd) {
+											let reactions = val.rect;
+											chatpage[key].reactions = reactions;
+											if (pinnedmessages[key]) { //&& pinnedmessages[i].reactions != val.rect
+												pinnedmessages[key].reactions = val.rect;
+												updatepinnedbar();
+											}
+											let rkeys = Object.keys(reactions);
+											let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
+											news.forEach(function(ir) {
+												let react = reactions[ir];
+												let reacc = document.createElement("div");
+												reacc.addEventListener("click",function() {
+													fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': key, reaction: ir}),method: 'POST'}).then((res) => {
+
+													})
+												})
+												let reace = document.createElement("label");
+												reace.innerText = ir;
+												let cnter = document.createElement("label");
+												cnter.innerText = "0";
+												reacc.appendChild(reace);
+												reacc.appendChild(cnter);
+												msgd.msgreactions.appendChild(reacc);
+
+												msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
+											});
+
+											let nurl = [];
+											Object.keys(msgd.reactions).forEach((i) => {
+												nurl.push(i);
+											})
+
+											rkeys.forEach(function(i) {
+												let rk = reactions[i];
+												let rkk = Object.keys(rk);
+												let doescontaincurr = false;
+												rkk.forEach(function(aa) {
+													let a = rk[aa];
+													if (a.sender == logininfo.uid) {
+														doescontaincurr = true;
+													}
+												})
+												nurl.splice(nurl.indexOf(i),1)
+												if (doescontaincurr == true) {
+													msgd.reactions[i].container.classList.add("rcted")
+												}else {
+													msgd.reactions[i].container.classList.remove("rcted")
+												}
+
+												msgd.reactions[i].counter.innerText = rkk.length;
+											})
+											nurl.forEach((i) => {
+												msgd.reactions[i].container.remove();
+												delete msgd.reactions[i];
+												delete msgd.msgreactions[i];
+											})
+										}
+									}
+									if (val.event == "PINNED") {
+										if (pinnedmessages[key] == undefined) {
+											let msgd = msgcdatas[key];
+											msgd.pinned.style.display = "";
+											pinnedmessages[key] = val;
+											updatepinnedbar();
+										}
+									}
+									if (val.event == "UNPINNED") {
+										if (pinnedmessages[key]) {
+											let msgd = msgcdatas[key];
+											msgd.pinned.style.display = "none";
+											delete pinnedmessages[key];
+											updatepinnedbar();
+										}
+									}
+								}
+							})
+							sendedmessages.forEach(function(i) {
+								i.remove();
+							})
+							sendedmessages = [];
+						}
+					}
+					{
+						let gettypingrequest = resp["gettyping"];
+						if (gettypingrequest.statuscode == 200) {
+							let json = JSON.parse(gettypingrequest.res);
+							let index = json.indexOf(logininfo.uid);
+							if (index >= 0) {
+								json.splice(index,1);
+							}
+							if (json.length == 0) {
+								typinglabel.innerText = "Nobody is typing";
+								typinglabel.style.opacity = "0";
+							}else {
+								let usernameslist = [];
+								json.forEach(function(i) {
+									getinfo(i,function(u) {
+										usernameslist.push(u.name);
+										if (json.length == usernameslist.length) {
+											typinglabel.innerText = usernameslist.join(",") + " is typing...";
+											typinglabel.style.opacity = "";
+										}
+									})
+								});
+							}
+						}
+					}
+					if (resp["getonline"]) {
+						let getonlinerequest = resp["getonline"];
+						if (getonlinerequest.statuscode == 200) {
+							let text = getonlinerequest.res;
 							infotxt.classList.remove("loading");
 							if (text == "Online") {
 								infotxt.innerText = "Online";
@@ -2610,161 +2783,12 @@ function loadmainarea() {
 								let dt = new Date(text);
 								infotxt.innerText = "Last Online: " + dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
 							}
-						})
+						}
 					}
-				});
-			}
-
-			fetch(currserver + "getupdates", {body: JSON.stringify({'token': logininfo.token, 'id': chatid, 'since': updatessince}),method: 'POST'}).then((res) => {
-				if (res.ok) {
-					res.json().then((json) => {
-						isready = true;
-						let keys = Object.keys(json);
-						keys.forEach((i) => {
-							updatessince = i;
-
-							let val = json[i];
-							let key = val.id;
-							if (!readupdates.includes(i)) {
-								readupdates.push(key);
-								if (val.event == "NEWMESSAGE") {
-									if (messageflexes[key] == undefined) {
-										chatpage[key] = val;
-										let msg = val;
-										addmsg(msg,key);
-										messageslist.scrollTop = messageslist.scrollHeight;
-									}
-								}
-								if (val.event == "DELETED") {
-									if (messageflexes[key]) {
-										delete chatpage[key];
-										messageflexes[key].remove();
-										let index = selectedMessages.indexOf(key);
-										if (index >= 0) {
-											selectedMessages.splice(index,1);
-										}
-										if (pinnedmessages[key]) {
-											delete pinnedmessages[key];
-											updatepinnedbar();
-										}
-									}
-								}
-								if (val.event == "REACTIONS") {
-									let msgd = msgcdatas[key];
-									if (msgd) {
-										let reactions = val.rect;
-										chatpage[key].reactions = reactions;
-										if (pinnedmessages[key]) { //&& pinnedmessages[i].reactions != val.rect
-											pinnedmessages[key].reactions = val.rect;
-											updatepinnedbar();
-										}
-										let rkeys = Object.keys(reactions);
-										let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
-										news.forEach(function(ir) {
-											let react = reactions[ir];
-											let reacc = document.createElement("div");
-											reacc.addEventListener("click",function() {
-												fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': key, reaction: ir}),method: 'POST'}).then((res) => {
-
-												})
-											})
-											let reace = document.createElement("label");
-											reace.innerText = ir;
-											let cnter = document.createElement("label");
-											cnter.innerText = "0";
-											reacc.appendChild(reace);
-											reacc.appendChild(cnter);
-											msgd.msgreactions.appendChild(reacc);
-
-											msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-										});
-
-										let nurl = [];
-										Object.keys(msgd.reactions).forEach((i) => {
-											nurl.push(i);
-										})
-
-										rkeys.forEach(function(i) {
-											let rk = reactions[i];
-											let rkk = Object.keys(rk);
-											let doescontaincurr = false;
-											rkk.forEach(function(aa) {
-												let a = rk[aa];
-												if (a.sender == logininfo.uid) {
-													doescontaincurr = true;
-												}
-											})
-											nurl.splice(nurl.indexOf(i),1)
-											if (doescontaincurr == true) {
-												msgd.reactions[i].container.classList.add("rcted")
-											}else {
-												msgd.reactions[i].container.classList.remove("rcted")
-											}
-
-											msgd.reactions[i].counter.innerText = rkk.length;
-										})
-										nurl.forEach((i) => {
-											msgd.reactions[i].container.remove();
-											delete msgd.reactions[i];
-											delete msgd.msgreactions[i];
-										})
-									}
-								}
-								if (val.event == "PINNED") {
-									if (pinnedmessages[key] == undefined) {
-										let msgd = msgcdatas[key];
-										msgd.pinned.style.display = "";
-										pinnedmessages[key] = val;
-										updatepinnedbar();
-									}
-								}
-								if (val.event == "UNPINNED") {
-									if (pinnedmessages[key]) {
-										let msgd = msgcdatas[key];
-										msgd.pinned.style.display = "none";
-										delete pinnedmessages[key];
-										updatepinnedbar();
-									}
-								}
-							}
-						})
-						sendedmessages.forEach(function(i) {
-							i.remove();
-						})
-						sendedmessages = [];
-					})
-				}else {
-					isready = true;
-				}
-			})
-			fetch(currserver + "gettyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
-				if (res.ok) {
-					res.json().then((json) => {
-						let index = json.indexOf(logininfo.uid);
-						if (index >= 0) {
-							json.splice(index,1);
-						}
-						if (json.length == 0) {
-							typinglabel.innerText = "Nobody is typing";
-							typinglabel.style.opacity = "0";
-						}else {
-							let usernameslist = [];
-							json.forEach(function(i) {
-								getinfo(i,function(u) {
-									usernameslist.push(u.name);
-									if (json.length == usernameslist.length) {
-										typinglabel.innerText = usernameslist.join(",") + " is typing...";
-										typinglabel.style.opacity = "";
-									}
-								})
-							});
-						}
-					});
-				}
-			})
+ 				});
+			});
 		}
-		
-		let chatupdatetimer = setInterval(updatechat,500)
+
 		return {
 			chat: mchat,
 			titlebar: titlebar,

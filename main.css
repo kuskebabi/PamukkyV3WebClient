@@ -423,7 +423,6 @@ ma {
 msgcont {
 	width:100%;
 	display:flex;
-	padding:2px;
 	animation-name: msgcappear;
 	animation-duration: 0.5s;
 }
