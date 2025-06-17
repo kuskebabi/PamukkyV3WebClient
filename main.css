@@ -209,11 +209,11 @@ pinbar {
 	align-items:center;
 	flex-shrink:0;
 }
-pinbar > replycont {
+pinbar > .replycont {
 	flex-shrink: initial;
 }
 
-replycont {
+.replycont {
 	display:flex;
 	width:100%;
 	flex-direction:column;
@@ -223,7 +223,21 @@ replycont {
 	margin: 5px;
 	border-radius: 5px;
 	border-left: 3px solid white;
+	text-align: inherit;
+	font-size: inherit;
+	background:transparent;
+	max-height: 20vh;
 }
+
+.replycont:hover {
+	opacity: 1;
+}
+
+.replycont > label {
+	cursor: pointer;
+	overflow-wrap: break-word;
+}
+
 attachmentscont {
 	display:flex;
 	width:100%;
@@ -325,6 +339,7 @@ msgbar > div > textarea {
 	width: 40px;
 	height: 40px;
 	background:white;
+	flex-shrink: 0;
 }
 
 .chatitem {
@@ -335,7 +350,7 @@ msgbar > div > textarea {
 	/*height:54px;*/
 	margin: unset;
 	cursor:pointer;
-	transition: background 300ms, border-radius 300ms, transform 300ms;
+	transition: background-color 300ms, border-radius 300ms, transform 300ms;
 	text-align: inherit;
 	font-size: inherit;
 	background:transparent;
@@ -425,6 +440,12 @@ msgcont {
 	display:flex;
 	animation-name: msgcappear;
 	animation-duration: 0.5s;
+	flex-shrink: 0;
+	transition: background-color 100ms;
+}
+
+msgcont.hint {
+	background: rgba(255, 200, 0, 0.5);
 }
 
 msgcont > img {
@@ -499,10 +520,10 @@ msgreacts > div.rcted {
 	color:black;
 }
 
-msgreacts > div.rcted > label:first-child {
+/*msgreacts > div.rcted > label:first-child {
 	animation-name: reactappear;
 	animation-duration: 0.5s;
-}
+}*/
 
 .errorlabel {
 	color: red;
@@ -531,7 +552,7 @@ button.fab {
 	right: 20px;
 	z-index:1;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-	transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 button.fab:hover {
 	background:orange;
@@ -552,7 +573,7 @@ button.fab:hover:active {
 	background: transparent;
 	margin:0px;
 }
-.contextmenu button:hover, .customctx button:hover {
+.contextmenu button:hover:not(:disabled), .customctx button:hover:not(:disabled) {
 	background: rgba(255,200,0,0.2);
 }
 .contextmenu {
@@ -626,11 +647,6 @@ button.fab:hover:active {
 
 a {
 	color:black;
-	text-decoration:none;
-}
-
-a:hover {
-	text-decoration:underline;
 }
 
 filed {

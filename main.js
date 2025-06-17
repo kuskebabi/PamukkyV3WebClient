@@ -19,6 +19,97 @@ function linkify(inputText) {
 
 	return replacedText;
 }
+
+function imageView(url) {
+	let w = 0;
+	let h = 0;
+	let sd = 1;
+	
+	var bg = document.createElement("div");
+	bg.style.zIndex = "2";
+	bg.style.backgroundColor = "rgba(0,0,0,0.3)";
+    bg.style.position = "fixed";
+    bg.style.top = "0";
+    bg.style.left = "0";
+    bg.style.width = "100%";
+	bg.style.height = "100%";
+	bg.style.transition = "opacity 0.3s";
+	bg.style.display = "flex";
+	bg.style.alignItems = "center";
+	
+	bg.style.overflow = "auto";
+	bg.onclick = function(e) {
+		if (e.target == bg) {
+			bg.remove()
+		}
+	}
+	bg.addEventListener("wheel",function(e) {
+		if (e.ctrlKey) {
+			if (e.deltaY < 0) {
+				sd += 0.1;
+			}else {
+				sd -= 0.1;
+				if (sd < 0.1) {
+					sd = 0.1;
+				}
+			}
+			zoom();
+			e.preventDefault();
+		}
+	})
+	bg.tabIndex = "0";
+	
+	
+	bg.addEventListener("keydown",function(e) {
+		if (e.key == "Escape") {
+			bg.click();
+		}
+	})
+
+    let closebtn = document.createElement("button");
+	closebtn.classList.add("transparentbtn");
+	closebtn.style.position = "fixed";
+	closebtn.style.top = "0px";
+	closebtn.style.right = "0px";
+	closebtn.style.width = "48px";
+	closebtn.style.height = "48px";
+	closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e3e3e3"><path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z"/></svg>';
+	closebtn.title = "Close";
+	bg.appendChild(closebtn);
+	closebtn.addEventListener("click",function() {
+		bg.click();
+	});
+
+	var img = document.createElement("img")
+	img.style.background = "white"
+	img.src = url;
+	img.onload = function() {
+		w = img.width;
+		h = img.height;
+		zoom();
+	};
+	bg.appendChild(img)
+	document.body.appendChild(bg)
+	
+	function zoom() {
+		img.style.width = w * sd + "px";
+		img.style.height = h * sd + "px";
+		if (w * sd > window.innerWidth) {
+			bg.style.justifyContent = "";
+		}else {
+			bg.style.justifyContent = "center";
+		}
+		if (h * sd > window.innerHeight) {
+			bg.style.alignItems = "";
+		}else {
+			bg.style.alignItems = "center";
+		}
+	}
+    
+	bg.focus();
+	return bg;
+}
+
 let currserver = "";
 
 function loaded() {setTimeout(init,1000);}
@@ -387,10 +478,10 @@ function loadmainarea() {
 									crole = JSON.parse(text);
 									if (crole.AllowEditingSettings == true) {
 										let editrolesbtn = document.createElement("button");
-										editrolesbtn.innerText = "Edit Roles";
+										editrolesbtn.innerText = "Edit roles";
 										editrolesbtn.addEventListener("click",function() {
 											let diaga = opendialog();
-											diaga.title.innerText = "Edit Roles";
+											diaga.title.innerText = "Edit roles";
 											diaga.inner.style.display = "flex";
 											diaga.inner.style.flexDirection = "column";
 											diaga.inner.style.alignItems = "center";
@@ -474,7 +565,8 @@ function loadmainarea() {
 								if (user == undefined) return;
 								urow.style.display = "flex";
 								urow.style.width = "100%";
-								urow.style.height = "40px";
+								urow.style.height = "56px";
+								urow.style.padding = "8px";
 								let uname = document.createElement("div");
 								uname.style.display = "flex";
 								uname.style.alignItems = "center";
@@ -490,7 +582,8 @@ function loadmainarea() {
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
 								usernamelbl.innerText = "loading..."
-								usernamelbl.style.marginLeft = "4px";
+								usernamelbl.style.marginLeft = "8px";
+								usernamelbl.style.marginRight = "8px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
 								getinfo(user.user,function(uii) {
@@ -578,7 +671,7 @@ function loadmainarea() {
 									urow.appendChild(uacts);
 								}
 							});
-							userstable.setGetSize(function(list,idx) {return 52});
+							userstable.setGetSize(function(list,idx) {return 56});
 							diag.inner.appendChild(userstable.element);
 							fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 								if (res.ok) {
@@ -605,7 +698,7 @@ function loadmainarea() {
 						diag.inner.appendChild(membersbtn);
 
 						let bannedusersbtn = document.createElement("button");
-						bannedusersbtn.innerText = "Banned Members";
+						bannedusersbtn.innerText = "Banned members";
 						bannedusersbtn.addEventListener("click",function() {
 							let users = {};
 							let rokeys = {};
@@ -621,7 +714,8 @@ function loadmainarea() {
 								if (user == undefined) return;
 								urow.style.display = "flex";
 								urow.style.width = "100%";
-								urow.style.height = "40px";
+								urow.style.height = "56px";
+								urow.style.padding = "8px";
 								let uname = document.createElement("div");
 								uname.style.display = "flex";
 								uname.style.alignItems = "center";
@@ -637,7 +731,8 @@ function loadmainarea() {
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
 								usernamelbl.innerText = "loading..."
-								usernamelbl.style.marginLeft = "4px";
+								usernamelbl.style.marginLeft = "8px";
+								usernamelbl.style.marginRight = "8px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
 								getinfo(user,function(uii) {
@@ -676,7 +771,7 @@ function loadmainarea() {
 									urow.appendChild(uacts);
 								}
 							});
-							userstable.setGetSize(function(list,idx) {return 52});
+							userstable.setGetSize(function(list,idx) {return 56});
 							diag.inner.appendChild(userstable.element);
 							fetch(currserver + "getbannedgroupmembers", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 								if (res.ok) {
@@ -869,6 +964,7 @@ function loadmainarea() {
 			if (item.icon) {
 				menuitemicon.innerHTML = item.icon;
 			}
+			addRipple(menuitem,"rgba(255,200,0,0.6)");
 			popupmenu.appendChild(menuitem);
 
 			menuitem.addEventListener("click",function() {
@@ -905,7 +1001,6 @@ function loadmainarea() {
 	}
 	
 	let currentchatview;
-	let chatitems = {};
 	let readnotifications = [];
 	let mutedchats = [];
 	let servermutedchats = [];
@@ -936,7 +1031,7 @@ function loadmainarea() {
 									var audio = new Audio('notif.mp3');
 									audio.play();
 									notification.addEventListener('click', (event) => {
-										chatitems[notif.chatid].click();
+										openchat(notif.chatid)
 									});
 								}
 								readnotifications.push(i);
@@ -953,7 +1048,7 @@ function loadmainarea() {
 				}
 			})
 		})
-	},3000)
+	},4000)
 	fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 		if (!res.ok) {
 			openloginarea();
@@ -1109,7 +1204,6 @@ function loadmainarea() {
 		let itmcont = document.createElement("button");
 		itmcont.classList.add("chatitem");
 		addRipple(itmcont,"rgba(255,200,0,0.6)");
-		chatitems[id] = itmcont;
 		let pfpimg = document.createElement("img")
 		pfpimg.loading = "lazy";
 		pfpimg.classList.add("loading");
@@ -1188,12 +1282,13 @@ function loadmainarea() {
 	pfpimg.style.margin = "4px";
 	profilebtn.appendChild(pfpimg);
 	let namelbl = document.createElement("label");
-	namelbl.style.margin = "4px";
+	namelbl.style.cursor = "pointer";
+	namelbl.style.margin = "8px";
 	profilebtn.appendChild(namelbl);
 	
 	fab.addEventListener("click",function() {
 		let diag = opendialog();
-		diag.title.innerText = "Add Chat";
+		diag.title.innerText = "Add chat";
 		diag.inner.style.display = "flex";
 		diag.inner.style.flexDirection = "column";
 		diag.inner.style.alignItems = "center";
@@ -1207,7 +1302,7 @@ function loadmainarea() {
 		diag.inner.appendChild(bflex);
 		
 		let adduserchatbtn = document.createElement("button");
-		adduserchatbtn.innerText = "Add User Chat";
+		adduserchatbtn.innerText = "Add user chat";
 		adduserchatbtn.addEventListener("click",function() {
 			fetch(currserver + "adduserchat", {body: JSON.stringify({'token': logininfo.token,'email': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
@@ -1221,7 +1316,7 @@ function loadmainarea() {
 		bflex.appendChild(adduserchatbtn);
 		
 		let creategroupbtn = document.createElement("button");
-		creategroupbtn.innerText = "Create Group";
+		creategroupbtn.innerText = "Create group...";
 		creategroupbtn.addEventListener("click",function() {
 			let f = document.createElement('input');
 			f.type='file';
@@ -1231,7 +1326,7 @@ function loadmainarea() {
 			let file;
 			
 			let diaga = opendialog();
-			diaga.title.innerText = "Create Group";
+			diaga.title.innerText = "Create group";
 			diaga.inner.style.display = "flex";
 			diaga.inner.style.flexDirection = "column";
 			diaga.inner.style.alignItems = "center";
@@ -1254,7 +1349,7 @@ function loadmainarea() {
 			namerow.appendChild(namettl);
 			let nameval = document.createElement("td");
 			let nameinp = document.createElement("input");
-			nameinp.value = "New Group";
+			nameinp.value = "New group";
 			nameval.appendChild(nameinp);
 			namerow.appendChild(nameval);
 			infotable.appendChild(namerow);
@@ -1276,7 +1371,7 @@ function loadmainarea() {
 			diaga.inner.appendChild(bflex);
 			
 			let createbtn = document.createElement("button");
-			createbtn.innerText = "Create Group";
+			createbtn.innerText = "Create group";
 			createbtn.addEventListener("click",function() {
 				if (ufl) {
 					fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
@@ -1316,7 +1411,7 @@ function loadmainarea() {
 		bflex.appendChild(creategroupbtn);
 		
 		let joingroupbtn = document.createElement("button");
-		joingroupbtn.innerText = "Join Group";
+		joingroupbtn.innerText = "Join group";
 		joingroupbtn.addEventListener("click",function() {
 			fetch(currserver + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
@@ -1336,7 +1431,7 @@ function loadmainarea() {
 		let file;
 		
 		let diag = opendialog();
-		diag.title.innerText = "Edit Profile";
+		diag.title.innerText = "Edit profile";
 		diag.inner.style.display = "flex";
 		diag.inner.style.flexDirection = "column";
 		diag.inner.style.alignItems = "center";
@@ -1379,17 +1474,17 @@ function loadmainarea() {
 		diag.inner.appendChild(infotable);
 		
 		let cpass = document.createElement("button");
-		cpass.innerText = "Change Password";
+		cpass.innerText = "Change password";
 		cpass.addEventListener("click",function() {
 			let diag = opendialog();
-			diag.title.innerText = "Change Password";
+			diag.title.innerText = "Change password";
 			diag.inner.style.display = "flex";
 			diag.inner.style.flexDirection = "column";
 			diag.inner.style.alignItems = "center";
 			let cpasstable = document.createElement("table");
 			let opr = document.createElement("tr");
 			let pprt = document.createElement("td");
-			pprt.innerText = "Old Password";
+			pprt.innerText = "Old password";
 			opr.appendChild(pprt);
 			let oprv = document.createElement("td");
 			let oprinp = document.createElement("input");
@@ -1399,7 +1494,7 @@ function loadmainarea() {
 			
 			let npr = document.createElement("tr");
 			let npt = document.createElement("td");
-			npt.innerText = "New Password";
+			npt.innerText = "New password";
 			npr.appendChild(npt);
 			let nprv = document.createElement("td");
 			let nprinp = document.createElement("input");
@@ -1409,7 +1504,7 @@ function loadmainarea() {
 			
 			let npc = document.createElement("tr");
 			let npcc = document.createElement("td");
-			npcc.innerText = "Confirm Password";
+			npcc.innerText = "Confirm password";
 			npc.appendChild(npcc);
 			let nprc = document.createElement("td");
 			let npcinp = document.createElement("input");
@@ -1431,20 +1526,16 @@ function loadmainarea() {
 					return;
 				}
 				fetch(currserver + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
-					//if (res.ok) {
-						res.text().then((text) => {
-							
-							info = JSON.parse(text);
-							if (info["status"] == "error") {
-								alert(text);
-								return;
-							}
-							//logininfo = info;
-							alert("Password Changed!");
-						})
-					//}else {
+					res.text().then((text) => {
 						
-					//}
+						info = JSON.parse(text);
+						if (info["status"] == "error") {
+							alert(text);
+							return;
+						}
+						//logininfo = info;
+						alert("Password changed!");
+					})
 				})
 			});
 			diag.inner.appendChild(changebtn);
@@ -1607,7 +1698,6 @@ function loadmainarea() {
 		
 		let fileslist = [];
 		let isuserchat = chatid.includes("-");
-		let messageflexes = {};
 		let pinnedmessages = {};
 		let mchat = document.createElement("mchat");
 		let titlebar = document.createElement("titlebar");
@@ -1690,14 +1780,25 @@ function loadmainarea() {
 		mchat.appendChild(titlebar);
 
 
-		let messageslist = document.createElement("messageslist");
-		let pinnedmessageslist = document.createElement("messageslist");
-		pinnedmessageslist.style.display = "none";
+		let messageslist = createDynamicList("messageslist","msgcont");
+		messageslist.setDirection(-1);
+		let pinnedmessageslist = createDynamicList("messageslist","msgcont");
+		pinnedmessageslist.element.style.display = "none";
 
 		let pinnedbar = document.createElement("pinbar");
 		pinnedbar.style.display = "none";
-		let mpint = document.createElement("replycont");
+		let mpint = document.createElement("button");
+		mpint.classList.add("replycont");
+		mpint.style.height = "58px";
+		addRipple(mpint,"rgba(255,200,0,0.6)");
 		pinnedbar.appendChild(mpint);
+		mpint.addEventListener("click",function() {
+			let k = Object.keys(pinnedmessages);
+			if (pinnedmessageslist.element.style.display == "") {
+				pinsbtn.click();
+			}
+			showmessage(k[k.length - 1]);
+		});
 		let pinsbtn = document.createElement("button");
 		pinsbtn.title = "Pinned messages";
 		addRipple(pinsbtn,"rgba(255,200,0,0.6)");
@@ -1706,23 +1807,15 @@ function loadmainarea() {
 		pinnedbar.appendChild(pinsbtn);
 		mchat.appendChild(pinnedbar);
 
-		function updatepinnedmessageslist() {
-			pinnedmessageslist.innerHTML = "";
-			for (const [key, msg] of Object.entries(pinnedmessages)) {
-				let msgd = createmsg(msg,key);
-				pinnedmessageslist.appendChild(msgd.message);
-			}
-		}
 
 		pinsbtn.addEventListener("click",function() {
-			if (messageslist.style.display == "") {
-				pinnedmessageslist.style.display = "";
-				messageslist.style.display = "none";
+			if (messageslist.element.style.display == "") {
+				pinnedmessageslist.element.style.display = "";
+				messageslist.element.style.display = "none";
 				mgb.style.display = "none";
-				updatepinnedmessageslist();
 			}else {
-				pinnedmessageslist.style.display = "none";
-				messageslist.style.display = "";
+				pinnedmessageslist.element.style.display = "none";
+				messageslist.element.style.display = "";
 				if (crole.AllowSending == true) {
 					mgb.style.display = "";
 				}else {
@@ -1738,8 +1831,10 @@ function loadmainarea() {
 		function updatepinnedbar() {
 			let k = Object.keys(pinnedmessages);
 			if (k.length > 0) {
+				if (pinnedbar.style.display == "none") {
+					messageslist.element.scrollTop += 56;
+				}
 				pinnedbar.style.display = "";
-				messageslist.scrollTop += 56;
 				let msg = pinnedmessages[k[k.length - 1]];
 				pincontent.innerText = msg.content;
 				pinsender.classList.add("loading");
@@ -1748,23 +1843,21 @@ function loadmainarea() {
 					pinsender.classList.remove("loading");
 					pinsender.innerText = info.name;
 				})
-				if (pinnedmessageslist.style.display == "") {
-					updatepinnedmessageslist();
-				}
 			}else {
 				pinnedbar.style.display = "none";
-				if (pinnedmessageslist.style.display == "") {
+				if (pinnedmessageslist.element.style.display == "") {
 					pinsbtn.click();
 				}
 			}
 		}
 		
-		mchat.appendChild(pinnedmessageslist);
-		mchat.appendChild(messageslist);
+		mchat.appendChild(pinnedmessageslist.element);
+		mchat.appendChild(messageslist.element);
 
 		
 		let mgb = document.createElement("msgbar");
-		let rc = document.createElement("replycont");
+		let rc = document.createElement("button");
+		rc.classList.add("replycont");
 		addRipple(rc,"rgba(255,200,0,0.6)");
 		rc.addEventListener("click",function() {
 			rc.style.display = "none";
@@ -1890,9 +1983,6 @@ function loadmainarea() {
 		mchat.appendChild(mgb)
 		
 		let chatpage;
-		let lastmsgsender;
-		let lastmsgtime = new Date(0);
-		let msgscont;
 		let selectedMessages = [];
 		let sendedmessages = [];
 		let crole = {"AdminOrder":0,"AllowMessageDeleting":true,"AllowEditingSettings":true,"AllowKicking":true,"AllowBanning":true,"AllowSending":true,"AllowEditingUsers":true,"AllowSendingReactions":true,"AllowPinningMessages":true};
@@ -1942,54 +2032,208 @@ function loadmainarea() {
 			});
 		}
 
-		//let sizecache = {};
-
-		/*messageslist.setGetSize(function(list,id) {
-			if (list[id]) {
-				if (sizecache[list[id].key]) {
-					//console.log(sizecache[list[id].key]);
-					return sizecache[list[id].key]
+		let timemsgid = 0;
+		let messagescount = 0;
+		let addloadoldermessages = true;
+		function addmsg(msg,id,order = 1) {
+			if (messageslist.getItemData(id)) return;
+			if (msg.type != "time") {
+				let dt = new Date(msg.time);
+				let list = messageslist.getList();
+				let keys = Object.keys(list);
+				let lastmsg = list[keys[keys.length - 1]];
+				let lastmsgtime;
+				if (lastmsg) {
+					lastmsgtime = new Date(lastmsg.data.time);
+				}else {
+					lastmsgtime = new Date(0);
 				}
-				return 36;
-			}
-			return 0;
-		});*/
-		
-		function addmsg(msg,id) {
-			let dt = new Date(msg.time);
-			let dtt = new Date(msg.time);
-			if (dtt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
-				lastmsgtime = new Date(msg.time);
-				addmsg({
-					sender:0,
-					content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
-					   time: dt
-				})
-				//lastmsgsender = msg.sender;
-			}
-			if (msg.sender != lastmsgsender) {
-				msgscont = document.createElement("msgscont");
-				messageslist.appendChild(msgscont)
-				lastmsgsender = msg.sender;
+				if (dt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
+					addmsg({
+						sender:0,
+						content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
+						time: dt,
+						loadolder: addloadoldermessages,
+						type: "time"
+					},timemsgid,order)
+					timemsgid++;
+					addloadoldermessages = false;
+				}
+
+				if (id > timemsgid) {
+					messagescount++;
+				}
 			}
 
-			let r = createmsg(msg,id);
-			messageflexes[id] = r.message;
-			msgscont.appendChild(r.message);
-			msgcdatas[id] = {message: r.message, status: r.status,msgreactions: r.msgreactions,reactions: r.reactions, pinned: r.pinned};
-			return msgcdatas[id];
+			messageslist.addItem(id,{
+				size: (msg.sender == logininfo.uid) ? 57 : (msg.sender == 0) ? 32 : 64,
+				data: msg,
+				generator: function(data, element, id) {
+					createmsg(data,id,element);
+					if (data.loadolder) {
+						getoldermessages("#" + messagescount + "-#" + (messagescount + 48), undefined, id);
+					}
+				},
+				updater: chatmsgupdater
+			}, order);
 		}
 
-		function createmsg(msg,id) {
+		function addpinnedmsg(key, msg) {
+			pinnedmessageslist.addItem(key,{
+				size: 68,
+				data: msg,
+				generator: function(data, element, id) {
+					createmsg(data, key, element, {pinnedmessageslist: true})
+				},
+				updater: chatmsgupdater
+			});
+		}
+
+		function chatmsgupdater(data,element,id) {
+			if (selectedMessages.includes(id)) {
+				element.style.background = "orange";
+			}else {
+				element.style.background = "";
+			}
+			let msgreactions = element.querySelector(".msgreactions");
+			if (msgreactions) {
+				msgreactions.innerHTML = "";
+				let reactions = data.reactions;
+				if (reactions) {
+					Object.keys(reactions).forEach(function(ir) {
+						let react = reactions[ir];
+						let reacc = document.createElement("div");
+						reacc.style.cursor = "pointer";
+						reacc.addEventListener("click",function() {
+							fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: ir}),method: 'POST'}).then((res) => {
+								updatechat();
+							})
+						})
+						let reace = document.createElement("label");
+						reace.innerText = ir;
+						let cnter = document.createElement("label");
+						cnter.innerText = "0";
+						reacc.appendChild(reace);
+						reacc.appendChild(cnter);
+						msgreactions.appendChild(reacc);
+
+						let rkk = Object.keys(react);
+						let doescontaincurr = false;
+						Object.keys(react).forEach(function(aa) {
+							let a = react[aa];
+							if (a.sender == logininfo.uid) {
+								doescontaincurr = true;
+							}
+						})
+
+						if (doescontaincurr) {
+							reacc.classList.add("rcted")
+						}
+
+						cnter.innerText = rkk.length;
+					});
+				}
+				// No need to check for these if there wasn't reaction container. Because these wouldn't exist too.
+				let msgpinned = element.querySelector(".msgpinned");
+				if (msgpinned) msgpinned.style.display = data.pinned ? "" : "none";
+				let msgstatus = element.querySelector(".msgstatus");
+				if (msgstatus) {
+					if (data.status == "sending") {
+						msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m614-310 51-51-149-149v-210h-72v240l170 170ZM480-96q-79.376 0-149.188-30Q261-156 208.5-208.5T126-330.958q-30-69.959-30-149.5Q96-560 126-630t82.5-122q52.5-52 122.458-82 69.959-30 149.5-30 79.542 0 149.548 30.24 70.007 30.24 121.792 82.08 51.786 51.84 81.994 121.92T864-480q0 79.376-30 149.188Q804-261 752-208.5T629.869-126Q559.738-96 480-96Zm0-384Zm.477 312q129.477 0 220.5-91.5T792-480.477q0-129.477-91.023-220.5T480.477-792Q351-792 259.5-700.977t-91.5 220.5Q168-351 259.5-259.5T480.477-168Z"/></svg>';
+					}else {
+						msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
+					}
+				};
+			}
+		}
+
+		function getoldermessages(prefix,callback,idtoremove) {
+			fetch(currserver + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': prefix}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					res.text().then((text) => {
+						isready = true;
+						chatpage = JSON.parse(text);
+						let mkeys = Object.keys(chatpage).reverse();
+						if (mkeys.length > 0) {
+							let list = messageslist.getList();
+							if (messageslist.getItemData(mkeys[0]) == undefined) {
+								let oldfirstmsg = list[Object.keys(list)[0]];
+								let lastmsgtime = new Date(oldfirstmsg.data.time);
+								let newfirstmsg = chatpage[mkeys[0]];
+								let newmsgtime = new Date(newfirstmsg.time);
+								if (idtoremove != undefined && newmsgtime.setHours(0,0,0,0) == lastmsgtime.setHours(0,0,0,0)) {
+									messageslist.removeItem(idtoremove);
+								}
+							}
+
+							mkeys.forEach((i,idx) => {
+								if (messageslist.getItemData(i) == undefined) {
+									let msg = chatpage[i];
+									let dt = new Date(msg.time);
+									
+									addmsg(msg, i, -1);
+									if (idx == mkeys.length - 1) {
+										addmsg({
+											sender:0,
+											content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
+											time: dt,
+											loadolder: true
+										},timemsgid,-1)
+										timemsgid++;
+									}
+								}
+							})
+						}
+
+						if (callback) {
+							callback();
+						}
+					})
+				}
+			})
+		}
+
+		function showmessage(id) {
+			function show() {
+				let cont = messageslist.getElement(id);
+				if (cont) {
+					function scroll() {
+						let top = Math.min(Math.max(cont.offsetTop - 250,0), messageslist.element.scrollHeight - messageslist.element.offsetHeight);
+						messageslist.element.scrollTop += (top - messageslist.element.scrollTop) / 8;
+						if (Math.abs(messageslist.element.scrollTop - Math.round(top)) > 10) {
+							requestAnimationFrame(function() {scroll();})
+						}else {
+							cont.classList.add("hint");
+							setTimeout(function() {
+								cont.classList.remove("hint");
+							},1000)
+						}
+					}
+					requestAnimationFrame(function() {scroll();});
+				}
+			}
+			if (messageslist.getItemData(id)) {
+				show();
+			}else {
+				getoldermessages("#" + messagescount + "-" + id, show);
+			}
+		}
+
+		function createmsg(msg,id,msgc,extra) {
+			if (msgc == undefined) {
+				return;
+			}
 			let dt = new Date(msg.time);
-			let msgc = document.createElement("msgcont");
 			function selectmessage() {
-				if (selectedMessages.includes(id)) {
-					selectedMessages.splice(selectedMessages.indexOf(id),1);
-					msgc.style.background = "";
+				let idx = selectedMessages.indexOf(id);
+				if (idx > -1) {
+					selectedMessages.splice(idx,1);
 				}else {
 					selectedMessages.push(id);
-					msgc.style.background = "orange";
+				}
+				messageslist.updateItem(id);
+				if (pinnedmessages[id]) {
+					pinnedmessageslist.updateItem(id);
 				}
 			}
 			msgc.addEventListener("click",function() {
@@ -2023,7 +2267,7 @@ function loadmainarea() {
 							reactionsdiv.appendChild(reactionbtn);
 							reactionbtn.addEventListener("click",function() {
 								fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'}).then((res) => {
-
+									updatechat();
 								})
 								clik();
 							});
@@ -2032,6 +2276,22 @@ function loadmainarea() {
 					}
 					let cnt = document.createElement("div");
 					ctxdiv.appendChild(cnt);
+					if (extra) {
+						if (extra.pinnedmessageslist == true) {
+							let gotobutton = document.createElement("button");
+							addRipple(gotobutton,"rgba(255,200,0,0.6)",true);
+							gotobutton.innerText = "Go to message";
+							gotobutton.disabled = !crole.AllowSending;
+							gotobutton.addEventListener("click", function() {
+								if (pinnedmessageslist.element.style.display == "") {
+									pinsbtn.click();
+								}
+								showmessage(id);
+								clik();
+							})
+							cnt.appendChild(gotobutton);
+						}
+					}
 					let replybutton = document.createElement("button");
 					addRipple(replybutton,"rgba(255,200,0,0.6)",true);
 					replybutton.innerText = "Reply";
@@ -2040,13 +2300,19 @@ function loadmainarea() {
 						replymsgid = id;
 						rc.style.display = "";
 						replycnt.innerText = msg.content;
-						replysname.innerText = senderuser.name;
+						getinfo(msg.sender,(user) => {
+							replysname.innerText = user.name;
+						})
+						if (pinnedmessageslist.element.style.display == "") {
+							pinsbtn.click();
+						}
+						msginput.focus();
 						clik();
 					})
 					cnt.appendChild(replybutton);
 					let forwardbutton = document.createElement("button");
 					addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
-					forwardbutton.innerText = "Forward Message...";
+					forwardbutton.innerText = "Forward message...";
 					forwardbutton.addEventListener("click", function() {
 						let diag = opendialog();
 						diag.title.innerText = "Forward message";
@@ -2079,8 +2345,8 @@ function loadmainarea() {
 							if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
 								item["lastmessage"] = {
 									time: new Date(),
-												   content: "No Messages. Send one to start conversation.",
-												   sender: "0"
+									content: "No Messages. Send one to start conversation.",
+									sender: "0"
 								}
 							}
 							itmcont.classList.add("chatitem");
@@ -2160,7 +2426,7 @@ function loadmainarea() {
 					})
 					cnt.appendChild(forwardbutton);
 					let selectbutton = document.createElement("button");
-					selectbutton.innerText = "Multi-Select";
+					selectbutton.innerText = "Select...";
 					addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
 					selectbutton.addEventListener("click", function() {
 						selectmessage();
@@ -2168,7 +2434,7 @@ function loadmainarea() {
 					})
 					cnt.appendChild(selectbutton);
 					let savebtn = document.createElement("button");
-					savebtn.innerText = "Save Message";
+					savebtn.innerText = "Save message";
 					addRipple(savebtn,"rgba(255,200,0,0.6)",true);
 					savebtn.addEventListener("click", function() {
 						let messages = selectedMessages;
@@ -2180,13 +2446,13 @@ function loadmainarea() {
 					})
 					cnt.appendChild(savebtn);
 					let pinbtn = document.createElement("button");
-					pinbtn.innerText = "Pin Message";
+					pinbtn.innerText = msgpinned.style.display == "" ? "Unpin message" : "Pin message";
 					addRipple(pinbtn,"rgba(255,200,0,0.6)",true);
 					pinbtn.addEventListener("click", function() {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
 						fetch(currserver + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-
+							updatechat();
 						})
 						clik();
 					})
@@ -2201,14 +2467,14 @@ function loadmainarea() {
 					})
 					cnt.appendChild(copybutton);
 					let deletebutton = document.createElement("button");
-					addRipple(deletebutton,"rgba(255,200,0,0.6)",true);
-					deletebutton.innerText = "Delete Message";
+					addRipple(deletebutton,"rgba(255,0,0,0.6)",true);
+					deletebutton.innerText = "Delete message";
 					deletebutton.addEventListener("click", () => {
 						if (confirm("Do you really want to delete?")) {
 							let messages = selectedMessages;
 							if (messages.length == 0) messages = [id];
 							fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-
+								updatechat();
 							})
 						}
 						clik();
@@ -2245,6 +2511,7 @@ function loadmainarea() {
 			let msgsender = document.createElement("msgsender");
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
+			msgreactions.classList.add("msgreactions");
 			msgpfp.classList.add("loading");
 			msgsendertxt.innerText = "loading..."
 			msgsendertxt.classList.add("loading");
@@ -2255,7 +2522,7 @@ function loadmainarea() {
 			if (msg.forwardedfrom != undefined) {
 				let il = document.createElement("div");
 				il.style.fontSize = "12px";
-				il.innerText = "Forwarded From "
+				il.innerText = "Forwarded from "
 				let fu = document.createElement("b");
 				fu.classList.add("loading");
 				fu.style.cursor = "pointer";
@@ -2272,10 +2539,11 @@ function loadmainarea() {
 			}
 
 			if (msg.replymsgcontent != undefined) {
-				let rc = document.createElement("replycont");
+				let rc = document.createElement("button");
+				rc.classList.add("replycont");
 				addRipple(rc,"rgba(255,200,0,0.6)");
 				rc.addEventListener("click",function() {
-
+					showmessage(msg.replymsgid);
 				})
 				let replysname = document.createElement("b");
 				replysname.innerText = "loading...";
@@ -2302,7 +2570,6 @@ function loadmainarea() {
 					msgsendertxt.innerText = user.name;
 					msgpfp.src = getpfp(user.picture);
 					msgpfp.title = user.name;
-					senderuser = user;
 				})
 
 				msgpfp.style.cursor = "pointer";
@@ -2397,6 +2664,7 @@ function loadmainarea() {
 
 			let msgstatus = null;
 			let msgpinned = document.createElement("div");
+			msgpinned.classList.add("msgpinned");
 			msgpinned.title = "Pinned";
 			msgpinned.style.display = msg.pinned ? "" : "none";
 			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
@@ -2410,6 +2678,7 @@ function loadmainarea() {
 				msgtime.appendChild(document.createElement("ma"));
 				msgtime.appendChild(msgtimelbl);
 				msgstatus = document.createElement("div");
+				msgstatus.classList.add("msgstatus");
 				msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
 				msgtime.appendChild(msgstatus);
 				msgc.appendChild(msgm);
@@ -2430,70 +2699,9 @@ function loadmainarea() {
 				}
 			}
 			msgtime.appendChild(msgpinned);
-
-			let reactions = msg.reactions;
-			let rdata = {};
-			if (reactions) {
-				Object.keys(reactions).forEach(function(ir) {
-					let react = reactions[ir];
-					let reacc = document.createElement("div");
-					reacc.style.cursor = "pointer";
-					reacc.addEventListener("click",function() {
-						fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: ir}),method: 'POST'}).then((res) => {
-
-						})
-					})
-					let reace = document.createElement("label");
-					reace.innerText = ir;
-					let cnter = document.createElement("label");
-					cnter.innerText = "0";
-					reacc.appendChild(reace);
-					reacc.appendChild(cnter);
-					msgreactions.appendChild(reacc);
-
-					rdata[ir] = {reaction: ir, container: reacc, counter:cnter}
-
-					let rkk = Object.keys(react);
-					let doescontaincurr = false;
-					Object.keys(react).forEach(function(aa) {
-						let a = react[aa];
-						if (a.sender == logininfo.uid) {
-							doescontaincurr = true;
-						}
-					})
-
-					if (doescontaincurr) {
-						rdata[ir].container.classList.add("rcted")
-					}
-
-					rdata[ir].counter.innerText = rkk.length;
-				});
-
-			}
-
-			return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: rdata, pinned:msgpinned};;
+			//return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: rdata, pinned:msgpinned};;
 		}
-
-		/*function addmsg(msg,id) {
-			let dt = new Date(msg.time);
-			let dtt = new Date(msg.time);
-			let nowdate = new Date();
-			if (dtt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
-				lastmsgtime = new Date(msg.time);
-				addmsg({
-					sender:0,
-					content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
-					time: dt
-				},0)
-				lastmsgsender = msg.sender;
-			}
-			msg.key = id;
-			msgs.push(msg);
-			messageslist.setList(msgs);
-			return {};
-		}*/
 		
-		let msgcdatas = {};
 		sendbtn.disabled = true;
 		let sendtyping = true;
 		msginput.addEventListener("input",function() {
@@ -2512,14 +2720,17 @@ function loadmainarea() {
 		sendbtn.addEventListener("click",function() {
 			let content = msginput.value.trim();
 			sendbtn.disabled = true;
-
-			let msg = addmsg({
+			
+			let msgid = "send" + Math.round(Math.random() * 100000);
+			addmsg({
 				sender:logininfo.uid,
 				content: content,
-				time: new Date()
-			},0);
-			msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m614-310 51-51-149-149v-210h-72v240l170 170ZM480-96q-79.376 0-149.188-30Q261-156 208.5-208.5T126-330.958q-30-69.959-30-149.5Q96-560 126-630t82.5-122q52.5-52 122.458-82 69.959-30 149.5-30 79.542 0 149.548 30.24 70.007 30.24 121.792 82.08 51.786 51.84 81.994 121.92T864-480q0 79.376-30 149.188Q804-261 752-208.5T629.869-126Q559.738-96 480-96Zm0-384Zm.477 312q129.477 0 220.5-91.5T792-480.477q0-129.477-91.023-220.5T480.477-792Q351-792 259.5-700.977t-91.5 220.5Q168-351 259.5-259.5T480.477-168Z"/></svg>';
+				time: new Date(),
+				status: "sending"
+			},msgid);
 
+			messageslist.element.scrollTop = messageslist.element.scrollHeight;
+			
 			let files = [];
 			let fll = Object.assign([], fileslist);
 			function upload() {
@@ -2544,17 +2755,21 @@ function loadmainarea() {
 							if (res.result == "error") {
 
 							}else {
-								msg.status.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
+								let data = messageslist.getItemData(msgid);
+								if (data) {
+									data["status"] = "sent";
+									messageslist.updateItem(msgid,data);
+								}
 							}
 
-							sendedmessages.push(msg.message);
+							sendedmessages.push(msgid);
 							updatechat();
 						})
 					}else {
-						msgscont.removeChild(msg.message);
+						messageslist.removeItem(msgid);
 					}
 				}).catch(() => {
-					msgscont.removeChild(msg.message);
+					messageslist.removeItem(msgid);
 				});
 			}
 			upload();
@@ -2587,20 +2802,21 @@ function loadmainarea() {
 						updatessince = i;
 					})
 
-					messageslist.scrollTop = messageslist.scrollHeight;
-
 					fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
 						if (res.ok) {
 							res.text().then((text) => {
 								pinnedmessages = JSON.parse(text);
 								updatepinnedbar();
+								for (const [key, msg] of Object.entries(pinnedmessages)) {
+									addpinnedmsg(key, msg);
+								}
 							});
 						}
 					});
-					chatupdatetimer = setInterval(updatechat,1000)
+					chatupdatetimer = setTimeout(updatechat,1000)
 				})
 			}else {
-				messageslist.innerHTML = "";
+				messageslist.element.innerHTML = "";
 				let errorcont = document.createElement("div");
 				let errortitle = document.createElement("h3");
 				errortitle.innerText = "Couldn't open chat.";
@@ -2608,14 +2824,16 @@ function loadmainarea() {
 				let errormsg = document.createElement("label");
 				errormsg.innerText = "Please tell the issue to server's owner if this is not normal.";
 				errorcont.appendChild(errormsg);
-				messageslist.style.alignItems = "center";
-				messageslist.style.justifyContent = "center";
-				messageslist.appendChild(errorcont);
+				messageslist.element.style.alignItems = "center";
+				messageslist.element.style.justifyContent = "center";
+				messageslist.element.appendChild(errorcont);
 				mgb.remove();
 				kill();
 			}
 		})
+
 		let readupdates = [];
+		let updatedelay = 1000;
 		function updatechat() {
 			if (!isready) return;
 			isready = false;
@@ -2634,115 +2852,68 @@ function loadmainarea() {
 						if (getupdatesrequest.statuscode == 200) {
 							let json = JSON.parse(getupdatesrequest.res);
 							let keys = Object.keys(json);
+							updatedelay += 250;
+							updatedelay = Math.min(updatedelay, 4000);
 							keys.forEach((i) => {
 								updatessince = i;
 								let val = json[i];
 								let key = val.id;
 								if (!readupdates.includes(i)) {
 									readupdates.push(key);
+									updatedelay = 1000;
 									if (val.event == "NEWMESSAGE") {
-										if (messageflexes[key] == undefined) {
+										if (messageslist.getItemData(key) == undefined) {
 											chatpage[key] = val;
-											let msg = val;
-											addmsg(msg,key);
-											messageslist.scrollTop = messageslist.scrollHeight;
+											addmsg(val,key);
 										}
 									}
 									if (val.event == "DELETED") {
-										if (messageflexes[key]) {
-											delete chatpage[key];
-											messageflexes[key].remove();
-											let index = selectedMessages.indexOf(key);
-											if (index >= 0) {
-												selectedMessages.splice(index,1);
-											}
-											if (pinnedmessages[key]) {
-												delete pinnedmessages[key];
-												updatepinnedbar();
-											}
-										}
-									}
-									if (val.event == "REACTIONS") {
-										let msgd = msgcdatas[key];
-										if (msgd) {
-											let reactions = val.rect;
-											chatpage[key].reactions = reactions;
-											if (pinnedmessages[key]) { //&& pinnedmessages[i].reactions != val.rect
-												pinnedmessages[key].reactions = val.rect;
-												updatepinnedbar();
-											}
-											let rkeys = Object.keys(reactions);
-											let news = Object.keys(reactions).filter(x => !Object.keys(msgd.reactions).includes(x));
-											news.forEach(function(ir) {
-												let react = reactions[ir];
-												let reacc = document.createElement("div");
-												reacc.addEventListener("click",function() {
-													fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': key, reaction: ir}),method: 'POST'}).then((res) => {
-
-													})
-												})
-												let reace = document.createElement("label");
-												reace.innerText = ir;
-												let cnter = document.createElement("label");
-												cnter.innerText = "0";
-												reacc.appendChild(reace);
-												reacc.appendChild(cnter);
-												msgd.msgreactions.appendChild(reacc);
-
-												msgd.reactions[ir] = {reaction: ir, container: reacc, counter:cnter}
-											});
-
-											let nurl = [];
-											Object.keys(msgd.reactions).forEach((i) => {
-												nurl.push(i);
-											})
-
-											rkeys.forEach(function(i) {
-												let rk = reactions[i];
-												let rkk = Object.keys(rk);
-												let doescontaincurr = false;
-												rkk.forEach(function(aa) {
-													let a = rk[aa];
-													if (a.sender == logininfo.uid) {
-														doescontaincurr = true;
-													}
-												})
-												nurl.splice(nurl.indexOf(i),1)
-												if (doescontaincurr == true) {
-													msgd.reactions[i].container.classList.add("rcted")
-												}else {
-													msgd.reactions[i].container.classList.remove("rcted")
-												}
-
-												msgd.reactions[i].counter.innerText = rkk.length;
-											})
-											nurl.forEach((i) => {
-												msgd.reactions[i].container.remove();
-												delete msgd.reactions[i];
-												delete msgd.msgreactions[i];
-											})
-										}
-									}
-									if (val.event == "PINNED") {
-										if (pinnedmessages[key] == undefined) {
-											let msgd = msgcdatas[key];
-											msgd.pinned.style.display = "";
-											pinnedmessages[key] = val;
+										messageslist.removeItem(key);
+										if (pinnedmessages[key]) {
+											delete pinnedmessages[key];
+											pinnedmessageslist.removeItem(key);
 											updatepinnedbar();
 										}
 									}
+									if (val.event == "REACTIONS") {
+										let data = messageslist.getItemData(key);
+										if (data) {
+											data.reactions = val.rect;
+											messageslist.updateItem(key, data);
+										}
+										// But message MIGHT be loaded in pinned messages area.
+										let pdata = pinnedmessageslist.getItemData(key);
+										if (pdata) {
+											pdata.reactions = val.rect;
+											pinnedmessageslist.updateItem(key, pdata);
+										}
+									}
+									if (val.event == "PINNED") {
+										let data = messageslist.getItemData(key);
+										if (data) {
+											data.pinned = true;
+											messageslist.updateItem(key, data);
+										}
+										pinnedmessages[key] = val;
+										updatepinnedbar();
+										addpinnedmsg(key,val);
+									}
 									if (val.event == "UNPINNED") {
+										let data = messageslist.getItemData(key);
+										if (data) {
+											data.pinned = false;
+											messageslist.updateItem(key, data);
+										}
 										if (pinnedmessages[key]) {
-											let msgd = msgcdatas[key];
-											msgd.pinned.style.display = "none";
 											delete pinnedmessages[key];
+											pinnedmessageslist.removeItem(key);
 											updatepinnedbar();
 										}
 									}
 								}
 							})
 							sendedmessages.forEach(function(i) {
-								i.remove();
+								messageslist.removeItem(i);
 							})
 							sendedmessages = [];
 						}
@@ -2785,6 +2956,7 @@ function loadmainarea() {
 							}
 						}
 					}
+					chatupdatetimer = setTimeout(updatechat,updatedelay)
  				});
 			});
 		}
@@ -2850,92 +3022,148 @@ function humanFileSize(bytes, si=false, dp=1) {
 }
 
 //something I made
-function createDynamicList(innertype = "div") {
-	let list = [];
-	let listelement = document.createElement("div");
+function createDynamicList(elemtype = "div", innertype = "div") {
+	let list = {};
+	let direction = 1;
+	let pos = -1;
+	let scrolldirection = 1;
+	let lastscrollpos = 0;
+	let listelement = document.createElement(elemtype);
 	listelement.style.overflow = "auto";
-	let innerelement = document.createElement(innertype);
-	innerelement.style.overflow = "hidden";
-	innerelement.style.width = "100%";
-	innerelement.style.position = "relative";
-	listelement.appendChild(innerelement);
-	let pos = 0;
+
 	listelement.addEventListener("scroll",function() {
-		pos = listelement.scrollTop;
-		render();
-	})
-
-	let itemgenerator = function(list,index) {};
-	let getsize = function(list,index) {};
-
-	let esize = 0;
-
-	function setitemgenerator(f) {
-		itemgenerator = f;
-	}
-	function setgetsize(f) {
-		getsize = f;
-	}
-	function setlist(l) {
-		list = l;
-		esize = calculateFullSize();
-		render();
-	}
-
-	function calculateFullSize() {
-		let size = 0;
-		list.forEach(function(i,idx) {
-			size += getsize(list,idx);
-		});
-		return size;
-	}
-
-	function render() {
-		esize = calculateFullSize();
-		innerelement.innerHTML = "";
-		innerelement.style.height = esize + "px";
-		//console.log(esize);
-		let idx = 0;
-		let size = 0;
-		while (pos >= size + getsize(list,idx)) {
-			if (idx > list.length - 1) {
-				return;
-			}
-			size += getsize(list,idx);
-			idx++;
+		if (listelement.scrollTop > lastscrollpos) {
+			scrolldirection = 1;
+		}else if (listelement.scrollTop < lastscrollpos) {
+			scrolldirection = -1;
+		}//else it's horizontal scroll
+		lastscrollpos = listelement.scrollTop;
+		if (listelement.scrollTop == 0) {
+			pos = -1;
+		}else if (Math.abs(listelement.scrollHeight - listelement.clientHeight - listelement.scrollTop) <= 1) {
+			pos = 1;
+		}else {
+			pos = 0;
 		}
-		let offset = pos - size;
-		//let visibleitemidx = 0;
-		while (pos + listelement.clientHeight >= size) {
-			if (idx > list.length - 1) {
-				return;
-			}
-			let elem = itemgenerator(list,idx);
-			if (elem) {
-				innerelement.appendChild(elem);
-				elem.style.position = "absolute";
-				/*if (visibleitemidx == 0) {
-					elem.style.marginTop = size + "px";
-				}*/
-				elem.style.top = (size) + "px";
-			}
-			//visibleitemidx++;
-			size += getsize(list,idx);
-			idx++;
+	});
+
+	function additem(key, item, order = 1) {
+		if (list[key]) {
+			return;
 		}
+		let element = document.createElement(innertype);
+		element.style.height = item.size + "px"; //Assumed size, will be removed when element loads.
+		if (order == 1) {
+			listelement.appendChild(element)
+			if (direction == -1) {
+				if (pos == 1) {
+					listelement.scrollTop += item.size; 
+				}
+			}
+		}
+		if (order == -1) {
+			listelement.prepend(element);
+			listelement.scrollTop += item.size; //FIXME
+		}
+		item.element = element;
+		let viewobserver = new IntersectionObserver(onintersection, {root: null, threshold: 0})
+		let loaded = false;
+		list[key] = item;
+		viewobserver.observe(element);
+		function onintersection(entries, opts){
+			entries.forEach(function (entry) {
+				let visible = entry.isIntersecting;
+				if (visible) {
+					if (loaded == false) {
+						viewobserver.unobserve(element);
+						element.style.height = "";
+						item.generator(item.data, element, key);
+						loaded = true;
+						item.updater(item.data, element, key);
+						if (scrolldirection == -1  || pos == 1) { //FIXME: Doesn't scroll to bottom properly on first open because this smh isn't -1.
+							requestAnimationFrame(function() { 
+								let diff = element.offsetHeight - item.size;
+								listelement.scrollTop += diff;
+							})
+						}
+					}
+				}
+			})
+		}
+	}
+
+
+	function updateitem(key = null, data = null) {
+		if (key != null) {
+			if (list[key]) {
+				if (data != null) {
+					list[key].data = data;
+				}
+				list[key].updater(list[key].data, list[key].element, key);
+			}
+		}else {
+			Object.keys(list).forEach(function(k) {
+				let i = list[k];
+				i.updater(i.data, i.element, k);
+			});
+		}
+	}
+
+	function getitemdata(key) {
+		if (list[key]) {
+			return list[key].data;
+		}
+	}
+
+	function removeitem(key) {
+		if (list[key]) {
+			let item = list[key];
+			item.element.remove();
+			delete list[key];
+		}
+	}
+
+	function clearitems() {
+		Object.keys(list).forEach(function(key) {
+			let item = list[key];
+			item.element.remove();
+			delete list[key];
+		})
+	}
+
+	function setdirection(d) {
+		direction = d;
+		if (direction == -1) {
+			pos = 1;
+			scrolldirection = -1;
+		}
+		if (direction == 1) {
+			pos = -1;
+			scrolldirection = 1;
+		}
+	}
+
+	function getelement(key) {
+		if (list[key]) {
+			let item = list[key];
+			return item.element
+		}
+	}
+
+	function getlist() {
+		return list;
 	}
 
 	return {
-		element:listelement,
-		setList: setlist,
-		setItemGenerator: setitemgenerator,
-		setGetSize: setgetsize,
-		render: render,
-		sizeCalc: function() {
-			esize = calculateFullSize();
-			innerelement.style.height = esize + "px";
-			return esize;
-		}
+		element: listelement,
+		addItem: additem,
+		removeItem: removeitem,
+		updateItem: updateitem,
+		getItemData: getitemdata,
+		clearItems: clearitems,
+		setDirection: setdirection,
+		getElement: getelement,
+		getList: getlist
 	}
 }
 
@@ -3019,6 +3247,6 @@ function getpfp(url,fallback = "person.svg") {
 			return url.replace(/%SERVER%/g,currserver) + (url.includes("%SERVER%") ? "&type=thumb" : "");
 		}
 	}else {
-		return "";
+		return fallback;
 	}
 }
