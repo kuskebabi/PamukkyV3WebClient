@@ -175,7 +175,7 @@ function openconnectarea(err) {
 	title.innerText = "Welcome To Pamukky!"
 	connectcnt.appendChild(title);
 	let it = document.createElement("label");
-	it.innerText = "Enter Server URL To Begin:\n"
+	it.innerText = "Enter server URL to begin:\n"
 	connectcnt.appendChild(it);
 	let servertb = document.createElement("input");
 	servertb.placeholder = "URL or IP address";
@@ -204,7 +204,7 @@ function openconnectarea(err) {
 		connectbtn.disabled = true;
 		errlbl.classList.remove("errorlabel");
 		errlbl.classList.add("infolabel");
-		errlbl.innerText = "Please Wait...";
+		errlbl.innerText = "Please wait...";
 		
 		fetch(servertb.value + "ping").then((res) => {
 			if (res.ok) {
@@ -233,7 +233,7 @@ function openloginarea() {
 	title.innerText = "Welcome To Pamukky!"
 	logincnt.appendChild(title);
 	let it = document.createElement("label");
-	it.innerText = "Login To Pamukky:\n"
+	it.innerText = "Login to this Pamukky server:\n"
 	logincnt.appendChild(it);
 	let emailtb = document.createElement("input");
 	emailtb.placeholder = "E-Mail";
@@ -335,6 +335,30 @@ function loadmainarea() {
 	let titlebar = document.createElement("titlebar");
 	let rightarea = document.createElement("rightarea");
 
+	function formatpamukmessage(message,callback) {
+		if (!message.includes("|")) {
+			callback(message);
+			return;
+		}
+		let split = message.split("|");
+		if (split[0] == "PINNEDMESSAGE" || split[0] == "UNPINNEDMESSAGE" || split[0] == "EDITGROUP" || split[0] == "JOINGROUP" || split[0] == "LEFTGROUP") {
+			let user = split[1];
+			getinfo(user, function(info) {
+				if (split[0].includes("PINNEDMESSAGE")) {
+					callback(info.name + " " + (split[0] == "UNPINNEDMESSAGE" ? "un" : "") + "pinned a message.");
+				}else if (split[0] == "EDITGROUP") {
+					callback(info.name + " edited this group.");
+				}else if (split[0] == "JOINGROUP") {
+					callback(info.name + " joined to this group, say hi!");
+				}else if (split[0] == "LEFTGROUP") {
+					callback(info.name + " left this group...");
+				}
+			})
+		}else {
+			callback("Some action was done here.");
+		}
+	}
+
 	function viewuginfo(ugid,type) {
 		let diag = opendialog();
 		diag.title.innerText = "Info";
@@ -429,7 +453,7 @@ function loadmainarea() {
 						
 						pfpimge.classList.remove("loading");
 						pfpimge.style.cursor = "pointer";
-						pfpimge.title = "Click to upload";
+						pfpimge.title = "Click here to upload";
 						pfpimge.src = getpfp(infod.picture,"group.svg");
 						pfpimge.addEventListener("click",function () {f.click();})
 						
@@ -820,6 +844,7 @@ function loadmainarea() {
 								fetch(currserver + "leavegroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid }),method: 'POST'}).then((res) => {
 									if (res.ok) {
 										loadchats();
+										diag.closebtn.click();
 									}else {
 
 									}
@@ -1026,13 +1051,24 @@ function loadmainarea() {
 							if (!readnotifications.includes(i)) {
 								let notif = nots[i];
 								if ((document.hasFocus() == false || currentchatid != notif.chatid) && !mutedchats.includes(notif.chatid)) {
-									Notification.requestPermission();
-									var notification = new Notification(notif.user.name + ' - Pamukky', { body: notif.content, icon: getpfp(notif.user.picture) });
-									var audio = new Audio('notif.mp3');
-									audio.play();
-									notification.addEventListener('click', (event) => {
-										openchat(notif.chatid)
-									});
+									let content = notif.content;
+									if (notif.userid == "0") {
+										formatpamukmessage(content, function(text) {
+											content = text;
+											send();
+										})
+									}else {
+										send();
+									}
+									function send() {
+										Notification.requestPermission();
+										var notification = new Notification(notif.user.name + ' - Pamukky', { body: content, icon: getpfp(notif.user.picture) });
+										var audio = new Audio('notif.mp3');
+										audio.play();
+										notification.addEventListener('click', (event) => {
+											openchat(notif.chatid)
+										});
+									}
 								}
 								readnotifications.push(i);
 							}
@@ -1196,8 +1232,8 @@ function loadmainarea() {
 		if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
 			item["lastmessage"] = {
 				time: new Date(),
-							   content: "No Messages. Send one to start conversation.",
-							   sender: 0
+				content: "No Messages. Send one to start conversation.",
+				sender: "0"
 			}
 		}
 		let id = item["chatid"] ?? item.group;
@@ -1230,10 +1266,17 @@ function loadmainarea() {
 		let lastmsgcontent = document.createElement("label");
 		lastmsgcontent.classList.add("loading");
 		lastmsgcontent.innerText = "User: " + item.lastmessage.content.split("\n")[0];
-		getinfo(item.lastmessage.sender, function(sender) {
-			lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
-			lastmsgcontent.classList.remove("loading");
-		});
+		if (item.lastmessage.sender == "0") {
+			formatpamukmessage(item.lastmessage.content, function(text) {
+				lastmsgcontent.innerText = text;
+				lastmsgcontent.classList.remove("loading");
+			});
+		}else {
+			getinfo(item.lastmessage.sender, function(sender) {
+				lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
+				lastmsgcontent.classList.remove("loading");
+			});
+		}
 
 		infocnt.appendChild(lastmsgcontent)
 		itmcont.appendChild(infocnt);
@@ -1336,7 +1379,7 @@ function loadmainarea() {
 			pfpimge.style.width = "80px";
 			pfpimge.style.height = "80px";
 			pfpimge.style.cursor = "pointer";
-			pfpimge.title = "Click to upload";
+			pfpimge.title = "Click here to upload";
 			//pfpimge.src = currentuser.picture.replace(/%SERVER%/g,currserver);
 			pfpimge.addEventListener("click",function () {f.click();})
 			diaga.inner.appendChild(pfpimge);
@@ -1442,7 +1485,7 @@ function loadmainarea() {
 		pfpimge.style.width = "80px";
 		pfpimge.style.height = "80px";
 		pfpimge.style.cursor = "pointer";
-		pfpimge.title = "Click to upload";
+		pfpimge.title = "Click here to upload";
 		pfpimge.src = getpfp(currentuser.picture);
 		pfpimge.addEventListener("click",function () {f.click();})
 		diag.inner.appendChild(pfpimge);
@@ -1831,12 +1874,19 @@ function loadmainarea() {
 		function updatepinnedbar() {
 			let k = Object.keys(pinnedmessages);
 			if (k.length > 0) {
-				if (pinnedbar.style.display == "none") {
+				if (pinnedbar.style.display == "none") { //FIXME
 					messageslist.element.scrollTop += 56;
 				}
 				pinnedbar.style.display = "";
 				let msg = pinnedmessages[k[k.length - 1]];
-				pincontent.innerText = msg.content;
+				if (msg.sender == "0") {
+					pincontent.innerText = "Pamuk is here!";
+					formatpamukmessage(msg.content, function(text) {
+						pincontent.innerText = text;
+					})
+				}else {
+					pincontent.innerText = msg.content;
+				}
 				pinsender.classList.add("loading");
 				pinsender.innerText = "loading...";
 				getinfo(msg.sender,function(info) {
@@ -2247,7 +2297,7 @@ function loadmainarea() {
 				if (tagname.toLowerCase() == "video") return;
 				if (tagname.toLowerCase() == "a") return;
 				if (tagname.toLowerCase() == "img") return;
-				if (msg.sender != 0) {
+				if (msg.type != "time") {
 					let ctxdiv = document.createElement("div");
 					ctxdiv.style.position = "absolute";
 					ctxdiv.style.top = event.clientY + "px";
@@ -2299,7 +2349,14 @@ function loadmainarea() {
 					replybutton.addEventListener("click", function() {
 						replymsgid = id;
 						rc.style.display = "";
-						replycnt.innerText = msg.content;
+						if (msg.sender == "0") {
+							replycnt.innerText = "Pamuk is here!";
+							formatpamukmessage(msg.content, function(text) {
+								replycnt.innerText = text;
+							})
+						}else {
+							replycnt.innerText = msg.content;
+						}
 						getinfo(msg.sender,(user) => {
 							replysname.innerText = user.name;
 						})
@@ -2516,7 +2573,14 @@ function loadmainarea() {
 			msgsendertxt.innerText = "loading..."
 			msgsendertxt.classList.add("loading");
 			msgcontent.style.overflowWrap = "break-word";
-			msgcontent.innerHTML = linkify(msg.content);
+			if (msg.sender == "0") {
+				msgcontent.innerText = "Pamuk is here!";
+				formatpamukmessage(msg.content, function(text) {
+					msgcontent.innerText = text;
+				})
+			}else {
+				msgcontent.innerHTML = linkify(msg.content);
+			}
 			msgtimelbl.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
 
 			if (msg.forwardedfrom != undefined) {
@@ -2555,7 +2619,14 @@ function loadmainarea() {
 
 				rc.appendChild(replysname);
 				let replycnt = document.createElement("label");
-				replycnt.innerText = msg.replymsgcontent;
+				if (msg.replymsgsender == "0") {
+					replycnt.innerText = "Pamuk is here!";
+					formatpamukmessage(msg.replymsgcontent, function(text) {
+						replycnt.innerText = text;
+					})
+				}else {
+					replycnt.innerText = msg.replymsgcontent;
+				}
 				rc.appendChild(replycnt);
 				msgbubble.appendChild(rc);
 			}
@@ -2658,7 +2729,7 @@ function loadmainarea() {
 			msgbubble.appendChild(msgcontent);
 			msgbubble.appendChild(msgreactions);
 
-			if (msg.sender != 0) {
+			if (msg.type != "time") {
 				msgm.appendChild(msgtime);
 			}
 
@@ -2688,6 +2759,10 @@ function loadmainarea() {
 					msgc.appendChild(document.createElement("ma"));
 					msgc.appendChild(msgm);
 					msgc.appendChild(document.createElement("ma"));
+					if (msg.type != "time") {
+						msgtime.appendChild(msgtimelbl);
+						msgtime.appendChild(document.createElement("ma"));
+					}
 				}else {
 					msgc.appendChild(msgpfp);
 					msgc.appendChild(msgm);

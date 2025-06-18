@@ -789,7 +789,7 @@ filed > div > label {
 }
 
 @media print {
-	leftarea, customctx, titlebar, pinbar, msgbar {
+	leftarea, .customctx, titlebar, pinbar, msgbar, .bgcover {
 		display:none !important;
 	}
 	rightarea {
@@ -797,11 +797,11 @@ filed > div > label {
 		background:white;
 		color:black;
 	}
-	msgcont  {
+	msgcont {
 		break-inside: avoid;
 	}
 	messageslist {
-		overflow:visible;
+		overflow:visible !important;
 	}
 	html,body,main {
 		overflow:visible;
