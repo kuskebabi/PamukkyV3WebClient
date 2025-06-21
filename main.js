@@ -1185,7 +1185,7 @@ function loadmainarea() {
 		if (url.includes("#")) {
 			let hash = url.split("#")[1];
 			if (hash.startsWith("chat:")) {
-				let chat = hash.split(":")[1];
+				let chat = hash.substring(hash.indexOf(":") + 1)
 				if (chat != currentchatid) {
 					openchat(chat);
 				}
