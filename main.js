@@ -110,9 +110,12 @@ function imageView(url) {
 	return bg;
 }
 
-let currserver = "";
+let currentServer = "";
 
-function loaded() {setTimeout(init,1000);}
+// Add load event listener and add delay so splash is visible
+window.onload = function loaded() {setTimeout(init,1000);};
+
+// Start the app
 function init() {
 let logininfo = {};
 let currentuser = {};
@@ -120,7 +123,8 @@ let chats = []
 let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","🎉","🔥", "💀","😘","😐","😡","👌","😆","😱","😋"];
 let cachedinfo = {};
 let idcallbacks = {};
-function getinfo(id, callback) {
+
+function getInfo(id, callback) {
 	if (cachedinfo.hasOwnProperty(id)) { // Return the cached
 		callback(cachedinfo[id]);
 	}else {
@@ -128,7 +132,7 @@ function getinfo(id, callback) {
 			idcallbacks[id].push(callback); //Just add this in callback list
 		}else { //New request
 			idcallbacks[id] = [callback]; //create the array
-			fetch(currserver + "getinfo", {body: JSON.stringify({'token': logininfo.token, 'id': id}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "getinfo", {body: JSON.stringify({'token': logininfo.token, 'id': id}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						//Yay! now we attempt to parse it then callback all of them
@@ -163,179 +167,213 @@ function getinfo(id, callback) {
 	}
 }
 
-const searchParams = new URLSearchParams(window.location.search);
-if (searchParams.has("server")) {
-	currserver = searchParams.get("server");
+let onlinehooks = {};
+let useronlinestatus = {};
+
+function createOnlineHook(userid) {
+	if (!onlinehooks.hasOwnProperty(userid)) {
+		onlinehooks[userid] = [];
+		fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["user:" + userid]}), method: "POST"});
+		fetch(currentServer + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': userid}),method: 'POST'}).then((res) => {
+			if (res.ok) {
+				res.text().then((text) => {
+					updateOnlineHook(userid, text);
+				})
+			}
+		});
+		
+	}
 }
 
-function openconnectarea(err) {
+function addOnlineHook(userid, callback) {
+	createOnlineHook(userid);
+	if (!onlinehooks[userid].includes(callback)) onlinehooks[userid].push(callback);
+	if (useronlinestatus.hasOwnProperty(userid)) {
+		callback(useronlinestatus[userid]);
+	}
+}
+
+function updateOnlineHook(userid, val) {
+	createOnlineHook(userid);
+	useronlinestatus[userid] = val;
+	onlinehooks[userid].forEach(callback => {
+		callback(val + "");
+	});
+}
+
+const searchParams = new URLSearchParams(window.location.search); //?server=https://.....
+if (searchParams.has("server")) {
+	currentServer = searchParams.get("server");
+}
+
+function openConnectArea(err) {
 	document.body.innerHTML = "";
 	let connectcnt = document.createElement("centeredPopup");
 	let title = document.createElement("h1");
 	title.innerText = "Welcome To Pamukky!"
 	connectcnt.appendChild(title);
-	let it = document.createElement("label");
-	it.innerText = "Enter server URL to begin:\n"
-	connectcnt.appendChild(it);
-	let servertb = document.createElement("input");
-	servertb.placeholder = "URL or IP address";
-	servertb.style.display = "block";
-	servertb.style.width = "100%";
-	servertb.style.marginTop = "5px";
-	servertb.style.marginBottom = "5px";
-	servertb.value = currserver;
-	connectcnt.appendChild(servertb);
-	let errlbl = document.createElement("label");
-	errlbl.classList.add("errorlabel");
-	errlbl.innerText = " ";
-	connectcnt.appendChild(errlbl);
-	let connectbtn = document.createElement("button")
-	connectbtn.innerText = "Connect"
-	connectbtn.style.width = "100%";
-	connectcnt.appendChild(connectbtn);
+	let infoLabel = document.createElement("label");
+	infoLabel.innerText = "Enter server URL to begin:\n"
+	connectcnt.appendChild(infoLabel);
+	let serverInput = document.createElement("input");
+	serverInput.placeholder = "URL or IP address";
+	serverInput.style.display = "block";
+	serverInput.style.width = "100%";
+	serverInput.style.marginTop = "5px";
+	serverInput.style.marginBottom = "5px";
+	serverInput.value = currentServer;
+	connectcnt.appendChild(serverInput);
+	let errorLabel = document.createElement("label");
+	errorLabel.classList.add("errorlabel");
+	errorLabel.innerText = " ";
+	connectcnt.appendChild(errorLabel);
+	let connectButton = document.createElement("button")
+	connectButton.innerText = "Connect"
+	connectButton.style.width = "100%";
+	connectcnt.appendChild(connectButton);
 	document.body.appendChild(connectcnt);
-	addRipple(connectbtn,"rgba(255,200,0,0.6)");
+	addRipple(connectButton,"rgba(255,200,0,0.6)");
 	
 	if (err) {
-		errlbl.innerText = "Connection failed."
+		errorLabel.innerText = "Connection failed."
 	}
 	
-	connectbtn.addEventListener("click",function() {
-		connectbtn.disabled = true;
-		errlbl.classList.remove("errorlabel");
-		errlbl.classList.add("infolabel");
-		errlbl.innerText = "Please wait...";
+	connectButton.addEventListener("click",function() {
+		connectButton.disabled = true;
+		errorLabel.classList.remove("errorlabel");
+		errorLabel.classList.add("infolabel");
+		errorLabel.innerText = "Please wait...";
 		
-		fetch(servertb.value + "ping").then((res) => {
+		fetch(serverInput.value + "ping").then((res) => {
 			if (res.ok) {
 				res.text().then((text) => {
-					console.log(text)
-					currserver = servertb.value;
-					localStorage.setItem("server", servertb.value);
-					openloginarea();
+					console.log(text); //debug, usually just "Pong"
+					currentServer = serverInput.value;
+					localStorage.setItem("server", serverInput.value); // Save the server url to localStorage.
+					openLoginArea();
 				})
 			}else {
-				connectbtn.disabled = false;
+				connectButton.disabled = false;
 			}
 		}).catch(() => {
-			connectbtn.disabled = false;
-			errlbl.classList.add("errorlabel");
-			errlbl.classList.remove("infolabel");
-			errlbl.innerText = "Connection failed."
+			connectButton.disabled = false;
+			errorLabel.classList.add("errorlabel");
+			errorLabel.classList.remove("infolabel");
+			errorLabel.innerText = "Connection failed."
 		})
 	})
 }
 
-function openloginarea() {
+function openLoginArea() {
 	document.body.innerHTML = "";
 	let logincnt = document.createElement("centeredPopup");
 	let title = document.createElement("h1");
 	title.innerText = "Welcome To Pamukky!"
 	logincnt.appendChild(title);
-	let it = document.createElement("label");
-	it.innerText = "Login to this Pamukky server:\n"
-	logincnt.appendChild(it);
-	let emailtb = document.createElement("input");
-	emailtb.placeholder = "E-Mail";
-	emailtb.style.display = "block";
-	emailtb.style.width = "100%";
-	emailtb.style.marginTop = "5px";
-	emailtb.type = "email";
-	emailtb.style.marginBottom = "5px";
-	logincnt.appendChild(emailtb);
-	let passwordtb = document.createElement("input");
-	passwordtb.placeholder = "Password";
-	passwordtb.type = "password";
-	passwordtb.style.display = "block";
-	passwordtb.style.width = "100%";
-	passwordtb.style.marginTop = "5px";
-	passwordtb.style.marginBottom = "5px";
-	logincnt.appendChild(passwordtb);
-	let errlbl = document.createElement("label");
-	errlbl.classList.add("errorlabel");
-	errlbl.innerText = " ";
-	logincnt.appendChild(errlbl);
-	let loginbtn = document.createElement("button")
-	loginbtn.innerText = "Login"
-	loginbtn.style.width = "100%";
-	logincnt.appendChild(loginbtn);
+	let infoLabel = document.createElement("label");
+	infoLabel.innerText = "Login to this Pamukky server:\n"
+	logincnt.appendChild(infoLabel);
+	let emailLabel = document.createElement("input");
+	emailLabel.placeholder = "E-Mail";
+	emailLabel.style.display = "block";
+	emailLabel.style.width = "100%";
+	emailLabel.style.marginTop = "5px";
+	emailLabel.type = "email";
+	emailLabel.style.marginBottom = "5px";
+	logincnt.appendChild(emailLabel);
+	let passwordLabel = document.createElement("input");
+	passwordLabel.placeholder = "Password";
+	passwordLabel.type = "password";
+	passwordLabel.style.display = "block";
+	passwordLabel.style.width = "100%";
+	passwordLabel.style.marginTop = "5px";
+	passwordLabel.style.marginBottom = "5px";
+	logincnt.appendChild(passwordLabel);
+	let errorLabel = document.createElement("label");
+	errorLabel.classList.add("errorlabel");
+	errorLabel.innerText = " ";
+	logincnt.appendChild(errorLabel);
+	let loginbutton = document.createElement("button")
+	loginbutton.innerText = "Login"
+	loginbutton.style.width = "100%";
+	logincnt.appendChild(loginbutton);
 	document.body.appendChild(logincnt);
-	let registerbtn = document.createElement("button")
-	registerbtn.innerText = "Register"
-	registerbtn.style.width = "100%";
-	logincnt.appendChild(registerbtn);
-	let connectbtn = document.createElement("button")
-	connectbtn.innerText = "Connect to other server..."
-	connectbtn.style.width = "100%";
-	logincnt.appendChild(connectbtn);
+	let registerButton = document.createElement("button")
+	registerButton.innerText = "Register"
+	registerButton.style.width = "100%";
+	logincnt.appendChild(registerButton);
+	let backToConnectButton = document.createElement("button")
+	backToConnectButton.innerText = "Connect to other server..."
+	backToConnectButton.style.width = "100%";
+	logincnt.appendChild(backToConnectButton);
 	document.body.appendChild(logincnt);
-	addRipple(loginbtn,"rgba(255,200,0,0.6)");
-	addRipple(registerbtn,"rgba(255,200,0,0.6)");
-	addRipple(connectbtn,"rgba(255,200,0,0.6)");
+	addRipple(loginbutton,"rgba(255,200,0,0.6)");
+	addRipple(registerButton,"rgba(255,200,0,0.6)");
+	addRipple(backToConnectButton,"rgba(255,200,0,0.6)");
 	
-	loginbtn.addEventListener("click",function() {
-		loginbtn.disabled = true;
-		registerbtn.disabled = true;
+	loginbutton.addEventListener("click",function() {
+		loginbutton.disabled = true;
+		registerButton.disabled = true;
 		
-		fetch(currserver + "login", {body: JSON.stringify({'email': emailtb.value,'password': passwordtb.value}),method: 'POST'}).then((res) => {
+		fetch(currentServer + "login", {body: JSON.stringify({'email': emailLabel.value,'password': passwordLabel.value}),method: 'POST'}).then((res) => {
 			if (res.ok) {
 				res.text().then((text) => {
 					logininfo = JSON.parse(text);
 					localStorage.setItem("logininfo", text);
-					loadmainarea();
+					openMainArea();
 				})
 			}else {
 				res.json().then((json) => {
-					errlbl.innerText = json.description;
+					errorLabel.innerText = json.description;
 				});
-				loginbtn.disabled = false;
-				registerbtn.disabled = false;
+				loginbutton.disabled = false;
+				registerButton.disabled = false;
 			}
 		}).catch(() => {
-			loginbtn.disabled = false;
-			registerbtn.disabled = false;
+			loginbutton.disabled = false;
+			registerButton.disabled = false;
 		})
 	})
 	
-	registerbtn.addEventListener("click",function() {
-		loginbtn.disabled = true;
-		registerbtn.disabled = true;
+	registerButton.addEventListener("click",function() {
+		loginbutton.disabled = true;
+		registerButton.disabled = true;
 		
-		fetch(currserver + "signup", {body: JSON.stringify({'email': emailtb.value,'password': passwordtb.value}),method: 'POST'}).then((res) => {
+		fetch(currentServer + "signup", {body: JSON.stringify({'email': emailLabel.value,'password': passwordLabel.value}),method: 'POST'}).then((res) => {
 			if (res.ok) {
 				res.text().then((text) => {
 					logininfo = JSON.parse(text);
 					localStorage.setItem("logininfo", text);
-					loadmainarea();
+					openMainArea();
 				})
 			}else {
 				res.json().then((json) => {
-					errlbl.innerText = json.description;
+					errorLabel.innerText = json.description;
 				});
-				loginbtn.disabled = false;
-				registerbtn.disabled = false;
+				loginbutton.disabled = false;
+				registerButton.disabled = false;
 			}
 		}).catch(() => {
-			loginbtn.disabled = false;
-			registerbtn.disabled = false;
+			loginbutton.disabled = false;
+			registerButton.disabled = false;
 		})
 	})
 	
-	connectbtn.addEventListener("click",function() {
-		openconnectarea();
+	backToConnectButton.addEventListener("click",function() {
+		openConnectArea();
 	})
 }
 
-function loadmainarea() {
+function openMainArea() {
 	Notification.requestPermission();
 
 	document.body.innerHTML = "";
 	let maincont = document.createElement("main");
-	let leftarea = document.createElement("leftarea");
-	let titlebar = document.createElement("titlebar");
-	let rightarea = document.createElement("rightarea");
+	let leftArea = document.createElement("leftarea");
+	let leftTitleBar = document.createElement("titlebar");
+	let rightArea = document.createElement("rightarea");
 
-	function formatpamukmessage(message,callback) {
+	function formatSystemMessage(message,callback) {
 		if (!message.includes("|")) {
 			callback(message);
 			return;
@@ -343,15 +381,24 @@ function loadmainarea() {
 		let split = message.split("|");
 		if (split[0] == "PINNEDMESSAGE" || split[0] == "UNPINNEDMESSAGE" || split[0] == "EDITGROUP" || split[0] == "JOINGROUP" || split[0] == "LEFTGROUP") {
 			let user = split[1];
-			getinfo(user, function(info) {
-				if (split[0].includes("PINNEDMESSAGE")) {
-					callback(info.name + " " + (split[0] == "UNPINNEDMESSAGE" ? "un" : "") + "pinned a message.");
-				}else if (split[0] == "EDITGROUP") {
-					callback(info.name + " edited this group.");
-				}else if (split[0] == "JOINGROUP") {
-					callback(info.name + " joined to this group, say hi!");
-				}else if (split[0] == "LEFTGROUP") {
-					callback(info.name + " left this group...");
+			getInfo(user, function(info) {
+				switch (split[0]) {
+					case "PINNEDMESSAGE":
+						callback(info.name + " pinned a message.");
+						break;
+					case "UNPINNEDMESSAGE":
+						callback(info.name + " unpinned a message.");
+						break;
+					case "EDITGROUP":
+						callback(info.name + " edited this group.");
+						break;
+					case "JOINGROUP":
+						callback(info.name + " joined, say hi!");
+						break;
+					case "LEFTGROUP":
+						callback(info.name + " left...");
+						break;
+					
 				}
 			})
 		}else {
@@ -359,7 +406,7 @@ function loadmainarea() {
 		}
 	}
 
-	function viewuginfo(ugid,type) {
+	function viewInfo(id,type) {
 		let diag = opendialog();
 		diag.title.innerText = "Info";
 		diag.inner.style.display = "flex";
@@ -388,7 +435,7 @@ function loadmainarea() {
 		diag.inner.appendChild(infotable);
 
 		if (type == "user") {
-			fetch(currserver + "getuser", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "getuser", {body: JSON.stringify({'token': logininfo.token, 'uid': id}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						let infod = JSON.parse(text);
@@ -396,7 +443,7 @@ function loadmainarea() {
 						pfpimge.classList.remove("loading");
 						pfpimge.src = getpfp(infod.picture);
 
-						fetch(currserver + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': ugid}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': id}),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								res.text().then((text) => {
 									infotxt.classList.remove("loading");
@@ -439,7 +486,7 @@ function loadmainarea() {
 				diag.inner.innerText = "Error";
 			});
 		}else {
-			fetch(currserver + "getgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "getgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						let infod = JSON.parse(text);
@@ -457,7 +504,7 @@ function loadmainarea() {
 						pfpimge.src = getpfp(infod.picture,"group.svg");
 						pfpimge.addEventListener("click",function () {f.click();})
 						
-						infotxt.innerText = ugid;
+						infotxt.innerText = id;
 						infotxt.classList.remove("loading");
 
 						let namerow = document.createElement("tr");
@@ -496,7 +543,7 @@ function loadmainarea() {
 						
 						let roles = {};
 						let crole = {};
-						fetch(currserver + "getgrouprole", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "getgrouprole", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								res.text().then((text) => {
 									crole = JSON.parse(text);
@@ -510,7 +557,7 @@ function loadmainarea() {
 											diaga.inner.style.flexDirection = "column";
 											diaga.inner.style.alignItems = "center";
 
-											fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+											fetch(currentServer + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 												if (res.ok) {
 													res.text().then((text) => {
 														roles = JSON.parse(text);
@@ -554,7 +601,7 @@ function loadmainarea() {
 											});
 										})
 										diag.inner.appendChild(editrolesbtn);
-										fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+										fetch(currentServer + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 											if (res.ok) {
 												res.text().then((text) => {
 													roles = JSON.parse(text);
@@ -601,7 +648,7 @@ function loadmainarea() {
 								userpfp.loading = "lazy";
 								userpfp.style.cursor = "pointer";
 								userpfp.addEventListener("click",function() {
-									viewuginfo(user.user,"user");
+									viewInfo(user.user,"user");
 								});
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
@@ -610,7 +657,7 @@ function loadmainarea() {
 								usernamelbl.style.marginRight = "8px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
-								getinfo(user.user,function(uii) {
+								getInfo(user.user,function(uii) {
 									userpfp.src = getpfp(uii.picture);
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
@@ -637,7 +684,7 @@ function loadmainarea() {
 									roleselect.value = user.role;
 									roleselect.addEventListener("change",function() {
 										//alert("wait..")
-										fetch(currserver + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'userid': user.user, 'role': roleselect.value }),method: 'POST'}).then((res) => {
+										fetch(currentServer + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.user, 'role': roleselect.value }),method: 'POST'}).then((res) => {
 											if (res.ok) {
 												res.text().then((text) => {
 
@@ -667,7 +714,7 @@ function loadmainarea() {
 										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
 										kickbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to kick this user?")) {
-												fetch(currserver + "kickuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user.user}),method: 'POST'}).then((res) => {
+												fetch(currentServer + "kickuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'uid': user.user}),method: 'POST'}).then((res) => {
 													if (res.ok) {
 														remove();
 													}
@@ -683,7 +730,7 @@ function loadmainarea() {
 										banbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q54 0 104-17.5t92-50.5L228-676q-33 42-50.5 92T160-480q0 134 93 227t227 93Zm252-124q33-42 50.5-92T800-480q0-134-93-227t-227-93q-54 0-104 17.5T284-732l448 448Z"/></svg>';
 										banbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to ban this user?")) {
-												fetch(currserver + "banuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user.user}),method: 'POST'}).then((res) => {
+												fetch(currentServer + "banuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'uid': user.user}),method: 'POST'}).then((res) => {
 													if (res.ok) {
 														remove();
 													}
@@ -697,12 +744,12 @@ function loadmainarea() {
 							});
 							userstable.setGetSize(function(list,idx) {return 56});
 							diag.inner.appendChild(userstable.element);
-							fetch(currserver + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+							fetch(currentServer + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 								if (res.ok) {
 									res.text().then((text) => {
 										roles = JSON.parse(text);
 										rokeys = Object.keys(roles);
-										fetch(currserver + "getgroupusers", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+										fetch(currentServer + "getgroupusers", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 											if (res.ok) {
 												res.text().then((text) => {
 													users = JSON.parse(text);
@@ -750,7 +797,7 @@ function loadmainarea() {
 								userpfp.loading = "lazy";
 								userpfp.style.cursor = "pointer";
 								userpfp.addEventListener("click",function() {
-									viewuginfo(user,"user");
+									viewInfo(user,"user");
 								});
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
@@ -759,7 +806,7 @@ function loadmainarea() {
 								usernamelbl.style.marginRight = "8px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
-								getinfo(user,function(uii) {
+								getInfo(user,function(uii) {
 									userpfp.src = getpfp(uii.picture);
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
@@ -782,7 +829,7 @@ function loadmainarea() {
 									unbanbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>';
 									unbanbtn.addEventListener("click",function() {
 										if (confirm("Do you really want to unban this user?")) {
-											fetch(currserver + "unbanuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'uid': user}),method: 'POST'}).then((res) => {
+											fetch(currentServer + "unbanuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'uid': user}),method: 'POST'}).then((res) => {
 												if (res.ok) {
 													remove();
 												}else {
@@ -797,7 +844,7 @@ function loadmainarea() {
 							});
 							userstable.setGetSize(function(list,idx) {return 56});
 							diag.inner.appendChild(userstable.element);
-							fetch(currserver + "getbannedgroupmembers", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+							fetch(currentServer + "getbannedgroupmembers", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 								if (res.ok) {
 									res.text().then((text) => {
 										let users = JSON.parse(text);
@@ -813,11 +860,11 @@ function loadmainarea() {
 						savebtn.innerText = "Save";
 						savebtn.addEventListener("click",function() {
 							if (ufl) {
-								fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
+								fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 									console.log(data);
 									ufl = false;
 									if (data.status == "success") {
-										fetch(currserver + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
+										fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
 											if (res.ok) {
 
 											}else {
@@ -827,7 +874,7 @@ function loadmainarea() {
 									}
 								})}).catch(function(error) {console.error(error);});
 							}else {
-								fetch(currserver + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
+								fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
 									if (res.ok) {
 
 									}else {
@@ -841,7 +888,7 @@ function loadmainarea() {
 						leavebtn.innerText = "Leave";
 						leavebtn.addEventListener("click",function() {
 							if (confirm("Do you really want to leave this group?\nIf you are the owner, promote someone else as the owner BEFORE leaving the group.")) {
-								fetch(currserver + "leavegroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid }),method: 'POST'}).then((res) => {
+								fetch(currentServer + "leavegroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id }),method: 'POST'}).then((res) => {
 									if (res.ok) {
 										loadchats();
 										diag.closebtn.click();
@@ -1034,70 +1081,98 @@ function loadmainarea() {
 			clearTimeout(ttimer);
 			return;
 		}
-		let req = {
-			"getnotifications": JSON.stringify({'token': logininfo.token})
-		};
 		if (document.hasFocus()) {
-			req["setonline"] = JSON.stringify({'token': logininfo.token});
+			fetch(currentServer + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+				if (!res.ok) {
+					openLoginArea();
+					clearTimeout(ttimer);
+					return;
+				}
+			});
 		}
-		fetch(currserver + "multi", {body: JSON.stringify(req),method: 'POST'}).then((res) => {
-			res.json().then((json) => {
-				{
-					let getnotificationsrequest = json["getnotifications"];
-					if (getnotificationsrequest.statuscode == 200) {
-						let nots = JSON.parse(getnotificationsrequest.res);
-						let list = Object.keys(nots);
-						list.forEach(function(i) {
-							if (!readnotifications.includes(i)) {
-								let notif = nots[i];
-								if ((document.hasFocus() == false || currentchatid != notif.chatid) && !mutedchats.includes(notif.chatid)) {
-									let content = notif.content;
-									if (notif.userid == "0") {
-										formatpamukmessage(content, function(text) {
-											content = text;
-											send();
-										})
-									}else {
+	},8000)
+
+	function notificationCheck() {
+		fetch(currentServer + "getnotifications", {body: JSON.stringify({'token': logininfo.token, "mode": "hold"}),method: 'POST'}).then((res) => {
+			if (res.ok) {
+				res.json().then((nots) => {
+					notificationCheck();
+					let list = Object.keys(nots);
+					list.forEach(function(i) {
+						if (!readnotifications.includes(i)) {
+							let notif = nots[i];
+							if ((document.hasFocus() == false || currentchatid != notif.chatid) && !mutedchats.includes(notif.chatid)) {
+								let content = notif.content;
+								if (notif.userid == "0") {
+									formatSystemMessage(content, function(text) {
+										content = text;
 										send();
-									}
-									function send() {
-										Notification.requestPermission();
-										var notification = new Notification(notif.user.name + ' - Pamukky', { body: content, icon: getpfp(notif.user.picture) });
-										var audio = new Audio('notif.mp3');
-										audio.play();
-										notification.addEventListener('click', (event) => {
-											openchat(notif.chatid)
-										});
-									}
+									})
+								}else {
+									send();
 								}
-								readnotifications.push(i);
+								function send() {
+									Notification.requestPermission();
+									var notification = new Notification(notif.user.name + ' - Pamukky', { body: content, icon: getpfp(notif.user.picture) });
+									var audio = new Audio('notif.mp3');
+									audio.play();
+									notification.addEventListener('click', (event) => {
+										openchat(notif.chatid)
+									});
+								}
 							}
-						})
-					}
-				}
-				if (json["setonline"]) {
-					let setonlinerequest = json["setonline"];
-					if (setonlinerequest.statuscode != 200) {
-						clearTimeout(ttimer);
-						openloginarea();
-					}
-				}
-			})
-		})
-	},4000)
-	fetch(currserver + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+							readnotifications.push(i);
+						}
+					})
+				});
+			}
+				
+		});
+	}
+
+	function getUpdates() {
+			fetch(currentServer + "getupdates", {body: JSON.stringify({'token': logininfo.token}), method: "POST"}).then((res) => {
+			if (res.ok) {
+				res.json().then((json) => {
+					getUpdates();
+					Object.keys(json).forEach(function(key) {
+						let type = key.split(":")[0];
+						switch(type) {
+							case "chat":
+								let chatid = key.split(":")[1];
+								if (currentchatid == chatid) {
+									console.log(json[key]);
+									currentchatview.applyChatUpdates(json[key]);
+								}
+								break;
+							case "user":
+								let uid = key.split(":")[1];
+								let val = json[key];
+								if (val.hasOwnProperty("online") && val["online"] != null) {
+									updateOnlineHook(uid, val["online"]);
+								}
+								break;
+						}
+					});
+				});
+			}
+		});
+	}
+
+	fetch(currentServer + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 		if (!res.ok) {
-			openloginarea();
+			openLoginArea();
 			clearTimeout(ttimer);
 			return;
 		}
 		loadchats();
-		getinfo(logininfo.uid, (info) => {
+		getUpdates();
+		getInfo(logininfo.uid, (info) => {
 			namelbl.innerText = info.name;
 			pfpimg.src = getpfp(info.picture);
 			currentuser = info;
 		})
-		fetch(currserver + "getmutedchats", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => { //Get server-side muted chats.
+		fetch(currentServer + "getmutedchats", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => { //Get server-side muted chats.
 			if (res.ok) {
 				res.text().then((text) => {
 					servermutedchats = JSON.parse(text);
@@ -1105,6 +1180,7 @@ function loadmainarea() {
 			}
 		})
 		mutedchats = JSON.parse(localStorage.getItem("mutedchats") ?? "[]");
+		notificationCheck();
 	})
 
 	let chatslist = createLazyList();
@@ -1129,35 +1205,35 @@ function loadmainarea() {
 
 		if (currentchatview) {
 			currentchatview.kill();
-			rightarea.removeChild(currentchatview.chat);
+			rightArea.removeChild(currentchatview.chat);
 		}
-		currentchatview = createchatarea(chatid, infoid);
+		currentchatview = createChatView(chatid, infoid);
 		currentchatid = chatid;
 		//callback for get*info
 		currentchatview.titlelabel.classList.add("loading");
 		currentchatview.titlelabel.innerText = "loading...";
 		currentchatview.pfp.classList.add("loading");
-		getinfo(infoid, function callback(cinfo) {
+		getInfo(infoid, function callback(cinfo) {
 			currentchatview.titlelabel.innerText = cinfo.name;
 			currentchatview.pfp.src = getpfp(cinfo.picture, type == "user" ? "person.svg" : "group.svg");
 			currentchatview.titlelabel.classList.remove("loading");
 			currentchatview.pfp.classList.remove("loading");
 		});
 
-		rightarea.appendChild(currentchatview.chat)
+		rightArea.appendChild(currentchatview.chat)
 		if (document.body.clientWidth <= 800) {
-			rightarea.style.display = "flex";
+			rightArea.style.display = "flex";
 			currentchatview.backbutton.style.display = ""
 			currentchatview.backbutton.onclick = function() {
-				rightarea.style.left = "";
-				leftarea.style.display = "";
+				rightArea.style.left = "";
+				leftArea.style.display = "";
 				currentchatid = "";
 				location.href = "#mainarea";
-				requestAnimationFrame(function() {leftarea.style.opacity = "1";})
+				requestAnimationFrame(function() {leftArea.style.opacity = "1";})
 				if (document.body.clientWidth <= 800) {
 					setTimeout(function() {
-						rightarea.style.display = "none";
-						leftarea.style.display = "";
+						rightArea.style.display = "none";
+						leftArea.style.display = "";
 						currentchatview.chat.innerHTML = "";
 					},500)
 				}else {
@@ -1166,17 +1242,17 @@ function loadmainarea() {
 			}
 			requestAnimationFrame(function() {
 				setTimeout(function() {
-					rightarea.style.left = "0px";
-					leftarea.style.opacity = "0";
+					rightArea.style.left = "0px";
+					leftArea.style.opacity = "0";
 					setTimeout(function() {
-						leftarea.style.display = "none";
+						leftArea.style.display = "none";
 					},500)
 				},100)
 			})
 		}else {
 			currentchatview.backbutton.style.display = "none"
-			rightarea.style.display = "";
-			leftarea.style.display = "";
+			rightArea.style.display = "";
+			leftArea.style.display = "";
 		}
 		chatslist.updateItem();
 	}
@@ -1202,33 +1278,7 @@ function loadmainarea() {
 	});
 	hashchange(location.href);
 
-	chatslist.element.classList.add("clist");
-	chatslist.setGetSize(function(list,index) {
-		if (index == 0) {
-			return 32;
-		}
-		return 60;
-	});
-	chatslist.setItemGenerator(function(list,index,element) {
-		if (index == 0) {
-			let rfb = document.createElement("button");
-			rfb.addEventListener("click",function() {
-				loadchats();
-			})
-			rfb.innerText = "Refresh"
-			element.appendChild(rfb);
-			return;
-		}
-		if (index == list.length - 1) {
-			let fabhint = document.createElement("label");
-			fabhint.style.display = "block";
-			fabhint.style.margin = "8px";
-			fabhint.innerText = "Click on the \"+\" button to add a new chat.";
-			element.appendChild(fabhint);
-			return;
-		}
-		let item = list[index];
-		if (item == undefined) return;
+	function chatsListItemGenerator(item, itmcont) {
 		if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
 			item["lastmessage"] = {
 				time: new Date(),
@@ -1236,8 +1286,6 @@ function loadmainarea() {
 				sender: "0"
 			}
 		}
-		let id = item["chatid"] ?? item.group;
-		let itmcont = document.createElement("button");
 		itmcont.classList.add("chatitem");
 		addRipple(itmcont,"rgba(255,200,0,0.6)");
 		let pfpimg = document.createElement("img")
@@ -1267,12 +1315,12 @@ function loadmainarea() {
 		lastmsgcontent.classList.add("loading");
 		lastmsgcontent.innerText = "User: " + item.lastmessage.content.split("\n")[0];
 		if (item.lastmessage.sender == "0") {
-			formatpamukmessage(item.lastmessage.content, function(text) {
+			formatSystemMessage(item.lastmessage.content, function(text) {
 				lastmsgcontent.innerText = text;
 				lastmsgcontent.classList.remove("loading");
 			});
 		}else {
-			getinfo(item.lastmessage.sender, function(sender) {
+			getInfo(item.lastmessage.sender, function(sender) {
 				lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
 				lastmsgcontent.classList.remove("loading");
 			});
@@ -1281,21 +1329,56 @@ function loadmainarea() {
 		infocnt.appendChild(lastmsgcontent)
 		itmcont.appendChild(infocnt);
 
-		itmcont.addEventListener("click",function() {
-			openchat(id);
-		})
-
-		getinfo(item.type == "user" ? item.user : item.group, function(info) {
+		getInfo(item.type == "user" ? item.user : item.group, function(info) {
 			pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
 			nameh4.innerText = info.name;
 			nameh4.classList.remove("loading");
 			pfpimg.classList.remove("loading");
 		});
-		element.appendChild(itmcont);
+	}
+
+	chatslist.element.classList.add("clist");
+	chatslist.setGetSize(function(list,index) {
+		if (index == 0) {
+			return 32;
+		}
+		return 60;
+	});
+	chatslist.setItemGenerator(function(list,index,element) {
+		if (index == 0) {
+			let rfb = document.createElement("button");
+			rfb.addEventListener("click",function() {
+				loadchats();
+			})
+			rfb.innerText = "Refresh"
+			element.appendChild(rfb);
+			return;
+		}
+		if (index == list.length - 1) {
+			let fabhint = document.createElement("label");
+			fabhint.style.display = "block";
+			fabhint.style.margin = "8px";
+			fabhint.innerText = "Click on the \"+\" button to add a new chat.";
+			element.appendChild(fabhint);
+			return;
+		}
+		let item = list[index];
+		if (item == undefined) return;
+
+		let itmbtn = document.createElement("button");
+		element.appendChild(itmbtn);
+
+		let id = item["chatid"] ?? item.group;
+		chatsListItemGenerator(item, itmbtn);
+
+		itmbtn.addEventListener("click",function() {
+			openchat(id);
+		})
 	});
 
 	chatslist.setItemUpdater(function(list,index,element) {
 		let itmcont = element.children[0];
+		if (itmcont == undefined) return;
 		if (itmcont.classList.contains("chatitem")) {
 			let item = list[index];
 			if (item == undefined) return;
@@ -1311,7 +1394,7 @@ function loadmainarea() {
 	fab.classList.add("fab");
 	fab.title = "Add new chat";
 	fab.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 -960 960 960" width="40"><path d="M446.667-446.667H200v-66.666h246.667V-760h66.666v246.667H760v66.666H513.333V-200h-66.666v-246.667Z"/></svg>';
-	leftarea.appendChild(fab);
+	leftArea.appendChild(fab);
 	let profilebtn = document.createElement("button");
 	profilebtn.title = "Edit profile...";
 	profilebtn.style.height = "100%";
@@ -1347,7 +1430,7 @@ function loadmainarea() {
 		let adduserchatbtn = document.createElement("button");
 		adduserchatbtn.innerText = "Add user chat";
 		adduserchatbtn.addEventListener("click",function() {
-			fetch(currserver + "adduserchat", {body: JSON.stringify({'token': logininfo.token,'email': tinput.value}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "adduserchat", {body: JSON.stringify({'token': logininfo.token,'email': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						loadchats();
@@ -1417,10 +1500,10 @@ function loadmainarea() {
 			createbtn.innerText = "Create group";
 			createbtn.addEventListener("click",function() {
 				if (ufl) {
-					fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
+					fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 						console.log(data);
 						if (data.status == "success") {
-							fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
+							fetch(currentServer + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
 								loadchats();
 								diag.closebtn.click();
 								diaga.closebtn.click();
@@ -1428,7 +1511,7 @@ function loadmainarea() {
 						}
 					})}).catch(function(error) {console.error(error);});
 				}else {
-					fetch(currserver + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': "", 'info': desinp.value }),method: 'POST'}).then((res) => {
+					fetch(currentServer + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': "", 'info': desinp.value }),method: 'POST'}).then((res) => {
 						loadchats();
 						diag.closebtn.click();
 						diaga.closebtn.click();
@@ -1456,7 +1539,7 @@ function loadmainarea() {
 		let joingroupbtn = document.createElement("button");
 		joingroupbtn.innerText = "Join group";
 		joingroupbtn.addEventListener("click",function() {
-			fetch(currserver + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': tinput.value}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					loadchats();
 					diag.closebtn.click();
@@ -1568,7 +1651,7 @@ function loadmainarea() {
 					alert("New and Confirm doesnt match!");
 					return;
 				}
-				fetch(currserver + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
+				fetch(currentServer + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
 					res.text().then((text) => {
 						
 						info = JSON.parse(text);
@@ -1589,12 +1672,12 @@ function loadmainarea() {
 		savebtn.innerText = "Save";
 		savebtn.addEventListener("click",function() {
 			if (ufl) {
-				fetch(currserver + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
+				fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 					console.log(data);
 					if (data.status == "success") {
 						ufl = false;
 						currentuser.picture = data.url;
-						fetch(currserver + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value }),method: 'POST'}).then((res) => {
+						fetch(currentServer + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value }),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								namelbl.innerText = nameinp.value;
 								pfpimg.src = getpfp(currentuser.picture);
@@ -1603,7 +1686,7 @@ function loadmainarea() {
 					}
 				})}).catch(function(error) {console.error(error);});
 			}else {
-				fetch(currserver + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value  }),method: 'POST'}).then((res) => {
+				fetch(currentServer + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value  }),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						namelbl.innerText = nameinp.value;
 					}
@@ -1617,7 +1700,7 @@ function loadmainarea() {
 		let lout = document.createElement("button");
 		lout.innerText = "Logout";
 		lout.addEventListener("click",function() {
-			fetch(currserver + "logout", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "logout", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					localStorage.setItem("logininfo", null);
 					location.reload();
@@ -1711,7 +1794,7 @@ function loadmainarea() {
 		}
 	});
 	function loadchats() {
-		fetch(currserver + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+		fetch(currentServer + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 			if (res.ok) {
 				res.text().then((text) => {
 					chats = JSON.parse(text);
@@ -1721,20 +1804,21 @@ function loadmainarea() {
 		})
 	}
 	
-	titlebar.appendChild(profilebtn);
-	leftarea.appendChild(titlebar);
-	leftarea.appendChild(chatslist.element);
-	maincont.appendChild(leftarea);
-	maincont.appendChild(rightarea);
+	leftTitleBar.appendChild(profilebtn);
+	leftArea.appendChild(leftTitleBar);
+	leftArea.appendChild(chatslist.element);
+	maincont.appendChild(leftArea);
+	maincont.appendChild(rightArea);
 	
 	document.body.appendChild(maincont);
 
 
-	function createchatarea(chatid,ugid) {
-		let chatupdatetimer;
+	function createChatView(chatid,ugid) {
+		let isKilled = false;
 		function kill() {
-			clearInterval(chatupdatetimer);
+			isKilled = true;
 		}
+
 		let f = document.createElement('input');
 		f.type='file';
 		f.multiple = true;
@@ -1771,7 +1855,7 @@ function loadmainarea() {
 		infobtn.classList.add("cb")
 		infobtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M444-288h72v-240h-72v240Zm35.789-312Q495-600 505.5-610.289q10.5-10.29 10.5-25.5Q516-651 505.711-661.5q-10.29-10.5-25.5-10.5Q465-672 454.5-661.711q-10.5 10.29-10.5 25.5Q444-621 454.289-610.5q10.29 10.5 25.5 10.5Zm.487 504Q401-96 331-126q-70-30-122.5-82.5T126-330.958q-30-69.959-30-149.5Q96-560 126-629.5t82.5-122Q261-804 330.958-834q69.959-30 149.5-30Q560-864 629.5-834t122 82.5Q804-699 834-629.276q30 69.725 30 149Q864-401 834-331q-30 70-82.5 122.5T629.276-126q-69.725 30-149 30ZM480-168q130 0 221-91t91-221q0-130-91-221t-221-91q-130 0-221 91t-91 221q0 130 91 221t221 91Zm0-312Z"/></svg>';
 		infobtn.addEventListener("click",function() {
-			viewuginfo(ugid,isuserchat ? "user" : "group")
+			viewInfo(ugid,isuserchat ? "user" : "group")
 		})
 		
 		titlebar.appendChild(infobtn);
@@ -1802,7 +1886,7 @@ function loadmainarea() {
 							content: servermutedchats.includes(chatid) ? "Unmute for this account" : "Mute for this account",
 							icon: servermutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 							callback: function() {
-								fetch(currserver + "mutechat", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'toggle': !servermutedchats.includes(chatid)}),method: 'POST'}).then((res) => {
+								fetch(currentServer + "mutechat", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'toggle': !servermutedchats.includes(chatid)}),method: 'POST'}).then((res) => {
 									if (res.ok) {
 										let index = servermutedchats.indexOf(chatid);
 										if (index > -1) {
@@ -1881,7 +1965,7 @@ function loadmainarea() {
 				let msg = pinnedmessages[k[k.length - 1]];
 				if (msg.sender == "0") {
 					pincontent.innerText = "Pamuk is here!";
-					formatpamukmessage(msg.content, function(text) {
+					formatSystemMessage(msg.content, function(text) {
 						pincontent.innerText = text;
 					})
 				}else {
@@ -1889,7 +1973,7 @@ function loadmainarea() {
 				}
 				pinsender.classList.add("loading");
 				pinsender.innerText = "loading...";
-				getinfo(msg.sender,function(info) {
+				getInfo(msg.sender,function(info) {
 					pinsender.classList.remove("loading");
 					pinsender.innerText = info.name;
 				})
@@ -2039,7 +2123,7 @@ function loadmainarea() {
 		let replymsgid = undefined;
 		
 		if (!isuserchat) {
-			fetch(currserver + "getgrouprole", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "getgrouprole", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						crole = JSON.parse(text);
@@ -2058,7 +2142,7 @@ function loadmainarea() {
 								mgbd.appendChild(joinbtn);
 								joinbtn.addEventListener("click",function() {
 									joinbtn.disabled = true;
-									fetch(currserver + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': ugid}),method: 'POST'}).then((res) => {
+									fetch(currentServer + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': ugid}),method: 'POST'}).then((res) => {
 										if (res.ok) {
 											loadchats();
 											openchat(chatid);
@@ -2072,7 +2156,7 @@ function loadmainarea() {
 					})
 				}
 			});
-			fetch(currserver + "getgroupmemberscount", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "getgroupmemberscount", {body: JSON.stringify({'token': logininfo.token, 'groupid': ugid}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						infotxt.classList.remove("loading");
@@ -2116,7 +2200,7 @@ function loadmainarea() {
 			}
 
 			messageslist.addItem(id,{
-				size: (msg.sender == logininfo.uid) ? 57 : (msg.sender == 0) ? 32 : 64,
+				size: (msg.sender == logininfo.uid) ? 61 : (msg.sender == 0) ? 34 : 68,
 				data: msg,
 				generator: function(data, element, id) {
 					createmsg(data,id,element);
@@ -2130,7 +2214,7 @@ function loadmainarea() {
 
 		function addpinnedmsg(key, msg) {
 			pinnedmessageslist.addItem(key,{
-				size: 68,
+				size: (msg.sender == logininfo.uid) ? 61 : (msg.sender == 0) ? 34 : 68,
 				data: msg,
 				generator: function(data, element, id) {
 					createmsg(data, key, element, {pinnedmessageslist: true})
@@ -2155,8 +2239,8 @@ function loadmainarea() {
 						let reacc = document.createElement("div");
 						reacc.style.cursor = "pointer";
 						reacc.addEventListener("click",function() {
-							fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: ir}),method: 'POST'}).then((res) => {
-								updatechat();
+							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: ir}),method: 'POST'}).then((res) => {
+								
 							})
 						})
 						let reace = document.createElement("label");
@@ -2198,7 +2282,7 @@ function loadmainarea() {
 		}
 
 		function getoldermessages(prefix,callback,idtoremove) {
-			fetch(currserver + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': prefix}),method: 'POST'}).then((res) => {
+			fetch(currentServer + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': prefix}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
 						isready = true;
@@ -2316,8 +2400,8 @@ function loadmainarea() {
 							reactionbtn.innerText = itm;
 							reactionsdiv.appendChild(reactionbtn);
 							reactionbtn.addEventListener("click",function() {
-								fetch(currserver + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'}).then((res) => {
-									updatechat();
+								fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'}).then((res) => {
+									
 								})
 								clik();
 							});
@@ -2351,13 +2435,13 @@ function loadmainarea() {
 						rc.style.display = "";
 						if (msg.sender == "0") {
 							replycnt.innerText = "Pamuk is here!";
-							formatpamukmessage(msg.content, function(text) {
+							formatSystemMessage(msg.content, function(text) {
 								replycnt.innerText = text;
 							})
 						}else {
 							replycnt.innerText = msg.content;
 						}
-						getinfo(msg.sender,(user) => {
+						getInfo(msg.sender,(user) => {
 							replysname.innerText = user.name;
 						})
 						if (pinnedmessageslist.element.style.display == "") {
@@ -2376,20 +2460,22 @@ function loadmainarea() {
 						diag.inner.style.overflow = "hidden";
 						diag.inner.style.display = "flex";
 						diag.inner.style.flexDirection = "column";
-						let fcb = document.createElement("div");
-						fcb.classList.add("bbar");
-						let cst = document.createElement("label");
-						cst.style.overflowWrap = "anywhere";
-						cst.style.width = "100%";
-						fcb.appendChild(cst);
-						let sb = document.createElement("button");
-						sb.classList.add("cb");
-						sb.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
-						fcb.appendChild(sb);
+						let bottomBar = document.createElement("div");
+						bottomBar.classList.add("bbar");
+						let forwardChatsLabel = document.createElement("label");
+						forwardChatsLabel.style.textOverflow = "ellipsis";
+						forwardChatsLabel.style.overflow = "hidden";
+						forwardChatsLabel.style.whiteSpace = "nowrap";
+						forwardChatsLabel.style.width = "100%";
+						bottomBar.appendChild(forwardChatsLabel);
+						let sendButton = document.createElement("button");
+						sendButton.classList.add("cb");
+						sendButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
+						bottomBar.appendChild(sendButton);
 						let fchatselectsid = [];
 						let gous = [];
 						function refreshlabel() {
-							cst.innerText = gous.join(", ");
+							forwardChatsLabel.innerText = gous.join(", ");
 						}
 						let chatslist = createLazyList("div","button");
 						chatslist.element.classList.add("clist");
@@ -2399,40 +2485,7 @@ function loadmainarea() {
 						chatslist.setItemGenerator(function(list,index,itmcont) {
 							let item = list[index];
 							if (item == undefined) return;
-							if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
-								item["lastmessage"] = {
-									time: new Date(),
-									content: "No Messages. Send one to start conversation.",
-									sender: "0"
-								}
-							}
-							itmcont.classList.add("chatitem");
-							addRipple(itmcont,"rgba(255,200,0,0.6)");
-							let pfpimg = document.createElement("img")
-							itmcont.appendChild(pfpimg);
-							let infocnt = document.createElement("infoarea");
-							let namecont = document.createElement("titlecont");
-							let nameh4 = document.createElement("h4");
-							namecont.appendChild(nameh4)
-							let lmt = document.createElement("time");
-							let dt = new Date(item.lastmessage.time);
-							let dtt = new Date(item.lastmessage.time);
-							let nowdate = new Date();
-							//try {
-							if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
-								lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-							}else {
-								lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-							}
-							//}catch {}
-							namecont.appendChild(lmt);
-							infocnt.appendChild(namecont);
-							let lastmsgcontent = document.createElement("label")
-							getinfo(item.lastmessage.sender, function(sender) {
-								lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
-							});
-							infocnt.appendChild(lastmsgcontent)
-							itmcont.appendChild(infocnt);
+							chatsListItemGenerator(item, itmcont);
 							let cinfo = {};
 							let id = item["chatid"] ?? item.group;
 							itmcont.addEventListener("click",function() {
@@ -2446,9 +2499,7 @@ function loadmainarea() {
 								refreshlabel();
 								chatslist.updateItem();
 							})
-							getinfo(item.type == "user" ? item.user : item.group, function(info) {
-								pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
-								nameh4.innerText = info.name;
+							getInfo(item.type == "user" ? item.user : item.group, function(info) {
 								cinfo = info;
 							});
 						});
@@ -2460,7 +2511,7 @@ function loadmainarea() {
 							itmcont.style.background = fchatselectsid.includes(id) ? "orange" : "";
 						});
 
-						fetch(currserver + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								res.text().then((text) => {
 									chats = JSON.parse(text);
@@ -2469,12 +2520,12 @@ function loadmainarea() {
 							}
 						})
 						diag.inner.appendChild(chatslist.element)
-						diag.inner.appendChild(fcb)
+						diag.inner.appendChild(bottomBar)
 
-						sb.onclick = function() {
+						sendButton.onclick = function() {
 							let messages = selectedMessages;
 							if (messages.length == 0) messages = [id];
-							fetch(currserver + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
+							fetch(currentServer + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
 
 							})
 							diag.closebtn.click();
@@ -2496,7 +2547,7 @@ function loadmainarea() {
 					savebtn.addEventListener("click", function() {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
-						fetch(currserver + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
 
 						})
 						clik();
@@ -2508,8 +2559,8 @@ function loadmainarea() {
 					pinbtn.addEventListener("click", function() {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
-						fetch(currserver + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-							updatechat();
+						fetch(currentServer + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+							
 						})
 						clik();
 					})
@@ -2530,8 +2581,8 @@ function loadmainarea() {
 						if (confirm("Do you really want to delete?")) {
 							let messages = selectedMessages;
 							if (messages.length == 0) messages = [id];
-							fetch(currserver + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-								updatechat();
+							fetch(currentServer + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+								
 							})
 						}
 						clik();
@@ -2575,7 +2626,7 @@ function loadmainarea() {
 			msgcontent.style.overflowWrap = "break-word";
 			if (msg.sender == "0") {
 				msgcontent.innerText = "Pamuk is here!";
-				formatpamukmessage(msg.content, function(text) {
+				formatSystemMessage(msg.content, function(text) {
 					msgcontent.innerText = text;
 				})
 			}else {
@@ -2592,9 +2643,9 @@ function loadmainarea() {
 				fu.style.cursor = "pointer";
 				fu.innerText = "loading..."
 				fu.addEventListener("click",function() {
-					viewuginfo(msg.forwardedfrom, "user")
+					viewInfo(msg.forwardedfrom, "user")
 				})
-				getinfo(msg.forwardedfrom,function(user) {
+				getInfo(msg.forwardedfrom,function(user) {
 					fu.innerText = user.name;
 					fu.classList.remove("loading");
 				})
@@ -2612,7 +2663,7 @@ function loadmainarea() {
 				let replysname = document.createElement("b");
 				replysname.innerText = "loading...";
 				replysname.classList.add("loading");
-				getinfo(msg.replymsgsender,function(user) {
+				getInfo(msg.replymsgsender,function(user) {
 					replysname.innerText = user.name;
 					replysname.classList.remove("loading");
 				})
@@ -2621,7 +2672,7 @@ function loadmainarea() {
 				let replycnt = document.createElement("label");
 				if (msg.replymsgsender == "0") {
 					replycnt.innerText = "Pamuk is here!";
-					formatpamukmessage(msg.replymsgcontent, function(text) {
+					formatSystemMessage(msg.replymsgcontent, function(text) {
 						replycnt.innerText = text;
 					})
 				}else {
@@ -2635,7 +2686,7 @@ function loadmainarea() {
 
 			if (msg.sender != 0) {
 				msgm.appendChild(msgsender);
-				getinfo(msg.sender,(user) => {
+				getInfo(msg.sender,(user) => {
 					msgpfp.classList.remove("loading");
 					msgsendertxt.classList.remove("loading");
 					msgsendertxt.innerText = user.name;
@@ -2645,14 +2696,14 @@ function loadmainarea() {
 
 				msgpfp.style.cursor = "pointer";
 				msgpfp.addEventListener("click",function() {
-					viewuginfo(msg.sender,"user")
+					viewInfo(msg.sender,"user")
 				})
 			}
 			msgm.appendChild(msgbubble);
 			if (msg.files != undefined) {
 				msg.gImages.forEach(function(i) {
 					let imgs = new Image();
-					imgs.src = i.url.replace(/%SERVER%/g,currserver) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
+					imgs.src = i.url.replace(/%SERVER%/g,currentServer) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
 					let img = document.createElement("img");
 					img.style.background = "white";
 					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -2664,14 +2715,14 @@ function loadmainarea() {
 					img.classList.add("msgimg");
 					img.onclick = function() {
 						let a = document.createElement("a");
-						a.href = i.url.replace(/%SERVER%/g,currserver);
+						a.href = i.url.replace(/%SERVER%/g,currentServer);
 						a.target = "_blank";
 						a.click();
 					}
 					imgs.onload = function() {
 						img.src = imgs.src;
 						img.onclick = function() {
-							imageView(i.url.replace(/%SERVER%/g,currserver));
+							imageView(i.url.replace(/%SERVER%/g,currentServer));
 						}
 					}
 					img.style.width = img.style.height = Math.max(240 / msg.gImages.length,64) + "px";
@@ -2684,7 +2735,7 @@ function loadmainarea() {
 					//vid.muted = true;
 					//vid.autoplay = true;
 					vid.controls = true;
-					vid.src = i.url.replace(/%SERVER%/g,currserver);
+					vid.src = i.url.replace(/%SERVER%/g,currentServer);
 					vid.style.aspectRatio = "16/9";
 					vid.style.width = "100%";
 					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
@@ -2697,7 +2748,7 @@ function loadmainarea() {
 					a.style.position = "relative";
 					a.download = i.name;
 					a.target = "_blank";
-					a.href = i.url.replace(/%SERVER%/g,currserver);
+					a.href = i.url.replace(/%SERVER%/g,currentServer);
 					let fd = document.createElement("filed");
 					addRipple(a,"rgba(255,255,255,0.6)");
 					let img = document.createElement("img");
@@ -2786,9 +2837,9 @@ function loadmainarea() {
 				sendbtn.disabled = false;
 			}
 			if (sendtyping) {
-				fetch(currserver + "settyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'});
+				fetch(currentServer + "settyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'});
 				sendtyping = false;
-				setTimeout(function() {sendtyping = true},1000);
+				setTimeout(function() {sendtyping = true}, 2000);
 			}
 		})
 		
@@ -2811,7 +2862,7 @@ function loadmainarea() {
 			function upload() {
 				if (fll.length > 0) {
 					let file = fll.shift();
-					fetch(currserver + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
+					fetch(currentServer + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 						console.log(data);
 						if (data.status == "success") {
 							files.push(data.url);
@@ -2823,7 +2874,7 @@ function loadmainarea() {
 				}
 			}
 			function send() {
-				fetch(currserver + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': content,replymsg: replymsgid,files: (files.length > 0 ? files : null)}),method: 'POST'}).then((res) => {
+				fetch(currentServer + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': content,replymsg: replymsgid,files: (files.length > 0 ? files : null)}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.text().then((text) => {
 							res = JSON.parse(text);
@@ -2838,7 +2889,6 @@ function loadmainarea() {
 							}
 
 							sendedmessages.push(msgid);
-							updatechat();
 						})
 					}else {
 						messageslist.removeItem(msgid);
@@ -2862,10 +2912,30 @@ function loadmainarea() {
 			}
 		})
 		
-		let isready = true;
-		let updatessince = "0";
-		fetch(currserver + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': "#0-#48"}),method: 'POST'}).then((res) => {
+		fetch(currentServer + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': "#0-#48"}),method: 'POST'}).then((res) => {
 			if (res.ok) {
+				fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["chat:" + chatid]}), method: "POST"});
+				fetch(currentServer + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
+					if (res.ok) {
+						res.text().then((text) => {
+							pinnedmessages = JSON.parse(text);
+							updatepinnedbar();
+							for (const [key, msg] of Object.entries(pinnedmessages)) {
+								addpinnedmsg(key, msg);
+							}
+						});
+					}
+				});
+				if (isuserchat) addOnlineHook(ugid, function(text) {
+					infotxt.classList.remove("loading");
+					if (text == "Online") {
+						infotxt.innerText = "Online";
+					}else {
+						let dt = new Date(text);
+						infotxt.innerText = "Last Online: " + dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+					}
+				});
+
 				res.text().then((text) => {
 					isready = true;
 					chatpage = JSON.parse(text);
@@ -2876,19 +2946,6 @@ function loadmainarea() {
 						addmsg(msg,i);
 						updatessince = i;
 					})
-
-					fetch(currserver + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
-						if (res.ok) {
-							res.text().then((text) => {
-								pinnedmessages = JSON.parse(text);
-								updatepinnedbar();
-								for (const [key, msg] of Object.entries(pinnedmessages)) {
-									addpinnedmsg(key, msg);
-								}
-							});
-						}
-					});
-					chatupdatetimer = setTimeout(updatechat,1000)
 				})
 			}else {
 				messageslist.element.innerHTML = "";
@@ -2908,132 +2965,90 @@ function loadmainarea() {
 		})
 
 		let readupdates = [];
-		let updatedelay = 1000;
-		function updatechat() {
-			if (!isready) return;
-			isready = false;
-			let req = {
-				"getupdates": JSON.stringify({'token': logininfo.token, 'id': chatid, 'since': updatessince}),
-				"gettyping": JSON.stringify({'token': logininfo.token, 'chatid': chatid})
-			};
-			if (isuserchat) {
-				req["getonline"] = JSON.stringify({'token': logininfo.token, 'uid': ugid});
-			}
-			fetch(currserver + "multi", {body: JSON.stringify(req), method: "POST"}).then((res) => {
-				res.json().then((resp) => {
-					isready = true;
-					{
-						let getupdatesrequest = resp["getupdates"];
-						if (getupdatesrequest.statuscode == 200) {
-							let json = JSON.parse(getupdatesrequest.res);
-							let keys = Object.keys(json);
-							updatedelay += 250;
-							updatedelay = Math.min(updatedelay, 4000);
-							keys.forEach((i) => {
-								updatessince = i;
-								let val = json[i];
-								let key = val.id;
-								if (!readupdates.includes(i)) {
-									readupdates.push(key);
-									updatedelay = 1000;
-									if (val.event == "NEWMESSAGE") {
-										if (messageslist.getItemData(key) == undefined) {
-											chatpage[key] = val;
-											addmsg(val,key);
-										}
-									}
-									if (val.event == "DELETED") {
-										messageslist.removeItem(key);
-										if (pinnedmessages[key]) {
-											delete pinnedmessages[key];
-											pinnedmessageslist.removeItem(key);
-											updatepinnedbar();
-										}
-									}
-									if (val.event == "REACTIONS") {
-										let data = messageslist.getItemData(key);
-										if (data) {
-											data.reactions = val.rect;
-											messageslist.updateItem(key, data);
-										}
-										// But message MIGHT be loaded in pinned messages area.
-										let pdata = pinnedmessageslist.getItemData(key);
-										if (pdata) {
-											pdata.reactions = val.rect;
-											pinnedmessageslist.updateItem(key, pdata);
-										}
-									}
-									if (val.event == "PINNED") {
-										let data = messageslist.getItemData(key);
-										if (data) {
-											data.pinned = true;
-											messageslist.updateItem(key, data);
-										}
-										pinnedmessages[key] = val;
-										updatepinnedbar();
-										addpinnedmsg(key,val);
-									}
-									if (val.event == "UNPINNED") {
-										let data = messageslist.getItemData(key);
-										if (data) {
-											data.pinned = false;
-											messageslist.updateItem(key, data);
-										}
-										if (pinnedmessages[key]) {
-											delete pinnedmessages[key];
-											pinnedmessageslist.removeItem(key);
-											updatepinnedbar();
-										}
-									}
+		
+		function applyChatUpdates(json) {
+			let keys = Object.keys(json);
+			keys.forEach((i) => {
+				updatessince = i;
+				let val = json[i];
+				if (i == "TYPING") {
+					let index = val.indexOf(logininfo.uid);
+					if (index >= 0) {
+						val.splice(index,1);
+					}
+					if (val.length == 0) {
+						typinglabel.innerText = "Nobody is typing";
+						typinglabel.style.opacity = "0";
+					}else {
+						let usernameslist = [];
+						val.forEach(function(i) {
+							getInfo(i,function(u) {
+								usernameslist.push(u.name);
+								if (val.length == usernameslist.length) {
+									typinglabel.innerText = usernameslist.join(",") + " is typing...";
+									typinglabel.style.opacity = "";
 								}
 							})
-							sendedmessages.forEach(function(i) {
-								messageslist.removeItem(i);
-							})
-							sendedmessages = [];
+						});
+					}
+				}else if (!readupdates.includes(i)) {
+					readupdates.push(i);
+					let key = val.id;
+					if (val.event == "NEWMESSAGE") {
+						if (messageslist.getItemData(key) == undefined) {
+							chatpage[key] = val;
+							addmsg(val,key);
 						}
 					}
-					{
-						let gettypingrequest = resp["gettyping"];
-						if (gettypingrequest.statuscode == 200) {
-							let json = JSON.parse(gettypingrequest.res);
-							let index = json.indexOf(logininfo.uid);
-							if (index >= 0) {
-								json.splice(index,1);
-							}
-							if (json.length == 0) {
-								typinglabel.innerText = "Nobody is typing";
-								typinglabel.style.opacity = "0";
-							}else {
-								let usernameslist = [];
-								json.forEach(function(i) {
-									getinfo(i,function(u) {
-										usernameslist.push(u.name);
-										if (json.length == usernameslist.length) {
-											typinglabel.innerText = usernameslist.join(",") + " is typing...";
-											typinglabel.style.opacity = "";
-										}
-									})
-								});
-							}
+					if (val.event == "DELETED") {
+						messageslist.removeItem(key);
+						if (pinnedmessages[key]) {
+							delete pinnedmessages[key];
+							pinnedmessageslist.removeItem(key);
+							updatepinnedbar();
 						}
 					}
-					if (resp["getonline"]) {
-						let getonlinerequest = resp["getonline"];
-						if (getonlinerequest.statuscode == 200) {
-							let text = getonlinerequest.res;
-							infotxt.classList.remove("loading");
-							if (text == "Online") {
-								infotxt.innerText = "Online";
-							}else {
-								let dt = new Date(text);
-								infotxt.innerText = "Last Online: " + dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-							}
+					if (val.event == "REACTIONS") {
+						let data = messageslist.getItemData(key);
+						if (data) {
+							data.reactions = val.rect;
+							messageslist.updateItem(key, data);
+						}
+						// But message MIGHT be loaded in pinned messages area.
+						let pdata = pinnedmessageslist.getItemData(key);
+						if (pdata) {
+							pdata.reactions = val.rect;
+							pinnedmessageslist.updateItem(key, pdata);
 						}
 					}
-					chatupdatetimer = setTimeout(updatechat,updatedelay)
- 				});
-			});
+					if (val.event == "PINNED") {
+						let data = messageslist.getItemData(key);
+						if (data) {
+							data.pinned = true;
+							messageslist.updateItem(key, data);
+						}
+						pinnedmessages[key] = val;
+						updatepinnedbar();
+						addpinnedmsg(key,val);
+					}
+					if (val.event == "UNPINNED") {
+						let data = messageslist.getItemData(key);
+						if (data) {
+							data.pinned = false;
+							messageslist.updateItem(key, data);
+						}
+						if (pinnedmessages[key]) {
+							delete pinnedmessages[key];
+							pinnedmessageslist.removeItem(key);
+							updatepinnedbar();
+						}
+					}
+				}
+			})
+			sendedmessages.forEach(function(i) {
+				messageslist.removeItem(i);
+			})
+			sendedmessages = [];
 		}
 
 		return {
@@ -3044,33 +3059,34 @@ function loadmainarea() {
 			infolabel: infotxt,
 			addmsg: addmsg,
 			backbutton:backbtn,
-			kill: kill
+			kill: kill,
+			applyChatUpdates: applyChatUpdates
 		};
 	}
 }
 
-if (currserver == "") {
+if (currentServer == "") {
 	if (localStorage.getItem("server") == null) {
-		openconnectarea();
+		openConnectArea();
 	}else {
-		currserver = localStorage.getItem("server");
-		fetch(currserver + "ping").then(function() {
+		currentServer = localStorage.getItem("server");
+		fetch(currentServer + "ping").then(function() {
 			if (localStorage.getItem("logininfo") == null) {
-				openloginarea();
+				openLoginArea();
 			}else {
 				logininfo = JSON.parse(localStorage.getItem("logininfo"));
-				loadmainarea();
+				openMainArea();
 			}
 			
 		}).catch(function() {
-			openconnectarea(true);
+			openConnectArea(true);
 		})
 	}
 }else {
-	fetch(currserver + "ping").then(function() {
-		openloginarea();
+	fetch(currentServer + "ping").then(function() {
+		openLoginArea();
 	}).catch(function() {
-		openconnectarea(true);
+		openConnectArea(true);
 	})
 }
 function humanFileSize(bytes, si=false, dp=1) {
@@ -3099,10 +3115,13 @@ function humanFileSize(bytes, si=false, dp=1) {
 //something I made
 function createDynamicList(elemtype = "div", innertype = "div") {
 	let list = {};
+	
 	let direction = 1;
 	let pos = -1;
 	let scrolldirection = 1;
 	let lastscrollpos = 0;
+	let lastheight = 0;
+
 	let listelement = document.createElement(elemtype);
 	listelement.style.overflow = "auto";
 
@@ -3121,6 +3140,18 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 			pos = 0;
 		}
 	});
+
+	function resize() {
+		if (lastheight != 0) {
+			if (direction == -1) {
+				let diff = lastheight - listelement.offsetHeight;
+				listelement.scrollTop += Math.max(diff);
+			}
+		}
+		lastheight = listelement.offsetHeight;
+	}
+
+	new ResizeObserver(resize).observe(listelement)
 
 	function additem(key, item, order = 1) {
 		if (list[key]) {
@@ -3319,7 +3350,7 @@ function getpfp(url,fallback = "person.svg") {
 		if (url.trim() == "") {
 			return fallback;
 		}else {
-			return url.replace(/%SERVER%/g,currserver) + (url.includes("%SERVER%") ? "&type=thumb" : "");
+			return url.replace(/%SERVER%/g,currentServer) + (url.includes("%SERVER%") ? "&type=thumb" : "");
 		}
 	}else {
 		return fallback;

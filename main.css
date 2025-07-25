@@ -20,6 +20,7 @@ body,html {
 	overflow:hidden;
 	background:wheat;
 	--main-bg: #ebebeb;
+	--transparent-hover: rgba(0,0,0,0.2);
 }
 
 flex {
@@ -45,7 +46,7 @@ body {
 }
 
 .cb:hover {
-	background:rgba(255,255,255,0.2);
+	background:var(--transparent-hover);
 }
 
 svg {
@@ -54,9 +55,6 @@ svg {
 	padding:0;
 }
 
-img {
-	border:none;
-}
 select {
 	border:none;
 	cursor:pointer;
@@ -82,6 +80,7 @@ centeredPopup {
 	animation-duration: 0.5s;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
+
 centeredPopup.docked {
 	background-color: var(--main-bg);
 	border-radius:0;
@@ -226,7 +225,6 @@ pinbar > .replycont {
 	text-align: inherit;
 	font-size: inherit;
 	background:transparent;
-	max-height: 20vh;
 }
 
 .replycont:hover {
@@ -235,7 +233,9 @@ pinbar > .replycont {
 
 .replycont > label {
 	cursor: pointer;
-	overflow-wrap: break-word;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
 }
 
 attachmentscont {
@@ -331,13 +331,13 @@ msgbar > div > textarea {
 }
 
 .transparentbtn:hover {
-	background: rgba(0,0,0,0.3);
+	background: var(--transparent-hover)
 }
 
 .circleimg {
 	border-radius: 100%;
-	width: 40px;
-	height: 40px;
+	width: 32px;
+	height: 32px;
 	background:white;
 	flex-shrink: 0;
 }
@@ -357,13 +357,13 @@ msgbar > div > textarea {
 	border-bottom: 1px solid gray;
 }
 
-.chatitem.active {
-	background: rgba(255,170,0,0.4);
+.chatitem:hover {
+	background: var(--transparent-hover);
 	border-bottom: 1px solid transparent;
 }
 
-.chatitem:hover {
-	background: rgba(0,0,0,0.2);
+.chatitem.active {
+	background: rgba(255,170,0,0.4);
 	border-bottom: 1px solid transparent;
 }
 
@@ -424,11 +424,9 @@ ma {
 	width: 35px !important;
 	height: 35px;
 	padding: 4px !important;
-	background: none;
 }
 .reactionbtn:hover {
 	transform: scale(1.2);
-	background: rgba(255,200,0,0.2) !important;
 }
 
 .reactionbtn:active {
@@ -442,6 +440,7 @@ msgcont {
 	animation-duration: 0.5s;
 	flex-shrink: 0;
 	transition: background-color 100ms;
+	padding: 2px;
 }
 
 msgcont.hint {
@@ -539,14 +538,14 @@ msgreacts > div.rcted {
 }
 
 button.fab {
-	background:gold;
+	background:orange;
 	width:60px;
 	height:60px;
 	padding:0;
 	display:flex;
 	align-items:center;
 	justify-content:center;
-	border-radius: 20px;
+	border-radius: 30px;
 	position: absolute;
 	bottom: 20px;
 	right: 20px;
@@ -555,7 +554,7 @@ button.fab {
 	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 button.fab:hover {
-	background:orange;
+	background:gold;
 	box-shadow: none;
 }
 button.fab:hover:active {
@@ -574,20 +573,20 @@ button.fab:hover:active {
 	margin:0px;
 }
 .contextmenu button:hover:not(:disabled), .customctx button:hover:not(:disabled) {
-	background: rgba(255,200,0,0.2);
+	background: var(--transparent-hover);
 }
 .contextmenu {
 	outline: 1px solid gray;
-	z-index:100000;
+	z-index: 100;
 	border-radius:8px;
 	overflow:hidden;
 	background: rgb(240,240,240);
 	transition: opacity 200ms;
 }
+
 .customctx {
 	z-index:100;
 	transition: opacity 200ms;
-	display:inline-block;
 }
 .customctx > div {
 	outline: 1px solid gray;
@@ -595,7 +594,7 @@ button.fab:hover:active {
 	overflow:hidden;
 	background: rgb(240,240,240);
 	transition: opacity 200ms;
-	display:inline-block;
+	width: fit-content;
 	animation-name: ctxappear;
 	animation-duration: 200ms;
 }
@@ -621,7 +620,7 @@ button.fab:hover:active {
 }
 
 .popupmenu > button:hover {
-	background: rgba(0,0,0,0.4);
+	background: var(--transparent-hover);
 }
 
 .popupmenu > button > div {
@@ -690,20 +689,24 @@ filed > div > label {
 @keyframes bgappear {
 	from {opacity:0;}
 }
+
 @keyframes ctxappear {
 	from {transform:scale(0.8);}
 }
+
 @keyframes loading {
 	0%   {opacity:0.3;}
 	50%  {opacity:0.8;}
 	100% {opacity:0.3;}
 }
+
 @keyframes msgbappear {
-  from {transform:scale(0.8);}
+  from {transform:scale(0.9);}
 }
 @keyframes msgcappear {
 	from {opacity:0;}
 }
+
 @keyframes dialogappear {
   from {transform:scale(0.8);opacity:0;}
 }
@@ -718,6 +721,10 @@ filed > div > label {
 @keyframes reactappear {
 	0% {transform:scale(0.8);opacity:0;}
 	50% {transform:scale(1.1);}
+}
+
+@keyframes slideup {
+  from {transform:translateY(100%);opacity:0;}
 }
 
 @media only screen and (min-width: 2000px) {
@@ -759,6 +766,7 @@ filed > div > label {
 	centeredPopup {
 		width:100%;
 		height:100%;
+		animation-name: slideup;
 	}
 }
 
@@ -766,15 +774,13 @@ filed > div > label {
 	html,body {
 		background:#2b230c;
 		--main-bg: #171717;
+		--transparent-hover: rgba(255,255,255,0.2);
 	}
 	rightarea {
 		background: rgb(20,20,20);
 	}
 	.contextmenu, .customctx > div, .popupmenu {
 		background: rgb(40,40,40);
-	}
-	.chatitem:hover, .transparentbtn:hover {
-		background: rgba(255,255,255,0.2);
 	}
 	filed > div > label, a {
 		color:white;
