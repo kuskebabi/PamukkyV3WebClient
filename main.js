@@ -1405,7 +1405,6 @@ function openMainArea() {
 
 	let pfpimg = document.createElement("img");
 	pfpimg.classList.add("circleimg")
-	pfpimg.style.margin = "4px";
 	profilebtn.appendChild(pfpimg);
 	let namelbl = document.createElement("label");
 	namelbl.style.cursor = "pointer";
@@ -1836,7 +1835,6 @@ function openMainArea() {
 		titlebar.appendChild(backbtn)
 		let pfpimg = document.createElement("img");
 		pfpimg.classList.add("circleimg")
-		pfpimg.style.margin = "2px";
 		titlebar.appendChild(pfpimg);
 		let titletxt = document.createElement("h4");
 		titletxt.style.marginLeft = "4px";
