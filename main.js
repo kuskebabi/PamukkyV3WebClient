@@ -2017,12 +2017,12 @@ function openMainArea() {
 				img.style.background = "white";
 				let imgs = new Image();
 				imgs.src = reader.result;
-				if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+				/*if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 					// dark mode
 					img.src = "file_dark.svg";
 				}else {
 					img.src = "file.svg";
-				}
+				}*/
 				img.classList.add("msgimg");
 				imgs.onload = function() {
 					img.src = imgs.src;
@@ -2706,12 +2706,6 @@ function openMainArea() {
 					imgs.src = i.url.replace(/%SERVER%/g,currentServer) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
 					let img = document.createElement("img");
 					img.style.background = "white";
-					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-						// dark mode
-						img.src = "file_dark.svg";
-					}else {
-						img.src = "file.svg";
-					}
 					img.classList.add("msgimg");
 					img.onclick = function() {
 						let a = document.createElement("a");
@@ -2751,16 +2745,11 @@ function openMainArea() {
 					a.href = i.url.replace(/%SERVER%/g,currentServer);
 					let fd = document.createElement("filed");
 					addRipple(a,"rgba(255,255,255,0.6)");
-					let img = document.createElement("img");
-					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-						// dark mode
-						img.src = "file_dark.svg";
-					}else {
-						img.src = "file.svg";
-					}
+					let fileico = document.createElement("div");
+					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="M319-250h322v-60H319v60Zm0-170h322v-60H319v60ZM220-80q-24 0-42-18t-18-42v-680q0-24 18-42t42-18h361l219 219v521q0 24-18 42t-42 18H220Zm331-554v-186H220v680h520v-494H551ZM220-820v186-186 680-680Z"/></svg>';
 					let filename = i.name;
 					a.title = filename;
-					fd.appendChild(img)
+					fd.appendChild(fileico)
 					let il = document.createElement("div");
 					il.style.display = "flex";
 					il.style.flexDirection = "column";
