@@ -81,6 +81,12 @@ centeredPopup {
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
+centeredPopup.closing {
+	transform:scale(0.8);
+	opacity:0;
+	animation-name: dialogdisappear;
+}
+
 centeredPopup.docked {
 	background-color: var(--main-bg);
 	border-radius:0;
@@ -89,6 +95,12 @@ centeredPopup.docked {
 	max-width:100%;
 	max-height:100%;
 	box-shadow: none;
+}
+
+centeredPopup.docked.closing {
+	transform:scale(0.8);
+	opacity:0;
+	animation-name: dialogdisappeardocked;
 }
 
 h1,h2,h3,h4,h5 {
@@ -132,11 +144,15 @@ mchat {
 	flex-direction: column;
 }
 
-input,textarea {
+input, textarea {
 	border:none;
 	padding:5px;
 	border-radius:8px;
 	outline:none;
+}
+
+input:focus, textarea:focus {
+	outline:1px solid gray;
 }
 
 button {
@@ -418,6 +434,7 @@ ma {
 	display:block;
 	margin:auto;
 }
+
 .reactionbtn {
 	transition: transform 100ms;
 	border-radius: 100%;
@@ -497,30 +514,31 @@ msgreacts {
 	min-width: 100%;
 }
 
-msgreacts > div {
+msgreacts > button {
 	display: inline-flex;
 	border-radius: 18px;
 	height:26px;
 	background: rgba(255,255,255,0.2);
 	align-items:center;
+	justify-content: center;
 	margin:2px;
 	padding: 4px;
 }
-msgreacts > div:hover {
+msgreacts > button:hover {
 	opacity: 0.9;
 	outline: 1px solid gray;
 }
 
-msgreacts > div * {
+msgreacts > button * {
 	cursor:pointer;
 }
 
-msgreacts > div.rcted {
+msgreacts > button.rcted {
 	background: rgba(255,255,255,1);
 	color:black;
 }
 
-/*msgreacts > div.rcted > label:first-child {
+/*msgreacts > button.rcted > label:first-child {
 	animation-name: reactappear;
 	animation-duration: 0.5s;
 }*/
@@ -643,6 +661,20 @@ button.fab:hover:active {
 	animation-iteration-count: infinite;
 	background-color:gray;
 	color: transparent;
+	position: relative;
+	overflow: hidden;
+}
+
+.loading::before {
+	content: '';
+	width: 10%;
+	background-color: lightgray;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	animation-name: loadingbar;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
 }
 
 a {
@@ -687,8 +719,18 @@ filed > div > label {
 	animation-duration: 200ms;
 }
 
+.bgcover.closing {
+	animation-name: bgdisappear;
+	opacity:0;
+	pointer-events: none;
+}
+
 @keyframes bgappear {
 	from {opacity:0;}
+}
+
+@keyframes bgdisappear {
+	from {opacity:1;}
 }
 
 @keyframes ctxappear {
@@ -699,6 +741,10 @@ filed > div > label {
 	0%   {opacity:0.3;}
 	50%  {opacity:0.8;}
 	100% {opacity:0.3;}
+}
+@keyframes loadingbar {
+	from {width: 10%; left: -10%;}
+	to {width:100%; left: 100%;}
 }
 
 @keyframes msgbappear {
@@ -711,8 +757,17 @@ filed > div > label {
 @keyframes dialogappear {
   from {transform:scale(0.8);opacity:0;}
 }
+@keyframes dialogdisappear {
+  from {transform:scale(1);opacity:1;}
+}
+
 @keyframes dialogappeardocked {
 	from {transform:scale(0.8) translateX(100%);opacity:0;}
+	to {transform:scale(1) translateX(0);opacity:1;}
+}
+@keyframes dialogdisappeardocked {
+	from {transform:scale(1) translateX(0);opacity:1;}
+	to {transform:scale(0.8) translateX(100%);opacity:0;}
 }
 
 @keyframes mainappear {
@@ -725,7 +780,13 @@ filed > div > label {
 }
 
 @keyframes slideup {
-  from {transform:translateY(100%);opacity:0;}
+  	from {transform:translateY(100%);opacity:0;}
+	to {transform:translateY(0);opacity:1;}
+}
+
+@keyframes slidedown {
+	from {transform:translateY(0);opacity:1;}
+  	to {transform:translateY(100%);opacity:0;}
 }
 
 @media only screen and (min-width: 2000px) {
@@ -768,6 +829,9 @@ filed > div > label {
 		width:100%;
 		height:100%;
 		animation-name: slideup;
+	}
+	centeredPopup.closing {
+		animation-name: slidedown;
 	}
 }
 

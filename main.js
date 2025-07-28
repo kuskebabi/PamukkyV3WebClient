@@ -207,6 +207,7 @@ if (searchParams.has("server")) {
 }
 
 function openConnectArea(err) {
+	document.title = "Pamukky";
 	document.body.innerHTML = "";
 	let connectcnt = document.createElement("centeredPopup");
 	let title = document.createElement("h1");
@@ -265,6 +266,7 @@ function openConnectArea(err) {
 }
 
 function openLoginArea() {
+	document.title = "Pamukky";
 	document.body.innerHTML = "";
 	let logincnt = document.createElement("centeredPopup");
 	let title = document.createElement("h1");
@@ -365,6 +367,7 @@ function openLoginArea() {
 }
 
 function openMainArea() {
+	document.title = "Pamukky";
 	Notification.requestPermission();
 
 	document.body.innerHTML = "";
@@ -929,9 +932,7 @@ function openMainArea() {
 		bgcover.style.alignItems = "center";
 		bgcover.style.justifyContent = "center";
 		bgcover.addEventListener("pointerdown",function(e) {
-			if (e.target == bgcover) {
-				document.body.removeChild(bgcover);
-			}
+			if (e.target == bgcover) closebtn.click();
 		})
 		
 		let dialoginside = document.createElement("centeredPopup");
@@ -954,13 +955,15 @@ function openMainArea() {
 		closebtn.style.padding = "0";
 		closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
 		closebtn.addEventListener("click",function(e) {
-			if (isatdock == true) {
-				maincont.removeChild(dialoginside);
-				
-			}else {
-				document.body.removeChild(bgcover);
-				
-			}
+			dialoginside.classList.add("closing");
+			bgcover.classList.add("closing");
+			setTimeout(function() {
+				if (isatdock == true) {
+					maincont.removeChild(dialoginside);
+				}else {
+					document.body.removeChild(bgcover);
+				}
+			}, 500);
 		})
 		dialoginside.addEventListener("keydown",function(e) {
 			if (e.key == "Escape") {
@@ -1064,7 +1067,7 @@ function openMainArea() {
 			popupmenu.style.opacity = "1";
 			//popupmenu.style.maxHeight = "calc(100% - " + popupmenu.style.top + ")";
 		});
-		maincont.addEventListener("mousedown",function() {
+		maincont.addEventListener("pointerdown",function() {
 			close();
 		})
 		popupmenu.addEventListener("keydown",function(e) {
@@ -1139,14 +1142,14 @@ function openMainArea() {
 						let type = key.split(":")[0];
 						switch(type) {
 							case "chat":
-								let chatid = key.split(":")[1];
+								let chatid = key.substring(key.indexOf(":") + 1);
 								if (currentchatid == chatid) {
 									console.log(json[key]);
 									currentchatview.applyChatUpdates(json[key]);
 								}
 								break;
 							case "user":
-								let uid = key.split(":")[1];
+								let uid = key.substring(key.indexOf(":") + 1);
 								let val = json[key];
 								if (val.hasOwnProperty("online") && val["online"] != null) {
 									updateOnlineHook(uid, val["online"]);
@@ -1214,6 +1217,7 @@ function openMainArea() {
 		currentchatview.titlelabel.innerText = "loading...";
 		currentchatview.pfp.classList.add("loading");
 		getInfo(infoid, function callback(cinfo) {
+			document.title = "Pamukky - " + cinfo.name;
 			currentchatview.titlelabel.innerText = cinfo.name;
 			currentchatview.pfp.src = getpfp(cinfo.picture, type == "user" ? "person.svg" : "group.svg");
 			currentchatview.titlelabel.classList.remove("loading");
@@ -1229,6 +1233,7 @@ function openMainArea() {
 				leftArea.style.display = "";
 				currentchatid = "";
 				location.href = "#mainarea";
+				document.title = "Pamukky";
 				requestAnimationFrame(function() {leftArea.style.opacity = "1";})
 				if (document.body.clientWidth <= 800) {
 					setTimeout(function() {
@@ -2234,7 +2239,7 @@ function openMainArea() {
 				if (reactions) {
 					Object.keys(reactions).forEach(function(ir) {
 						let react = reactions[ir];
-						let reacc = document.createElement("div");
+						let reacc = document.createElement("button");
 						reacc.style.cursor = "pointer";
 						reacc.addEventListener("click",function() {
 							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: ir}),method: 'POST'}).then((res) => {
