@@ -73,7 +73,7 @@ function imageView(url) {
 	closebtn.style.right = "0px";
 	closebtn.style.width = "48px";
 	closebtn.style.height = "48px";
-	closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e3e3e3"><path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z"/></svg>';
+	closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"><path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z"/></svg>';
 	closebtn.title = "Close";
 	bg.appendChild(closebtn);
 	closebtn.addEventListener("click",function() {
@@ -373,7 +373,7 @@ function openMainArea() {
 	let playedAudioPath = null;
 	let playedAudioChat = null;
 
-	function playAudio(path) {
+	function playAudio(path, chatid = null) {
 		if (playedAudio != null) {
 			playedAudio.pause();
 			playedAudio = null
@@ -381,6 +381,8 @@ function openMainArea() {
 		playedAudio = new Audio(path);
 		playedAudio.play();
 		playedAudioPath = path;
+		playedAudioChat = chatid;
+		updateAudioBar();
 	}
 
 	Notification.requestPermission();
@@ -729,7 +731,7 @@ function openMainArea() {
 										let kickbtn = document.createElement("button");
 										kickbtn.classList.add("cb");
 										kickbtn.title = "Kick";
-										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
+										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
 										kickbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to kick this user?")) {
 												fetch(currentServer + "kickuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'uid': user.user}),method: 'POST'}).then((res) => {
@@ -1177,29 +1179,40 @@ function openMainArea() {
 		});
 	}
 
-	fetch(currentServer + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
-		if (!res.ok) {
-			openLoginArea();
-			clearTimeout(ttimer);
-			return;
+	let audioBar = document.createElement("div");
+	audioBar.classList.add("mediabar");
+
+	let audioPlayPause = document.createElement("button");
+	audioPlayPause.addEventListener("click",function() {
+		if (playedAudio == null) return;
+		if (playedAudio.paused) {
+			playedAudio.play();
+		}else {
+			playedAudio.pause();
 		}
-		loadchats();
-		getUpdates();
-		getInfo(logininfo.uid, (info) => {
-			namelbl.innerText = info.name;
-			pfpimg.src = getpfp(info.picture);
-			currentuser = info;
-		})
-		fetch(currentServer + "getmutedchats", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => { //Get server-side muted chats.
-			if (res.ok) {
-				res.text().then((text) => {
-					servermutedchats = JSON.parse(text);
-				});
-			}
-		})
-		mutedchats = JSON.parse(localStorage.getItem("mutedchats") ?? "[]");
-		notificationCheck();
+		updateAudioBar();
 	})
+	audioBar.appendChild(audioPlayPause);
+
+	let audioTitle = document.createElement("label");
+	audioBar.appendChild(audioTitle);
+
+	function updateAudioBar() {
+		if (playedAudio == null) {
+			audioBar.style.display = "none";
+			audioTitle.innerText = "";
+			audioPlayPause.innerHTML = "";
+		}else {
+			audioBar.style.display = "";
+			if (playedAudio.paused) {
+				audioPlayPause.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M336-282.24v-395.52Q336-694 346.93-704t25.5-10q4.55 0 9.56 1.5 5.01 1.5 9.69 4.37L697-510q8 5.32 12.5 13.31 4.5 7.98 4.5 16.85 0 8.87-4.5 16.86Q705-455 697-450L391.67-251.75q-4.68 2.88-9.84 4.31Q376.68-246 372-246q-14.4 0-25.2-10-10.8-10-10.8-26.24Z"/></svg>';
+			}else {
+				audioPlayPause.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M636-228q-29.7 0-50.85-21.15Q564-270.3 564-300v-360q0-29.7 21.15-50.85Q606.3-732 636-732h24q29.7 0 50.85 21.15Q732-689.7 732-660v360q0 29.7-21.15 50.85Q689.7-228 660-228h-24Zm-336 0q-29.7 0-50.85-21.15Q228-270.3 228-300v-360q0-29.7 21.15-50.85Q270.3-732 300-732h24q29.7 0 50.85 21.15Q396-689.7 396-660v360q0 29.7-21.15 50.85Q353.7-228 324-228h-24Z"/></svg>';
+			}
+		}
+	}
+
+	updateAudioBar();
 
 	let chatslist = createLazyList();
 	let currentchatid = 0;
@@ -1825,11 +1838,36 @@ function openMainArea() {
 	
 	leftTitleBar.appendChild(profilebtn);
 	leftArea.appendChild(leftTitleBar);
+	leftArea.appendChild(audioBar);
 	leftArea.appendChild(chatslist.element);
 	maincont.appendChild(leftArea);
 	maincont.appendChild(rightArea);
 	
 	document.body.appendChild(maincont);
+
+	fetch(currentServer + "setonline", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
+		if (!res.ok) {
+			openLoginArea();
+			clearTimeout(ttimer);
+			return;
+		}
+		loadchats();
+		getUpdates();
+		getInfo(logininfo.uid, (info) => {
+			namelbl.innerText = info.name;
+			pfpimg.src = getpfp(info.picture);
+			currentuser = info;
+		})
+		fetch(currentServer + "getmutedchats", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => { //Get server-side muted chats.
+			if (res.ok) {
+				res.text().then((text) => {
+					servermutedchats = JSON.parse(text);
+				});
+			}
+		})
+		mutedchats = JSON.parse(localStorage.getItem("mutedchats") ?? "[]");
+		notificationCheck();
+	})
 
 
 	function createChatView(chatid,ugid) {
@@ -1881,16 +1919,16 @@ function openMainArea() {
 		addRipple(optionsbtn,"rgba(255,200,0,0.6)");
 		optionsbtn.title = "Options";
 		optionsbtn.classList.add("cb")
-		optionsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M479.79-192Q450-192 429-213.21t-21-51Q408-294 429.21-315t51-21Q510-336 531-314.79t21 51Q552-234 530.79-213t-51 21Zm0-216Q450-408 429-429.21t-21-51Q408-510 429.21-531t51-21Q510-552 531-530.79t21 51Q552-450 530.79-429t-51 21Zm0-216Q450-624 429-645.21t-21-51Q408-726 429.21-747t51-21Q510-768 531-746.79t21 51Q552-666 530.79-645t-51 21Z"/></svg>';
+		optionsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M479.79-192Q450-192 429-213.21t-21-51Q408-294 429.21-315t51-21Q510-336 531-314.79t21 51Q552-234 530.79-213t-51 21Zm0-216Q450-408 429-429.21t-21-51Q408-510 429.21-531t51-21Q510-552 531-530.79t21 51Q552-450 530.79-429t-51 21Zm0-216Q450-624 429-645.21t-21-51Q408-726 429.21-747t51-21Q510-768 531-746.79t21 51Q552-666 530.79-645t-51 21Z"/></svg>';
 		optionsbtn.addEventListener("click",function(e) {
 			openmenu([{
 				content: "Mute...",
-				icon: '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
+				icon: '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 				callback: function() {
 					openmenu([
 						{
 							content: mutedchats.includes(chatid) ? "Unmute for this client" : "Mute for this client",
-							icon: mutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
+							icon: mutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 							callback: function() {
 								let index = mutedchats.indexOf(chatid);
 								if (index > -1) {
@@ -1902,7 +1940,7 @@ function openMainArea() {
 							}
 						}, {
 							content: servermutedchats.includes(chatid) ? "Unmute for this account" : "Mute for this account",
-							icon: servermutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
+							icon: servermutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 							callback: function() {
 								fetch(currentServer + "mutechat", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'toggle': !servermutedchats.includes(chatid)}),method: 'POST'}).then((res) => {
 									if (res.ok) {
@@ -2772,6 +2810,7 @@ function openMainArea() {
 					fd.setAttribute("data-audiopath", path);
 					let fileico = document.createElement("div");
 					fileico.classList.add("playico");
+					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M320-273v-414q0-17 12-28.5t28-11.5q5 0 10.5 1.5T381-721l326 207q9 6 13.5 15t4.5 19q0 10-4.5 19T707-446L381-239q-5 3-10.5 4.5T360-233q-16 0-28-11.5T320-273Z"/></svg>';
 					let filename = i.name;
 					fd.appendChild(fileico)
 					let il = document.createElement("div");
@@ -2786,7 +2825,8 @@ function openMainArea() {
 					fd.appendChild(il);
 
 					fd.addEventListener("click",function() {
-						playAudio(path);
+						playAudio(path, chatid);
+						audioTitle.innerText = filename;
 					})
 
 					msgbubble.appendChild(fd);
@@ -2801,7 +2841,7 @@ function openMainArea() {
 					fd.classList.add("filed");
 					addRipple(fd, "rgba(255,255,255,0.6)");
 					let fileico = document.createElement("div");
-					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M760-200H320q-33 0-56.5-23.5T240-280v-560q0-33 23.5-56.5T320-920h247q16 0 30.5 6t25.5 17l194 194q11 11 17 25.5t6 30.5v367q0 33-23.5 56.5T760-200Zm0-440L560-840v140q0 25 17.5 42.5T620-640h140ZM160-40q-33 0-56.5-23.5T80-120v-520q0-17 11.5-28.5T120-680q17 0 28.5 11.5T160-640v520h400q17 0 28.5 11.5T600-80q0 17-11.5 28.5T560-40H160Z"/></svg>';
+					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M760-200H320q-33 0-56.5-23.5T240-280v-560q0-33 23.5-56.5T320-920h247q16 0 30.5 6t25.5 17l194 194q11 11 17 25.5t6 30.5v367q0 33-23.5 56.5T760-200Zm0-440L560-840v140q0 25 17.5 42.5T620-640h140ZM160-40q-33 0-56.5-23.5T80-120v-520q0-17 11.5-28.5T120-680q17 0 28.5 11.5T160-640v520h400q17 0 28.5 11.5T600-80q0 17-11.5 28.5T560-40H160Z"/></svg>';
 					let filename = i.name;
 					fd.appendChild(fileico)
 					let il = document.createElement("div");

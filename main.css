@@ -740,6 +740,30 @@ a {
 	pointer-events: none;
 }
 
+.mediabar {
+	height: 28px;
+	font-size: small;
+	display: flex;
+	align-items: center;
+}
+
+.mediabar > button {
+	width: 28px;
+	height: 28px;
+	background: transparent;
+	border-radius: 0;
+}
+
+.mediabar > button:hover {
+	background-color: var(--transparent-hover);
+}
+
+.mediabar > label {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
 @keyframes bgappear {
 	from {opacity:0;}
 }
