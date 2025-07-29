@@ -681,23 +681,38 @@ a {
 	color:black;
 }
 
-filed {
+.filed {
 	display:flex;
 	align-items:center;
 	border-radius:5px;
-	padding:4px;
+	padding:8px;
+	cursor:pointer;
+	background: transparent;
+	text-align: left;
 }
 
-filed:hover {
-	background: rgba(255,255,255,0.1);
+.filed:hover {
+	background: var(--transparent-hover);
 }
 
-filed > div > label {
-	text-decoration: none !important;
-	color:black;
-	font-weight:bold;
+.filed > div:first-child {
+	background-color: orange;
+	border-radius: 100%;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 8px;
+}
+
+.filed > div > label {
 	cursor:pointer;
 	overflow-wrap:anywhere;
+}
+
+.filed > div > label:first-child {
+	font-weight:bold;
 }
 
 .typinglabel {

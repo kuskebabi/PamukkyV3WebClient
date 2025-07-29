@@ -368,6 +368,21 @@ function openLoginArea() {
 
 function openMainArea() {
 	document.title = "Pamukky";
+
+	let playedAudio = null;
+	let playedAudioPath = null;
+	let playedAudioChat = null;
+
+	function playAudio(path) {
+		if (playedAudio != null) {
+			playedAudio.pause();
+			playedAudio = null
+		}
+		playedAudio = new Audio(path);
+		playedAudio.play();
+		playedAudioPath = path;
+	}
+
 	Notification.requestPermission();
 
 	document.body.innerHTML = "";
@@ -2704,6 +2719,12 @@ function openMainArea() {
 			}
 			msgm.appendChild(msgbubble);
 			if (msg.files != undefined) {
+				if (msg.gImages == undefined) msg.gImages = [];
+				if (msg.gVideos == undefined) msg.gVideos = [];
+				if (msg.gAudio == undefined) msg.gAudio = [];
+				if (msg.gFiles == undefined) msg.gFiles = [];
+
+				//Grid
 				msg.gImages.forEach(function(i) {
 					let imgs = new Image();
 					imgs.src = i.url.replace(/%SERVER%/g,currentServer) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
@@ -2739,19 +2760,19 @@ function openMainArea() {
 					vid.title = filename;
 					msgbubble.appendChild(vid);
 				})
-				if (msg.gImages.length > 0) msgbubble.appendChild(document.createElement("br"));
-				msg.gFiles.forEach(function(i) {
-					let a = document.createElement("a");
-					a.style.position = "relative";
-					a.download = i.name;
-					a.target = "_blank";
-					a.href = i.url.replace(/%SERVER%/g,currentServer);
-					let fd = document.createElement("filed");
-					addRipple(a,"rgba(255,255,255,0.6)");
+				// -----
+				if (msg.gImages.length + msg.gVideos.length > 0) msgbubble.appendChild(document.createElement("br"));
+
+				// List
+				msg.gAudio.forEach(function(i) {
+					let fd = document.createElement("button");
+					fd.classList.add("filed");
+					addRipple(fd, "rgba(255,255,255,0.6)");
+					let path = i.url.replace(/%SERVER%/g,currentServer);
+					fd.setAttribute("data-audiopath", path);
 					let fileico = document.createElement("div");
-					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="M319-250h322v-60H319v60Zm0-170h322v-60H319v60ZM220-80q-24 0-42-18t-18-42v-680q0-24 18-42t42-18h361l219 219v521q0 24-18 42t-42 18H220Zm331-554v-186H220v680h520v-494H551ZM220-820v186-186 680-680Z"/></svg>';
+					fileico.classList.add("playico");
 					let filename = i.name;
-					a.title = filename;
 					fd.appendChild(fileico)
 					let il = document.createElement("div");
 					il.style.display = "flex";
@@ -2763,8 +2784,42 @@ function openMainArea() {
 					sizel.innerText = humanFileSize(i.size);
 					il.appendChild(sizel);
 					fd.appendChild(il);
-					a.appendChild(fd)
-					msgbubble.appendChild(a);
+
+					fd.addEventListener("click",function() {
+						playAudio(path);
+					})
+
+					msgbubble.appendChild(fd);
+				})
+				msg.gFiles.forEach(function(i) {
+					let a = document.createElement("a");
+					a.style.position = "relative";
+					a.download = i.name;
+					a.target = "_blank";
+					a.href = i.url.replace(/%SERVER%/g,currentServer);
+					let fd = document.createElement("button");
+					fd.classList.add("filed");
+					addRipple(fd, "rgba(255,255,255,0.6)");
+					let fileico = document.createElement("div");
+					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M760-200H320q-33 0-56.5-23.5T240-280v-560q0-33 23.5-56.5T320-920h247q16 0 30.5 6t25.5 17l194 194q11 11 17 25.5t6 30.5v367q0 33-23.5 56.5T760-200Zm0-440L560-840v140q0 25 17.5 42.5T620-640h140ZM160-40q-33 0-56.5-23.5T80-120v-520q0-17 11.5-28.5T120-680q17 0 28.5 11.5T160-640v520h400q17 0 28.5 11.5T600-80q0 17-11.5 28.5T560-40H160Z"/></svg>';
+					let filename = i.name;
+					fd.appendChild(fileico)
+					let il = document.createElement("div");
+					il.style.display = "flex";
+					il.style.flexDirection = "column";
+					let namel = document.createElement("label");
+					namel.innerText = filename;
+					il.appendChild(namel);
+					let sizel = document.createElement("label");
+					sizel.innerText = humanFileSize(i.size);
+					il.appendChild(sizel);
+					fd.appendChild(il);
+
+					fd.addEventListener("click",function() {
+						a.click();
+					})
+
+					msgbubble.appendChild(fd);
 				})
 
 			}
