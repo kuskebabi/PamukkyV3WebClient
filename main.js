@@ -2833,7 +2833,6 @@ function openMainArea() {
 				})
 				msg.gFiles.forEach(function(i) {
 					let a = document.createElement("a");
-					a.style.position = "relative";
 					a.download = i.name;
 					a.target = "_blank";
 					a.href = i.url.replace(/%SERVER%/g,currentServer);
