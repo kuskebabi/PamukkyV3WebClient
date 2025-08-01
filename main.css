@@ -443,10 +443,13 @@ ma {
 	height: 35px;
 	padding: 4px !important;
 }
-.reactionbtn:hover {
+.reactionbtn.reacted {
+	background-color: var(--transparent-hover);
+	transform: scale(0.9);
+}
+.reactionbtn:hover:not(.reacted) {
 	transform: scale(1.2);
 }
-
 .reactionbtn:active {
 	transform: scale(0.9);
 }

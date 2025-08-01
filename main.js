@@ -2457,12 +2457,26 @@ function openMainArea() {
 							let itm = item.toString();
 							let reactionbtn = document.createElement("button");
 							reactionbtn.classList.add("reactionbtn");
+							let reacted = false;
+							if (msg.reactions) {
+								if (msg.reactions[itm]) {
+									Object.values(msg.reactions[itm]).forEach(function(s) {
+										if (s.sender == logininfo.uid) {
+											reactionbtn.classList.add("reacted");
+											reacted = true;
+										}
+									})
+								}
+							}
 							reactionbtn.innerText = itm;
 							reactionsdiv.appendChild(reactionbtn);
 							reactionbtn.addEventListener("click",function() {
-								fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'}).then((res) => {
-									
-								})
+								fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'})
+								if (reacted) {
+									reactionbtn.classList.remove("reacted");
+								}else {
+									reactionbtn.classList.add("reacted");
+								}
 								clik();
 							});
 						});
@@ -2648,7 +2662,13 @@ function openMainArea() {
 						clik();
 					})
 					cnt.appendChild(deletebutton);
-					let clik = function() {ctxdiv.style.opacity = "0";setTimeout(function() {document.body.removeChild(ctxdiv); maincont.removeEventListener("pointerdown", clik);},200)}
+					let clik = function() {
+						ctxdiv.style.pointerEvents = "none";
+						ctxdiv.style.opacity = "0";
+						setTimeout(function() {
+							document.body.removeChild(ctxdiv); maincont.removeEventListener("pointerdown", clik);
+						},200)
+					}
 					if (selectedMessages.length > 0) {
 						deletebutton.disabled = false;
 					}else {
@@ -2935,7 +2955,6 @@ function openMainArea() {
 		
 		sendbtn.addEventListener("click",function() {
 			let content = msginput.value.trim();
-			sendbtn.disabled = true;
 			
 			let msgid = "send" + Math.round(Math.random() * 100000);
 			addmsg({
@@ -2988,11 +3007,14 @@ function openMainArea() {
 				});
 			}
 			upload();
+
 			fileslist = [];
 			atc.innerHTML = "";
 			msginput.value = "";
 			rc.style.display = "none";
 			replymsgid = undefined;
+			sendbtn.disabled = true;
+			msginput.focus();
 		});
 		
 		msginput.addEventListener("keydown",function(e) {
