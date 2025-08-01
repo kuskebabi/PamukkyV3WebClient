@@ -1713,6 +1713,8 @@ function openMainArea() {
 							if (res.ok) {
 								namelbl.innerText = nameinp.value;
 								pfpimg.src = getpfp(currentuser.picture);
+								currentuser.name = nameinp.value;
+								currentuser.description = desinp.value;
 							}
 						})
 					}
@@ -1721,6 +1723,8 @@ function openMainArea() {
 				fetch(currentServer + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value  }),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						namelbl.innerText = nameinp.value;
+						currentuser.name = nameinp.value;
+						currentuser.description = desinp.value;
 					}
 				})
 			}
@@ -3231,7 +3235,7 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		if (lastheight != 0) {
 			if (direction == -1) {
 				let diff = lastheight - listelement.offsetHeight;
-				listelement.scrollTop += Math.max(diff);
+				listelement.scrollTop += Math.max(diff, 0);
 			}
 		}
 		lastheight = listelement.offsetHeight;
