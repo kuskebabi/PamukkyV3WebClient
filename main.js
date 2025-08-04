@@ -910,7 +910,6 @@ function openMainArea() {
 							if (confirm("Do you really want to leave this group?\nIf you are the owner, promote someone else as the owner BEFORE leaving the group.")) {
 								fetch(currentServer + "leavegroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id }),method: 'POST'}).then((res) => {
 									if (res.ok) {
-										loadchats();
 										diag.closebtn.click();
 									}else {
 
@@ -1171,6 +1170,27 @@ function openMainArea() {
 								if (val.hasOwnProperty("online") && val["online"] != null) {
 									updateOnlineHook(uid, val["online"]);
 								}
+								break;
+							case "chatslist":
+								Object.keys(json[key]).forEach(function(ikey) {
+									let value = json[key][ikey];
+									if (value == "DELETED") {
+										let indexToRemove = null;
+										chats.forEach(function(i,d) {
+											let id = i["chatid"] ?? i.group;
+											if (id == ikey) {
+												indexToRemove = d;
+											}
+										})
+										if (indexToRemove != null) {
+											chats.splice(indexToRemove, 1);
+										}
+									}else {
+										chats.push(value);
+									}
+
+									chatslist.setList([{}, ...chats, {}]);
+								});
 								break;
 						}
 					});
@@ -1465,7 +1485,6 @@ function openMainArea() {
 			fetch(currentServer + "adduserchat", {body: JSON.stringify({'token': logininfo.token,'email': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					res.text().then((text) => {
-						loadchats();
 						diag.closebtn.click();
 					})
 				}
@@ -1536,7 +1555,6 @@ function openMainArea() {
 						console.log(data);
 						if (data.status == "success") {
 							fetch(currentServer + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
-								loadchats();
 								diag.closebtn.click();
 								diaga.closebtn.click();
 							})
@@ -1544,7 +1562,6 @@ function openMainArea() {
 					})}).catch(function(error) {console.error(error);});
 				}else {
 					fetch(currentServer + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': "", 'info': desinp.value }),method: 'POST'}).then((res) => {
-						loadchats();
 						diag.closebtn.click();
 						diaga.closebtn.click();
 					})
@@ -1573,7 +1590,6 @@ function openMainArea() {
 		joingroupbtn.addEventListener("click",function() {
 			fetch(currentServer + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
-					loadchats();
 					diag.closebtn.click();
 				}
 			})
@@ -1871,6 +1887,7 @@ function openMainArea() {
 		})
 		mutedchats = JSON.parse(localStorage.getItem("mutedchats") ?? "[]");
 		notificationCheck();
+		fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["chatslist"]}), method: "POST"});
 	})
 
 
@@ -2204,7 +2221,6 @@ function openMainArea() {
 									joinbtn.disabled = true;
 									fetch(currentServer + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': ugid}),method: 'POST'}).then((res) => {
 										if (res.ok) {
-											loadchats();
 											openchat(chatid);
 										}
 									});

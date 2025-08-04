@@ -666,6 +666,7 @@ button.fab:hover:active {
 	color: transparent;
 	position: relative;
 	overflow: hidden;
+	display: inline-block;
 }
 
 .loading::before {
