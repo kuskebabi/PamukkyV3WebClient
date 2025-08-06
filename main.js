@@ -1332,13 +1332,7 @@ function openMainArea() {
 	hashchange(location.href);
 
 	function chatsListItemGenerator(item, itmcont) {
-		if (!item.hasOwnProperty("lastmessage") || item["lastmessage"] == null) {
-			item["lastmessage"] = {
-				time: new Date(),
-				content: "No Messages. Send one to start conversation.",
-				sender: "0"
-			}
-		}
+		let id = item["chatid"] ?? item.group;
 		itmcont.classList.add("chatitem");
 		addRipple(itmcont,"rgba(255,200,0,0.6)");
 		let pfpimg = document.createElement("img")
@@ -1352,35 +1346,52 @@ function openMainArea() {
 		nameh4.classList.add("loading");
 		namecont.appendChild(nameh4)
 		let lmt = document.createElement("time");
-		let dt = new Date(item.lastmessage.time);
-		let dtt = new Date(item.lastmessage.time);
-		let nowdate = new Date();
-		//try {
-		if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
-			lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-		}else {
-			lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-		}
+		lmt.innerText = "Loading..."
+		lmt.classList.add("loading");
 		//}catch {}
 		namecont.appendChild(lmt);
 		infocnt.appendChild(namecont);
 		let lastmsgcontent = document.createElement("label");
+		lastmsgcontent.innerText = "Loading..."
 		lastmsgcontent.classList.add("loading");
-		lastmsgcontent.innerText = "User: " + item.lastmessage.content.split("\n")[0];
-		if (item.lastmessage.sender == "0") {
-			formatSystemMessage(item.lastmessage.content, function(text) {
-				lastmsgcontent.innerText = text;
-				lastmsgcontent.classList.remove("loading");
-			});
-		}else {
-			getInfo(item.lastmessage.sender, function(sender) {
-				lastmsgcontent.innerText = sender.name + ": " + item.lastmessage.content.split("\n")[0];
-				lastmsgcontent.classList.remove("loading");
-			});
-		}
 
 		infocnt.appendChild(lastmsgcontent)
 		itmcont.appendChild(infocnt);
+
+		fetch(currentServer + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': id, 'prefix': "#0"}),method: 'POST'}).then(function(response) { response.json().then(function(data) {
+			if (data["status"]) {
+				console.log(data);
+			}else {
+				let msg = Object.values(data)[0];
+				if (msg) {
+					let dt = new Date(msg.time);
+					let dtt = new Date(msg.time);
+					let nowdate = new Date();
+					//try {
+					if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
+						lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+					}else {
+						lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+					}
+					lastmsgcontent.innerText = "User: " + msg.content.split("\n")[0];
+					if (msg.sender == "0") {
+						formatSystemMessage(msg.content, function(text) {
+							lastmsgcontent.innerText = text;
+							lastmsgcontent.classList.remove("loading");
+						});
+					}else {
+						getInfo(msg.sender, function(sender) {
+							lastmsgcontent.innerText = sender.name + ": " + msg.content.split("\n")[0];
+							lastmsgcontent.classList.remove("loading");
+						});
+					}
+				}else {
+					lastmsgcontent.innerText = "No Messages. Send one to start conversation.";
+				}
+			}
+			lmt.classList.remove("loading");
+			lastmsgcontent.classList.remove("loading");
+		})}).catch(function(error) {console.error(error);});
 
 		getInfo(item.type == "user" ? item.user : item.group, function(info) {
 			pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
