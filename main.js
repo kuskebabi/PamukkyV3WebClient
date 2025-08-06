@@ -1387,6 +1387,7 @@ function openMainArea() {
 					}
 				}else {
 					lastmsgcontent.innerText = "No Messages. Send one to start conversation.";
+					lmt.style.display = "none";
 				}
 			}
 			lmt.classList.remove("loading");
