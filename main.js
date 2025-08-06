@@ -435,7 +435,6 @@ function openMainArea() {
 
 		//Content
 		let pfpimge = document.createElement("img");
-		pfpimge.style.boxShadow = "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)";
 		pfpimge.classList.add("circleimg");
 		pfpimge.loading = "lazy";
 		pfpimge.style.width = "80px";
@@ -2541,7 +2540,7 @@ function openMainArea() {
 								replycnt.innerText = text;
 							})
 						}else {
-							replycnt.innerText = msg.content;
+							replycnt.innerText = msg.content.length > 0 ? msg.content : "Message";
 						}
 						getInfo(msg.sender,(user) => {
 							replysname.innerText = user.name;
@@ -2784,7 +2783,7 @@ function openMainArea() {
 						replycnt.innerText = text;
 					})
 				}else {
-					replycnt.innerText = msg.replymsgcontent;
+					replycnt.innerText = msg.replymsgcontent.length > 0 ? msg.replymsgcontent : "Message";
 				}
 				rc.appendChild(replycnt);
 				msgbubble.appendChild(rc);

@@ -357,6 +357,7 @@ msgbar > div > textarea {
 	margin: 4px;
 	background:white;
 	flex-shrink: 0;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .chatitem {
@@ -391,6 +392,7 @@ msgbar > div > textarea {
 	margin-right: 5px;
 	flex-shrink:0;
 	background:white;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .chatitem > infoarea {
@@ -474,8 +476,9 @@ msgcont > img {
 	width: 40px;
 	height:40px;
 	border-radius: 100%;
-	margin: 0px 4px 0px 4px;
+	margin: 0px 8px 0px 8px;
 	background:white;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 msgmain {
@@ -487,11 +490,12 @@ msgmain {
 msgmain > msgbubble {
 	display:block;
 	border-radius: 6px;
-	padding: 5px;
+	padding: 6px;
 	background: rgba(100,100,100,0.4);
 	width:auto;
 	animation-name: msgbappear;
 	animation-duration: 0.5s;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 msgmain.sender > msgbubble {
@@ -606,6 +610,7 @@ button.fab:hover:active {
 	overflow:hidden;
 	background: rgb(240,240,240);
 	transition: opacity 200ms;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .customctx {
@@ -621,6 +626,7 @@ button.fab:hover:active {
 	width: fit-content;
 	animation-name: ctxappear;
 	animation-duration: 200ms;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .popupmenu {
@@ -635,6 +641,7 @@ button.fab:hover:active {
 	opacity: 0;
 	display: flex;
 	flex-direction: column;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .popupmenu > button {
