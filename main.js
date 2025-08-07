@@ -1145,6 +1145,10 @@ function openMainArea() {
 				});
 			}
 				
+		}).catch(function() {
+			setTimeout(function() {
+				notificationCheck();
+			}, 3000);
 		});
 	}
 
@@ -1195,6 +1199,10 @@ function openMainArea() {
 					});
 				});
 			}
+		}).catch(function() {
+			setTimeout(function() {
+				getUpdates();
+			}, 3000);
 		});
 	}
 
@@ -1903,6 +1911,7 @@ function openMainArea() {
 
 
 	function createChatView(chatid,ugid) {
+		let menuspawned = false;
 		let isKilled = false;
 		function kill() {
 			isKilled = true;
@@ -2316,7 +2325,7 @@ function openMainArea() {
 			}else {
 				element.style.background = "";
 			}
-			let msgreactions = element.querySelector(".msgreactions");
+			let msgreactions = element.querySelector("msgreacts");
 			if (msgreactions) {
 				msgreactions.innerHTML = "";
 				let reactions = data.reactions;
@@ -2352,6 +2361,62 @@ function openMainArea() {
 						}
 
 						cnter.innerText = rkk.length;
+
+						reacc.addEventListener("contextmenu", function(event) {
+							let diag = opendialog();
+							diag.title.innerText = "Reactions: " + ir;
+							diag.inner.style.overflow = "hidden";
+							diag.inner.style.display = "flex";
+							diag.inner.style.flexDirection = "column";
+							
+							let reactionslist = createLazyList("div","div");
+							reactionslist.element.classList.add("clist");
+							reactionslist.setGetSize(function(list,index) {
+								return 56;
+							});
+							reactionslist.setItemGenerator(function(list,index,urow) {
+								console.log(list);
+								let item = list[index];
+								if (item == undefined) return;
+								console.log(item);
+								urow.style.display = "flex";
+								urow.style.width = "100%";
+								urow.style.height = "56px";
+								urow.style.padding = "8px";
+								let uname = document.createElement("div");
+								uname.style.display = "flex";
+								uname.style.alignItems = "center";
+								uname.style.width = "100%";
+								let userpfp = document.createElement("img");
+								userpfp.classList.add("circleimg");
+								userpfp.classList.add("loading");
+								userpfp.loading = "lazy";
+								userpfp.style.cursor = "pointer";
+								userpfp.addEventListener("click",function() {
+									viewInfo(item.sender, "user");
+								});
+								let usernamelbl = document.createElement("label");
+								usernamelbl.classList.add("loading");
+								usernamelbl.innerText = "loading..."
+								usernamelbl.style.marginLeft = "8px";
+								usernamelbl.style.marginRight = "8px";
+								uname.appendChild(userpfp);
+								uname.appendChild(usernamelbl);
+								getInfo(item.sender, function(uii) {
+									userpfp.src = getpfp(uii.picture);
+									usernamelbl.innerText = uii.name;
+									userpfp.classList.remove("loading");
+									usernamelbl.classList.remove("loading");
+									userpfp.title = "View profile of " + uii.name;
+								});
+								urow.appendChild(uname);
+							});
+
+							reactionslist.setList(Object.values(react));
+
+							diag.inner.appendChild(reactionslist.element);
+							event.preventDefault();
+						})
 					});
 				}
 				// No need to check for these if there wasn't reaction container. Because these wouldn't exist too.
@@ -2457,263 +2522,275 @@ function openMainArea() {
 					pinnedmessageslist.updateItem(id);
 				}
 			}
+			function reply() {
+				replymsgid = id;
+				rc.style.display = "";
+				if (msg.sender == "0") {
+					replycnt.innerText = "Pamuk is here!";
+					formatSystemMessage(msg.content, function(text) {
+						replycnt.innerText = text;
+					})
+				}else {
+					replycnt.innerText = msg.content.length > 0 ? msg.content : "Message";
+				}
+				getInfo(msg.sender,(user) => {
+					replysname.innerText = user.name;
+				})
+				if (pinnedmessageslist.element.style.display == "") {
+					pinsbtn.click();
+				}
+				msginput.focus();
+			}
+
 			msgc.addEventListener("click",function() {
 				if (selectedMessages.length > 0) {
 					selectmessage();
 				}
 			})
 
-			msgc.addEventListener("contextmenu",function(event) {
-				let tagname = event.target.tagName.toString();
-				if (tagname.toLowerCase() == "video") return;
-				if (tagname.toLowerCase() == "a") return;
-				if (tagname.toLowerCase() == "img") return;
-				if (msg.type != "time") {
-					let ctxdiv = document.createElement("div");
-					ctxdiv.style.position = "absolute";
-					ctxdiv.style.top = event.clientY + "px";
-					ctxdiv.style.left = event.clientX + "px";
-					ctxdiv.classList.add("customctx");
-					ctxdiv.style.width = "315px";
-					if (crole.AllowSendingReactions == true) {
-						let reactionsdiv = document.createElement("div");
-						reactionsdiv.style.maxWidth = "315px";
-						reactionsdiv.style.overflow = "visible";
-						reactionsdiv.style.marginBottom = "8px";
-						reactionemojis.forEach((item) => {
-							let itm = item.toString();
-							let reactionbtn = document.createElement("button");
-							reactionbtn.classList.add("reactionbtn");
-							let reacted = false;
-							if (msg.reactions) {
-								if (msg.reactions[itm]) {
-									Object.values(msg.reactions[itm]).forEach(function(s) {
-										if (s.sender == logininfo.uid) {
-											reactionbtn.classList.add("reacted");
-											reacted = true;
-										}
-									})
-								}
-							}
-							reactionbtn.innerText = itm;
-							reactionsdiv.appendChild(reactionbtn);
-							reactionbtn.addEventListener("click",function() {
-								fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'})
-								if (reacted) {
-									reactionbtn.classList.remove("reacted");
-								}else {
-									reactionbtn.classList.add("reacted");
-								}
-								clik();
-							});
-						});
-						ctxdiv.appendChild(reactionsdiv);
-					}
-					let cnt = document.createElement("div");
-					ctxdiv.appendChild(cnt);
-					if (extra) {
-						if (extra.pinnedmessageslist == true) {
-							let gotobutton = document.createElement("button");
-							addRipple(gotobutton,"rgba(255,200,0,0.6)",true);
-							gotobutton.innerText = "Go to message";
-							gotobutton.disabled = !crole.AllowSending;
-							gotobutton.addEventListener("click", function() {
-								if (pinnedmessageslist.element.style.display == "") {
-									pinsbtn.click();
-								}
-								showmessage(id);
-								clik();
-							})
-							cnt.appendChild(gotobutton);
-						}
-					}
-					let replybutton = document.createElement("button");
-					addRipple(replybutton,"rgba(255,200,0,0.6)",true);
-					replybutton.innerText = "Reply";
-					replybutton.disabled = !crole.AllowSending;
-					replybutton.addEventListener("click", function() {
-						replymsgid = id;
-						rc.style.display = "";
-						if (msg.sender == "0") {
-							replycnt.innerText = "Pamuk is here!";
-							formatSystemMessage(msg.content, function(text) {
-								replycnt.innerText = text;
-							})
-						}else {
-							replycnt.innerText = msg.content.length > 0 ? msg.content : "Message";
-						}
-						getInfo(msg.sender,(user) => {
-							replysname.innerText = user.name;
-						})
-						if (pinnedmessageslist.element.style.display == "") {
-							pinsbtn.click();
-						}
-						msginput.focus();
-						clik();
-					})
-					cnt.appendChild(replybutton);
-					let forwardbutton = document.createElement("button");
-					addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
-					forwardbutton.innerText = "Forward message...";
-					forwardbutton.addEventListener("click", function() {
-						let diag = opendialog();
-						diag.title.innerText = "Forward message";
-						diag.inner.style.overflow = "hidden";
-						diag.inner.style.display = "flex";
-						diag.inner.style.flexDirection = "column";
-						let bottomBar = document.createElement("div");
-						bottomBar.classList.add("bbar");
-						let forwardChatsLabel = document.createElement("label");
-						forwardChatsLabel.style.textOverflow = "ellipsis";
-						forwardChatsLabel.style.overflow = "hidden";
-						forwardChatsLabel.style.whiteSpace = "nowrap";
-						forwardChatsLabel.style.width = "100%";
-						bottomBar.appendChild(forwardChatsLabel);
-						let sendButton = document.createElement("button");
-						sendButton.classList.add("cb");
-						sendButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
-						bottomBar.appendChild(sendButton);
-						let fchatselectsid = [];
-						let gous = [];
-						function refreshlabel() {
-							forwardChatsLabel.innerText = gous.join(", ");
-						}
-						let chatslist = createLazyList("div","button");
-						chatslist.element.classList.add("clist");
-						chatslist.setGetSize(function(list,index) {
-							return 60;
-						});
-						chatslist.setItemGenerator(function(list,index,itmcont) {
-							let item = list[index];
-							if (item == undefined) return;
-							chatsListItemGenerator(item, itmcont);
-							let cinfo = {};
-							let id = item["chatid"] ?? item.group;
-							itmcont.addEventListener("click",function() {
-								if (fchatselectsid.includes(id)) {
-									gous.splice(fchatselectsid.indexOf(id),1);
-									fchatselectsid.splice(fchatselectsid.indexOf(id),1);
-								}else {
-									fchatselectsid.push(id);
-									gous.push(cinfo.name);
-								}
-								refreshlabel();
-								chatslist.updateItem();
-							})
-							getInfo(item.type == "user" ? item.user : item.group, function(info) {
-								cinfo = info;
-							});
-						});
-
-						chatslist.setItemUpdater(function(list,index,itmcont) {
-							let item = list[index];
-							if (item == undefined) return;
-							let id = item["chatid"] ?? item.group;
-							itmcont.style.background = fchatselectsid.includes(id) ? "orange" : "";
-						});
-
-						fetch(currentServer + "getchatslist", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
-							if (res.ok) {
-								res.text().then((text) => {
-									chats = JSON.parse(text);
-									chatslist.setList(chats);
+			function spawnmenu(pos) {
+				if (menuspawned) return;
+				menuspawned = true;
+				let ctxdiv = document.createElement("div");
+				ctxdiv.style.position = "absolute";
+				ctxdiv.style.top = pos.y + "px";
+				ctxdiv.style.left = pos.x + "px";
+				ctxdiv.classList.add("customctx");
+				ctxdiv.style.width = "315px";
+				if (crole.AllowSendingReactions == true) {
+					let reactionsdiv = document.createElement("div");
+					reactionsdiv.style.maxWidth = "315px";
+					reactionsdiv.style.overflow = "visible";
+					reactionsdiv.style.marginBottom = "8px";
+					reactionemojis.forEach((item) => {
+						let itm = item.toString();
+						let reactionbtn = document.createElement("button");
+						reactionbtn.classList.add("reactionbtn");
+						let reacted = false;
+						if (msg.reactions) {
+							if (msg.reactions[itm]) {
+								Object.values(msg.reactions[itm]).forEach(function(s) {
+									if (s.sender == logininfo.uid) {
+										reactionbtn.classList.add("reacted");
+										reacted = true;
+									}
 								})
 							}
-						})
-						diag.inner.appendChild(chatslist.element)
-						diag.inner.appendChild(bottomBar)
-
-						sendButton.onclick = function() {
-							let messages = selectedMessages;
-							if (messages.length == 0) messages = [id];
-							fetch(currentServer + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
-
-							})
-							diag.closebtn.click();
 						}
-						clik();
-					})
-					cnt.appendChild(forwardbutton);
-					let selectbutton = document.createElement("button");
-					selectbutton.innerText = "Select...";
-					addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
-					selectbutton.addEventListener("click", function() {
-						selectmessage();
-						clik();
-					})
-					cnt.appendChild(selectbutton);
-					let savebtn = document.createElement("button");
-					savebtn.innerText = "Save message";
-					addRipple(savebtn,"rgba(255,200,0,0.6)",true);
-					savebtn.addEventListener("click", function() {
+						reactionbtn.innerText = itm;
+						reactionsdiv.appendChild(reactionbtn);
+						reactionbtn.addEventListener("click",function() {
+							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'})
+							if (reacted) {
+								reactionbtn.classList.remove("reacted");
+							}else {
+								reactionbtn.classList.add("reacted");
+							}
+							clik();
+						});
+					});
+					ctxdiv.appendChild(reactionsdiv);
+				}
+				let cnt = document.createElement("div");
+				ctxdiv.appendChild(cnt);
+				if (extra) {
+					if (extra.pinnedmessageslist == true) {
+						let gotobutton = document.createElement("button");
+						addRipple(gotobutton,"rgba(255,200,0,0.6)",true);
+						gotobutton.innerText = "Go to message";
+						gotobutton.disabled = !crole.AllowSending;
+						gotobutton.addEventListener("click", function() {
+							if (pinnedmessageslist.element.style.display == "") {
+								pinsbtn.click();
+							}
+							showmessage(id);
+							clik();
+						})
+						cnt.appendChild(gotobutton);
+					}
+				}
+				let replybutton = document.createElement("button");
+				addRipple(replybutton,"rgba(255,200,0,0.6)",true);
+				replybutton.innerText = "Reply";
+				replybutton.disabled = !crole.AllowSending;
+				replybutton.addEventListener("click", function() {
+					reply();
+					clik();
+				})
+				cnt.appendChild(replybutton);
+				let forwardbutton = document.createElement("button");
+				addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
+				forwardbutton.innerText = "Forward message...";
+				forwardbutton.addEventListener("click", function() {
+					let diag = opendialog();
+					diag.title.innerText = "Forward message";
+					diag.inner.style.overflow = "hidden";
+					diag.inner.style.display = "flex";
+					diag.inner.style.flexDirection = "column";
+					let bottomBar = document.createElement("div");
+					bottomBar.classList.add("bbar");
+					let forwardChatsLabel = document.createElement("label");
+					forwardChatsLabel.style.textOverflow = "ellipsis";
+					forwardChatsLabel.style.overflow = "hidden";
+					forwardChatsLabel.style.whiteSpace = "nowrap";
+					forwardChatsLabel.style.width = "100%";
+					bottomBar.appendChild(forwardChatsLabel);
+					let sendButton = document.createElement("button");
+					sendButton.classList.add("cb");
+					sendButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
+					bottomBar.appendChild(sendButton);
+					let fchatselectsid = [];
+					let gous = [];
+					function refreshlabel() {
+						forwardChatsLabel.innerText = gous.join(", ");
+					}
+					let chatslist = createLazyList("div","button");
+					chatslist.element.classList.add("clist");
+					chatslist.setGetSize(function(list,index) {
+						return 60;
+					});
+					chatslist.setItemGenerator(function(list,index,itmcont) {
+						let item = list[index];
+						if (item == undefined) return;
+						chatsListItemGenerator(item, itmcont);
+						let cinfo = {};
+						let id = item["chatid"] ?? item.group;
+						itmcont.addEventListener("click",function() {
+							if (fchatselectsid.includes(id)) {
+								gous.splice(fchatselectsid.indexOf(id),1);
+								fchatselectsid.splice(fchatselectsid.indexOf(id),1);
+							}else {
+								fchatselectsid.push(id);
+								gous.push(cinfo.name);
+							}
+							refreshlabel();
+							chatslist.updateItem();
+						})
+						getInfo(item.type == "user" ? item.user : item.group, function(info) {
+							cinfo = info;
+						});
+					});
+
+					chatslist.setItemUpdater(function(list,index,itmcont) {
+						let item = list[index];
+						if (item == undefined) return;
+						let id = item["chatid"] ?? item.group;
+						itmcont.style.background = fchatselectsid.includes(id) ? "orange" : "";
+					});
+
+					chatslist.setList(chats);
+
+					diag.inner.appendChild(chatslist.element)
+					diag.inner.appendChild(bottomBar)
+
+					sendButton.onclick = function() {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
-						fetch(currentServer + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
 
 						})
-						clik();
+						diag.closebtn.click();
+					}
+					clik();
+				})
+				cnt.appendChild(forwardbutton);
+				let selectbutton = document.createElement("button");
+				selectbutton.innerText = "Select...";
+				addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
+				selectbutton.addEventListener("click", function() {
+					selectmessage();
+					clik();
+				})
+				cnt.appendChild(selectbutton);
+				let savebtn = document.createElement("button");
+				savebtn.innerText = "Save message";
+				addRipple(savebtn,"rgba(255,200,0,0.6)",true);
+				savebtn.addEventListener("click", function() {
+					let messages = selectedMessages;
+					if (messages.length == 0) messages = [id];
+					fetch(currentServer + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+
 					})
-					cnt.appendChild(savebtn);
-					let pinbtn = document.createElement("button");
-					pinbtn.innerText = msgpinned.style.display == "" ? "Unpin message" : "Pin message";
-					addRipple(pinbtn,"rgba(255,200,0,0.6)",true);
-					pinbtn.addEventListener("click", function() {
+					clik();
+				})
+				cnt.appendChild(savebtn);
+				let pinbtn = document.createElement("button");
+				pinbtn.innerText = msgpinned.style.display == "" ? "Unpin message" : "Pin message";
+				addRipple(pinbtn,"rgba(255,200,0,0.6)",true);
+				pinbtn.addEventListener("click", function() {
+					let messages = selectedMessages;
+					if (messages.length == 0) messages = [id];
+					fetch(currentServer + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+						
+					})
+					clik();
+				})
+				pinbtn.disabled = !crole.AllowPinningMessages;
+				cnt.appendChild(pinbtn);
+				let copybutton = document.createElement("button");
+				addRipple(copybutton,"rgba(255,200,0,0.6)",true);
+				copybutton.innerText = "Copy selected text";
+				copybutton.addEventListener("click", function() {
+					document.execCommand('copy');
+					clik();
+				})
+				cnt.appendChild(copybutton);
+				let deletebutton = document.createElement("button");
+				addRipple(deletebutton,"rgba(255,0,0,0.6)",true);
+				deletebutton.innerText = "Delete message";
+				deletebutton.addEventListener("click", () => {
+					if (confirm("Do you really want to delete?")) {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
-						fetch(currentServer + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
 							
 						})
-						clik();
-					})
-					pinbtn.disabled = !crole.AllowPinningMessages;
-					cnt.appendChild(pinbtn);
-					let copybutton = document.createElement("button");
-					addRipple(copybutton,"rgba(255,200,0,0.6)",true);
-					copybutton.innerText = "Copy selected text";
-					copybutton.addEventListener("click", function() {
-						document.execCommand('copy');
-						clik();
-					})
-					cnt.appendChild(copybutton);
-					let deletebutton = document.createElement("button");
-					addRipple(deletebutton,"rgba(255,0,0,0.6)",true);
-					deletebutton.innerText = "Delete message";
-					deletebutton.addEventListener("click", () => {
-						if (confirm("Do you really want to delete?")) {
-							let messages = selectedMessages;
-							if (messages.length == 0) messages = [id];
-							fetch(currentServer + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
-								
-							})
-						}
-						clik();
-					})
-					cnt.appendChild(deletebutton);
-					let clik = function() {
-						ctxdiv.style.pointerEvents = "none";
-						ctxdiv.style.opacity = "0";
-						setTimeout(function() {
-							document.body.removeChild(ctxdiv); maincont.removeEventListener("pointerdown", clik);
-						},200)
 					}
-					if (selectedMessages.length > 0) {
-						deletebutton.disabled = false;
-					}else {
-						deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
-					}
-
+					clik();
+				})
+				cnt.appendChild(deletebutton);
+				let clik = function() {
+					ctxdiv.style.pointerEvents = "none";
 					ctxdiv.style.opacity = "0";
-					document.body.appendChild(ctxdiv);
-					requestAnimationFrame(function() {
-						ctxdiv.style.opacity = "";
-					});
-					maincont.addEventListener("pointerdown",clik)
-					if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
-						ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
-					}
-					if (event.clientY > document.body.clientHeight - ctxdiv.offsetHeight) {
-						ctxdiv.style.top = (document.body.clientHeight - ctxdiv.offsetHeight) + "px";
-					}
+					setTimeout(function() {
+						document.body.removeChild(ctxdiv); maincont.removeEventListener("pointerdown", clik);
+						menuspawned = false;
+					},200)
+				}
+				if (selectedMessages.length > 0) {
+					deletebutton.disabled = false;
+				}else {
+					deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
+				}
+
+				ctxdiv.style.opacity = "0";
+				document.body.appendChild(ctxdiv);
+				requestAnimationFrame(function() {
+					ctxdiv.style.opacity = "";
+				});
+				maincont.addEventListener("pointerdown",clik)
+				if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
+					ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
+				}
+				if (event.clientY > document.body.clientHeight - ctxdiv.offsetHeight) {
+					ctxdiv.style.top = (document.body.clientHeight - ctxdiv.offsetHeight) + "px";
+				}
+			}
+
+			msgc.addEventListener("contextmenu",function(event) {
+				if (event.pointerType == "touch") return;
+				let tagname = event.target.tagName.toString();
+				if (tagname.toLowerCase() == "video") return;
+				if (tagname.toLowerCase() == "img") return;
+				let parent = event.target;
+				while (parent) {
+					tagname = parent.tagName.toString();
+					if (tagname.toLowerCase() == "a") return;
+					if (tagname.toLowerCase() == "button") return;
+					parent = parent.parentElement;
+				}
+				if (msg.type != "time") {
+					spawnmenu({x: event.clientX, y: event.clientY});
 					event.preventDefault();
 				}
 			});
@@ -2726,7 +2803,6 @@ function openMainArea() {
 			let msgsender = document.createElement("msgsender");
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
-			msgreactions.classList.add("msgreactions");
 			msgpfp.classList.add("loading");
 			msgsendertxt.innerText = "loading..."
 			msgsendertxt.classList.add("loading");
@@ -2911,7 +2987,6 @@ function openMainArea() {
 
 					msgbubble.appendChild(fd);
 				})
-
 			}
 
 			msgbubble.appendChild(msgcontent);
@@ -2962,6 +3037,52 @@ function openMainArea() {
 				}
 			}
 			msgtime.appendChild(msgpinned);
+
+			let replydragstart = null;
+			let dragy = null;
+			let dragtime = null;
+			let lastdiff = 0;
+			let cancelled = false;
+			msgc.addEventListener("touchstart", function(event) {
+				if (msg.type != "time") {
+					replydragstart = event.touches[0].clientX;
+					dragy = event.touches[0].clientY;
+					dragtime = Date.now();
+					cancelled = false;
+				}
+			})
+			msgc.addEventListener("touchmove", function(event) {
+				if (replydragstart == null) return;
+				let x = event.touches[0].clientX;
+				let y = event.touches[0].clientY;
+				let diff = Math.max(0, replydragstart - x);
+				if (Math.abs(dragy - y) > 20) {
+					msgm.style.transform = "";
+					cancelled = true;
+				}else if (!cancelled) {
+					msgm.style.transform = "translateX(" + Math.max(-diff, -50) + "px)";
+
+					lastdiff = diff;
+				}
+			})
+			msgc.addEventListener("touchend", function(event) {
+				msgm.style.transform = "";
+				replydragstart = null;
+				if (cancelled) {
+
+				}else if (lastdiff < 5 && (Date.now() - dragtime) < 200) {
+					spawnmenu({x: replydragstart, y: dragy});
+				}else if (lastdiff >= 50) {
+					reply();
+				}
+				lastdiff = 0;
+			})
+
+			msgc.addEventListener("touchcancel", function(event) {
+				msgm.style.transform = "";
+				replydragstart = null;
+				lastdiff = 0;
+			})
 			//return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: rdata, pinned:msgpinned};;
 		}
 		

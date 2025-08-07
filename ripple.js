@@ -1,6 +1,5 @@
 function addRipple(element,color,isinfixedcont) {
-	element.addEventListener("mousedown", rippleStart);
-	element.addEventListener("touchstart", rippleStart,{passive: true});
+	element.addEventListener("pointerdown", rippleStart);
 	element.style.position = "relative";
 	element.style.overflow = "hidden";
 	function rippleStart(event) {
@@ -12,9 +11,6 @@ function addRipple(element,color,isinfixedcont) {
 		if (event.clientX) {
 			ripple.style.top = (event.clientY - (boundingclient.top + radius)) + "px";
 			ripple.style.left = (event.clientX - (boundingclient.left + radius)) + "px";
-		}else {
-			ripple.style.top = (event.touches[0].clientY - (boundingclient.top + radius)) + "px";
-			ripple.style.left = (event.touches[0].clientX - (boundingclient.left + radius)) + "px";
 		}
 		ripple.style.transform = "scale(0)";
 		ripple.style.width = "1px";
@@ -37,10 +33,8 @@ function addRipple(element,color,isinfixedcont) {
 		ripple.style.pointerEvents = "none";
 		element.appendChild(ripple);
 		var rp = true;
-		element.addEventListener("mouseup",endr);
-		element.addEventListener("mouseleave",endr);
-		element.addEventListener("touchend",endr);
-		element.addEventListener("touchleave",endr);
+		element.addEventListener("pointerup",endr);
+		element.addEventListener("pointerleave",endr);
 		function endr() {
 			if (rp) {
 				setTimeout(_ => {
