@@ -2763,10 +2763,10 @@ function openMainArea() {
 					ctxdiv.style.opacity = "";
 				});
 				maincont.addEventListener("pointerdown",clik)
-				if (event.clientX > document.body.clientWidth - ctxdiv.offsetWidth) {
+				if (pos.x > document.body.clientWidth - ctxdiv.offsetWidth) {
 					ctxdiv.style.left = (document.body.clientWidth - ctxdiv.offsetWidth) + "px";
 				}
-				if (event.clientY > document.body.clientHeight - ctxdiv.offsetHeight) {
+				if (pos.y > document.body.clientHeight - ctxdiv.offsetHeight) {
 					ctxdiv.style.top = (document.body.clientHeight - ctxdiv.offsetHeight) + "px";
 				}
 			}
