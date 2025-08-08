@@ -1,3 +1,9 @@
+let isTouch = false;
+
+addEventListener("pointerdown", function(event) {
+	isTouch = event.pointerType == "touch";
+})
+
 function linkify(inputText) {
 	var replacedText, replacePattern1, replacePattern2, replacePattern3;
 	inputText = inputText.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/ /g,"&nbsp;").replace(/\r/g,"")
@@ -26,14 +32,7 @@ function imageView(url) {
 	let sd = 1;
 	
 	var bg = document.createElement("div");
-	bg.style.zIndex = "2";
-	bg.style.backgroundColor = "rgba(0,0,0,0.3)";
-    bg.style.position = "fixed";
-    bg.style.top = "0";
-    bg.style.left = "0";
-    bg.style.width = "100%";
-	bg.style.height = "100%";
-	bg.style.transition = "opacity 0.3s";
+	bg.classList.add("bgcover");
 	bg.style.display = "flex";
 	bg.style.alignItems = "center";
 	
@@ -73,7 +72,7 @@ function imageView(url) {
 	closebtn.style.right = "0px";
 	closebtn.style.width = "48px";
 	closebtn.style.height = "48px";
-	closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"><path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z"/></svg>';
+	closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" style="fill: white;"><path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z"/></svg>';
 	closebtn.title = "Close";
 	bg.appendChild(closebtn);
 	closebtn.addEventListener("click",function() {
@@ -880,7 +879,6 @@ function openMainArea() {
 						savebtn.addEventListener("click",function() {
 							if (ufl) {
 								fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-									console.log(data);
 									ufl = false;
 									if (data.status == "success") {
 										fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
@@ -1163,7 +1161,6 @@ function openMainArea() {
 							case "chat":
 								let chatid = key.substring(key.indexOf(":") + 1);
 								if (currentchatid == chatid) {
-									console.log(json[key]);
 									currentchatview.applyChatUpdates(json[key]);
 								}
 								break;
@@ -1571,7 +1568,6 @@ function openMainArea() {
 			createbtn.addEventListener("click",function() {
 				if (ufl) {
 					fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-						console.log(data);
 						if (data.status == "success") {
 							fetch(currentServer + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
 								diag.closebtn.click();
@@ -1740,7 +1736,6 @@ function openMainArea() {
 		savebtn.addEventListener("click",function() {
 			if (ufl) {
 				fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-					console.log(data);
 					if (data.status == "success") {
 						ufl = false;
 						currentuser.picture = data.url;
@@ -1928,6 +1923,7 @@ function openMainArea() {
 		let titlebar = document.createElement("titlebar");
 		let backbtn = document.createElement("button");
 		addRipple(backbtn,"rgba(255,200,0,0.6)");
+		backbtn.title = "Back";
 		backbtn.classList.add("cb")
 		backbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M384-96 0-480l384-384 68 68-316 316 316 316-68 68Z"/></svg>';
 		backbtn.style.display = "none";
@@ -2375,10 +2371,8 @@ function openMainArea() {
 								return 56;
 							});
 							reactionslist.setItemGenerator(function(list,index,urow) {
-								console.log(list);
 								let item = list[index];
 								if (item == undefined) return;
-								console.log(item);
 								urow.style.display = "flex";
 								urow.style.width = "100%";
 								urow.style.height = "56px";
@@ -2778,7 +2772,7 @@ function openMainArea() {
 			}
 
 			msgc.addEventListener("contextmenu",function(event) {
-				if (event.pointerType == "touch") return;
+				if (event.pointerType == "touch" && selectedMessages.length == 0) return;
 				let tagname = event.target.tagName.toString();
 				if (tagname.toLowerCase() == "video") return;
 				if (tagname.toLowerCase() == "img") return;
@@ -3042,8 +3036,20 @@ function openMainArea() {
 			let dragy = null;
 			let dragtime = null;
 			let lastdiff = 0;
-			let cancelled = false;
+			let cancelled = true;
+			let draglocked = false;
 			msgc.addEventListener("touchstart", function(event) {
+				if (selectedMessages.length > 0) return;
+				let tagname = event.target.tagName.toString();
+				if (tagname.toLowerCase() == "video") return;
+				if (tagname.toLowerCase() == "img") return;
+				let parent = event.target;
+				while (parent) {
+					tagname = parent.tagName.toString();
+					if (tagname.toLowerCase() == "a") return;
+					if (tagname.toLowerCase() == "button") return;
+					parent = parent.parentElement;
+				}
 				if (msg.type != "time") {
 					replydragstart = event.touches[0].clientX;
 					dragy = event.touches[0].clientY;
@@ -3056,18 +3062,24 @@ function openMainArea() {
 				let x = event.touches[0].clientX;
 				let y = event.touches[0].clientY;
 				let diff = Math.max(0, replydragstart - x);
-				if (Math.abs(dragy - y) > 20) {
+				if (Math.abs(dragy - y) > 20 && !draglocked) {
 					msgm.style.transform = "";
 					cancelled = true;
 				}else if (!cancelled) {
 					msgm.style.transform = "translateX(" + Math.max(-diff, -50) + "px)";
-
 					lastdiff = diff;
+
+					if (diff > 10) {
+						draglocked = true;
+					}
+
+					if (draglocked) {
+						event.preventDefault();
+					}
 				}
 			})
 			msgc.addEventListener("touchend", function(event) {
 				msgm.style.transform = "";
-				replydragstart = null;
 				if (cancelled) {
 
 				}else if (lastdiff < 5 && (Date.now() - dragtime) < 200) {
@@ -3076,12 +3088,17 @@ function openMainArea() {
 					reply();
 				}
 				lastdiff = 0;
+				cancelled = true;
+				replydragstart = null;
+				draglocked = false;
 			})
 
 			msgc.addEventListener("touchcancel", function(event) {
 				msgm.style.transform = "";
 				replydragstart = null;
 				lastdiff = 0;
+				cancelled = true;
+				draglocked = false;
 			})
 			//return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: rdata, pinned:msgpinned};;
 		}
@@ -3120,7 +3137,6 @@ function openMainArea() {
 				if (fll.length > 0) {
 					let file = fll.shift();
 					fetch(currentServer + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-						console.log(data);
 						if (data.status == "success") {
 							files.push(data.url);
 							upload();
@@ -3166,15 +3182,15 @@ function openMainArea() {
 		});
 		
 		msginput.addEventListener("keydown",function(e) {
-			if (e.key == "Enter" && !e.shiftKey) {
+			if (e.key == "Enter" && !e.shiftKey && !isTouch) {
 				sendbtn.click();
 				e.preventDefault();
 			}
 		})
-		
+
+		fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["chat:" + chatid]}), method: "POST"});
 		fetch(currentServer + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': "#0-#48"}),method: 'POST'}).then((res) => {
 			if (res.ok) {
-				fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["chat:" + chatid]}), method: "POST"});
 				fetch(currentServer + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.text().then((text) => {

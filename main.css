@@ -744,6 +744,7 @@ a {
 	right:0;
 	bottom:0;
 	z-index:6;
+	backdrop-filter: blur(8px);
 	animation-name: bgappear;
 	animation-duration: 200ms;
 }
@@ -779,7 +780,8 @@ a {
 }
 
 @keyframes bgappear {
-	from {opacity:0;}
+	from {opacity:0;backdrop-filter: none;}
+	to {backdrop-filter: blur(8px);}
 }
 
 @keyframes bgdisappear {

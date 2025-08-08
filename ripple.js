@@ -1,4 +1,4 @@
-function addRipple(element,color,isinfixedcont) {
+function addRipple(element,color) {
 	element.addEventListener("pointerdown", rippleStart);
 	element.style.position = "relative";
 	element.style.overflow = "hidden";
@@ -37,16 +37,15 @@ function addRipple(element,color,isinfixedcont) {
 		element.addEventListener("pointerleave",endr);
 		function endr() {
 			if (rp) {
-				setTimeout(_ => {
-					ripple.style.transition = "transform 1s,opacity 1s";
-					requestAnimationFrame(_ => {
-						ripple.style.opacity = "0";
-						setTimeout(function() {
-							element.removeChild(ripple);
-						},1000)
-					})
-				},200)
+				setTimeout(function() {
+					ripple.style.opacity = "0";
+					setTimeout(function() {
+						element.removeChild(ripple);
+					},1000)
+				}, 200)
 				rp = false;
+				element.removeEventListener("pointerup",endr);
+				element.removeEventListener("pointerleave",endr);
 			}
 		}
 	}
