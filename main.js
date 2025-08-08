@@ -938,8 +938,17 @@ function openMainArea() {
 			});
 		}
 	}
+
+	let activePopupCount = 0;
+
+	function inertMainUI() {
+		rightArea.inert = leftArea.inert = activePopupCount > 0;
+	}
 	
 	function opendialog() {
+		activePopupCount++;
+		inertMainUI();
+
 		let bgcover = document.createElement("div");
 		bgcover.classList.add("bgcover");
 		bgcover.style.alignItems = "center";
@@ -959,6 +968,9 @@ function openMainArea() {
 		let titlelbl = document.createElement("h4");
 		titlelbl.innerText = "Dialog";
 		titlelbl.style.marginRight = "auto";
+		
+		let closed = false;
+
 		let closebtn = document.createElement("button");
 		addRipple(closebtn,"rgba(255,200,0,0.6)");
 		closebtn.title = "Close";
@@ -968,10 +980,16 @@ function openMainArea() {
 		closebtn.style.padding = "0";
 		closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
 		closebtn.addEventListener("click",function(e) {
+			if (closed) return;
+			closed = true;
+
+			if (!isatdock) activePopupCount--;
+			inertMainUI();
+
 			dialoginside.classList.add("closing");
 			bgcover.classList.add("closing");
 			setTimeout(function() {
-				if (isatdock == true) {
+				if (isatdock) {
 					maincont.removeChild(dialoginside);
 				}else {
 					document.body.removeChild(bgcover);
@@ -998,12 +1016,18 @@ function openMainArea() {
 			if (isatdock == true) {
 				document.body.appendChild(bgcover);
 				bgcover.appendChild(dialoginside);
-				dialoginside.classList.remove("docked")
+				dialoginside.classList.remove("docked");
+
+				activePopupCount++;
+				inertMainUI();
 			}else {
 				document.body.removeChild(bgcover);
 				bgcover.removeChild(dialoginside);
 				maincont.appendChild(dialoginside);
-				dialoginside.classList.add("docked")
+				dialoginside.classList.add("docked");
+
+				activePopupCount--;
+				inertMainUI();
 			}
 			isatdock = !isatdock;
 		})
@@ -1034,6 +1058,9 @@ function openMainArea() {
 	}
 
 	function openmenu(menuitems, element) {
+		activePopupCount++;
+		inertMainUI();
+		
 		let popupmenu = document.createElement("div");
 		popupmenu.classList.add("popupmenu");
 		popupmenu.tabIndex = "0";
@@ -1060,10 +1087,20 @@ function openMainArea() {
 				item.callback();
 			})
 		});
-
+		
+		let closed = false;
 		function close() {
+			if (closed) return;
+			closed = true;
+
+			activePopupCount--;
+			inertMainUI();
+
 			//popupmenu.style.maxHeight = "0px";
 			popupmenu.style.opacity = "";
+			
+			maincont.removeEventListener("pointerdown", close);
+
 			setTimeout(function() {
 				popupmenu.remove();
 			},200)
@@ -1080,9 +1117,7 @@ function openMainArea() {
 			popupmenu.style.opacity = "1";
 			//popupmenu.style.maxHeight = "calc(100% - " + popupmenu.style.top + ")";
 		});
-		maincont.addEventListener("pointerdown",function() {
-			close();
-		})
+		maincont.addEventListener("pointerdown", close);
 		popupmenu.addEventListener("keydown",function(e) {
 			if (e.key == "Escape") close();
 		})
@@ -2545,6 +2580,10 @@ function openMainArea() {
 			function spawnmenu(pos) {
 				if (menuspawned) return;
 				menuspawned = true;
+
+				activePopupCount++;
+				inertMainUI();
+
 				let ctxdiv = document.createElement("div");
 				ctxdiv.style.position = "absolute";
 				ctxdiv.style.top = pos.y + "px";
@@ -2744,12 +2783,16 @@ function openMainArea() {
 				})
 				cnt.appendChild(deletebutton);
 				let clik = function() {
+					activePopupCount--;
+					inertMainUI();
+					
 					ctxdiv.style.pointerEvents = "none";
 					ctxdiv.style.opacity = "0";
+					maincont.removeEventListener("pointerdown", clik);
 					setTimeout(function() {
-						document.body.removeChild(ctxdiv); maincont.removeEventListener("pointerdown", clik);
+						document.body.removeChild(ctxdiv);
 						menuspawned = false;
-					},200)
+					},250)
 				}
 				if (selectedMessages.length > 0) {
 					deletebutton.disabled = false;
@@ -3083,9 +3126,11 @@ function openMainArea() {
 				if (cancelled) {
 
 				}else if (lastdiff < 5 && (Date.now() - dragtime) < 200) {
-					spawnmenu({x: replydragstart, y: dragy});
+					setTimeout(function() {spawnmenu({x: replydragstart, y: dragy});}, 100);
+					event.preventDefault();
 				}else if (lastdiff >= 50) {
 					reply();
+					event.preventDefault();
 				}
 				lastdiff = 0;
 				cancelled = true;
