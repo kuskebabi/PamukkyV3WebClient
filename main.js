@@ -1951,6 +1951,7 @@ function openMainArea() {
 		f.type='file';
 		f.multiple = true;
 		
+		let typingUsers = [];
 		let fileslist = [];
 		let isuserchat = chatid.includes("-");
 		let pinnedmessages = {};
@@ -2011,16 +2012,15 @@ function openMainArea() {
 								localStorage.setItem("mutedchats", JSON.stringify(mutedchats));
 							}
 						}, {
-							content: servermutedchats.includes(chatid) ? "Unmute for this account" : "Mute for this account",
-							icon: servermutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
+							content: servermutedchats.hasOwnProperty(chatid) ? "Unmute for this account" : "Mute for this account",
+							icon: servermutedchats.hasOwnProperty(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 							callback: function() {
-								fetch(currentServer + "mutechat", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'toggle': !servermutedchats.includes(chatid)}),method: 'POST'}).then((res) => {
+								fetch(currentServer + "mutechat", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'toggle': !servermutedchats.hasOwnProperty(chatid)}),method: 'POST'}).then((res) => {
 									if (res.ok) {
-										let index = servermutedchats.indexOf(chatid);
-										if (index > -1) {
-											servermutedchats.splice(index, 1);
+										if (servermutedchats.hasOwnProperty(chatid)) {
+											delete servermutedchats[chatid];
 										}else {
-											servermutedchats.push(chatid);
+											servermutedchats[chatid] = {allowTags: true};
 										}
 									}
 								})
@@ -3231,7 +3231,7 @@ function openMainArea() {
 				sendbtn.click();
 				e.preventDefault();
 			}
-		})
+		});
 
 		fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["chat:" + chatid]}), method: "POST"});
 		fetch(currentServer + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': "#0-#48"}),method: 'POST'}).then((res) => {
@@ -3247,6 +3247,20 @@ function openMainArea() {
 						});
 					}
 				});
+
+				fetch(currentServer + "gettyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
+					if (res.ok) {
+						res.json().then((val) => {
+							let index = val.indexOf(logininfo.uid);
+							if (index >= 0) {
+								val.splice(index,1);
+							}
+							typingUsers = val;
+							updateTypingUsers();
+						});
+					}
+				});
+
 				if (isuserchat) addOnlineHook(ugid, function(text) {
 					infotxt.classList.remove("loading");
 					if (text == "Online") {
@@ -3286,32 +3300,53 @@ function openMainArea() {
 		})
 
 		let readupdates = [];
+
+		function updateTypingUsers() {
+			if (typingUsers.length == 0) {
+				typinglabel.innerText = "Nobody is typing";
+				typinglabel.style.opacity = "0";
+			}else {
+				let usernameslist = [];
+				typingUsers.forEach(function(i) {
+					getInfo(i,function(u) {
+						usernameslist.push(u.name);
+						if (typingUsers.length == usernameslist.length) {
+							typinglabel.innerText = usernameslist.join(",") + " is typing...";
+							typinglabel.style.opacity = "";
+						}
+					})
+				});
+			}
+		}
 		
 		function applyChatUpdates(json) {
+			console.log(json)
 			let keys = Object.keys(json);
 			keys.forEach((i) => {
 				updatessince = i;
 				let val = json[i];
-				if (i == "TYPING") {
+				if (i == "TYPING") { // Backwards compatibility
+					// Here the value is a array with all users that are typing.
 					let index = val.indexOf(logininfo.uid);
 					if (index >= 0) {
 						val.splice(index,1);
 					}
-					if (val.length == 0) {
-						typinglabel.innerText = "Nobody is typing";
-						typinglabel.style.opacity = "0";
-					}else {
-						let usernameslist = [];
-						val.forEach(function(i) {
-							getInfo(i,function(u) {
-								usernameslist.push(u.name);
-								if (val.length == usernameslist.length) {
-									typinglabel.innerText = usernameslist.join(",") + " is typing...";
-									typinglabel.style.opacity = "";
-								}
-							})
-						});
+					typingUsers = val;
+					updateTypingUsers();
+				}else if (i.startsWith("TYPING|")) {
+					// Here the value is true/false and event name is "TYPING|[User ID]"
+					let user = i.split("|")[1];
+					if (user != logininfo.uid) {
+						if (val == true) {
+							typingUsers.push(user);
+						}else {
+							let ind = typingUsers.indexOf(user);
+							if (ind != -1) {
+								typingUsers.splice(ind, 1);
+							}
+						}
 					}
+					updateTypingUsers();
 				}else if (!readupdates.includes(i)) {
 					readupdates.push(i);
 					let key = val.id;
@@ -3335,10 +3370,47 @@ function openMainArea() {
 							data.reactions = val.rect;
 							messageslist.updateItem(key, data);
 						}
-						// But message MIGHT be loaded in pinned messages area.
+						// But message MIGHT be loaded in pinned messages area too.
 						let pdata = pinnedmessageslist.getItemData(key);
 						if (pdata) {
 							pdata.reactions = val.rect;
+							pinnedmessageslist.updateItem(key, pdata);
+						}
+					}
+					if (val.event == "REACT") {
+						let data = messageslist.getItemData(key);
+						let emoji = val.reaction;
+						if (data) {
+							if (!data.reactions.hasOwnProperty(emoji)) data.reactions[emoji] = {}; // Create emoji subobject if doesn't exist.
+
+							data.reactions[emoji][val.userID] = {
+								reaction: emoji,
+								sender: val.userID,
+								time: val.time
+							}
+							messageslist.updateItem(key, data);
+						}
+						// But message MIGHT be loaded in pinned messages area too.
+						let pdata = pinnedmessageslist.getItemData(key);
+						if (pdata) {
+							pdata.reactions = data.reactions;
+							pinnedmessageslist.updateItem(key, pdata);
+						}
+					}
+					if (val.event == "UNREACT") {
+						let data = messageslist.getItemData(key);
+						let emoji = val.reaction;
+						if (data) {
+							delete data.reactions[emoji][val.userID];
+							if (Object.keys(data.reactions[emoji]).length == 0) {
+								delete data.reactions[emoji];
+							}
+							messageslist.updateItem(key, data);
+						}
+						// But message MIGHT be loaded in pinned messages area too.
+						let pdata = pinnedmessageslist.getItemData(key);
+						if (pdata) {
+							pdata.reactions = data.reactions;
 							pinnedmessageslist.updateItem(key, pdata);
 						}
 					}

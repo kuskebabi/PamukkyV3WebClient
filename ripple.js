@@ -3,6 +3,7 @@ function addRipple(element,color) {
 	element.style.position = "relative";
 	element.style.overflow = "hidden";
 	function rippleStart(event) {
+		if (element.disabled) return;
 		const diameter = Math.max(element.clientWidth, element.clientHeight);
 		const radius = diameter / 2;
 		var ripple = document.createElement("div");
