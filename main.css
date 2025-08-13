@@ -32,6 +32,34 @@ td {
 	padding:5px;
 }
 
+svg {
+	fill: CanvasText;
+	margin: 0;
+	padding:0;
+}
+
+h1,h2,h3,h4,h5 {
+	padding: 0;
+	margin: 0;
+}
+
+a {
+	color:black;
+}
+
+select {
+	border:none;
+	cursor:pointer;
+	background: rgba(0,0,0,0.1);
+	padding:4px;
+	border-radius:8px;
+}
+
+select:hover {
+	outline:1px solid gray;
+	background: rgba(0,0,0,0.2);
+}
+
 body {
 	position: relative;
 }
@@ -48,25 +76,6 @@ body {
 
 .cb:hover {
 	background:var(--transparent-hover);
-}
-
-svg {
-	fill: CanvasText;
-	margin: 0;
-	padding:0;
-}
-
-select {
-	border:none;
-	cursor:pointer;
-	background: rgba(0,0,0,0.1);
-	padding:4px;
-	border-radius:8px;
-}
-
-select:hover {
-	outline:1px solid gray;
-	background: rgba(0,0,0,0.2);
 }
 
 centeredPopup {
@@ -102,11 +111,6 @@ centeredPopup.docked.closing {
 	transform:scale(0.8);
 	opacity:0;
 	animation-name: dialogdisappeardocked;
-}
-
-h1,h2,h3,h4,h5 {
-	padding: 0;
-	margin: 0;
 }
 
 main {
@@ -150,6 +154,7 @@ input, textarea {
 	padding:5px;
 	border-radius:8px;
 	outline:none;
+	font: inherit;
 }
 
 input:focus, textarea:focus {
@@ -176,30 +181,6 @@ button:disabled {
 	padding:4px;
 }
 
-messageslist {
-	display:flex;
-	flex-direction: column;
-	width: 100%;
-	height:100%;
-	overflow:auto;
-	padding:3px;
-	padding-left:5%;
-	padding-right:5%;
-}
-
-msgscont {
-	display:flex;
-	flex-direction: column;
-}
-
-msgscont > msgcont:not(:first-child) > img {
-	visibility: hidden;
-}
-
-msgscont > msgcont:not(:first-child) > msgmain > msgsender {
-	display: none;
-}
-
 .bbar {
 	display:flex;
 	flex-shrink:0;
@@ -215,6 +196,229 @@ titlebar {
 	background-color: var(--main-bg);
 	align-items:center;
 	flex-shrink:0;
+}
+
+.transparentbtn {
+	background:transparent;
+	cursor:pointer;
+}
+
+.transparentbtn:hover {
+	background: var(--transparent-hover)
+}
+
+.circleimg {
+	border-radius: 100%;
+	width: 32px;
+	height: 32px;
+	margin: 4px;
+	background:white;
+	flex-shrink: 0;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.errorlabel {
+	color: red;
+	padding: 2px;
+	text-align:center;
+	display:block;
+}
+
+.infolabel {
+	padding: 2px;
+	text-align:center;
+	display:block;
+}
+
+button.fab {
+	background:orange;
+	width:60px;
+	height:60px;
+	padding:0;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	border-radius: 30px;
+	position: absolute;
+	bottom: 20px;
+	right: 20px;
+	z-index:1;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+button.fab:hover {
+	background:gold;
+	box-shadow: none;
+}
+button.fab:hover:active {
+	transform:scale(0.8);
+}
+
+.contextmenu > *, .customctx > div > * {
+	width:100%;
+}
+
+.contextmenu button, .customctx button {
+	border:none;
+	white-space: nowrap;
+	padding:6px 32px 6px 32px;
+	background: transparent;
+	margin:0px;
+}
+.contextmenu button:hover:not(:disabled), .customctx button:hover:not(:disabled) {
+	background: var(--transparent-hover);
+}
+.contextmenu {
+	outline: 1px solid gray;
+	z-index: 100;
+	border-radius:8px;
+	background: rgb(240,240,240);
+	transition: opacity 200ms;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.customctx {
+	z-index:100;
+	transition: opacity 200ms;
+}
+.customctx > div {
+	outline: 1px solid gray;
+	border-radius:8px;
+	background: rgb(240,240,240);
+	transition: opacity 200ms;
+	animation-name: ctxappear;
+	animation-duration: 200ms;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	margin-bottom: 8px;
+}
+
+.popupmenu {
+	position: fixed;
+	outline: 1px solid gray;
+	z-index:100000;
+	border-radius:8px;
+	overflow: auto;
+	background: rgb(240,240,240);
+	transition: opacity 200ms;
+	/*max-height: 0px;*/
+	opacity: 0;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.popupmenu > button {
+	display: flex;
+	align-items: center;
+	background: transparent;
+}
+
+.popupmenu > button:hover {
+	background: var(--transparent-hover);
+}
+
+.popupmenu > button > div {
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
+}
+
+.popupmenu > button > label {
+	padding: 8px 32px 8px 8px;
+	display: block;
+	cursor: pointer;
+}
+
+.loading {
+	animation-name: loading;
+	animation-duration: 2s;
+	animation-iteration-count: infinite;
+	background-color:gray;
+	color: transparent;
+	position: relative;
+	overflow: hidden;
+	display: inline-block;
+}
+
+.loading::before {
+	content: '';
+	width: 10%;
+	background-color: lightgray;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	animation-name: loadingbar;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+}
+
+.bgcover {
+	background: rgba(0,0,0,0.3);
+	display:flex;
+	position:fixed;
+	top:0;
+	left:0;
+	right:0;
+	bottom:0;
+	z-index:6;
+	backdrop-filter: blur(8px);
+	animation-name: bgappear;
+	animation-duration: 200ms;
+}
+
+.bgcover.closing {
+	animation-name: bgdisappear;
+	opacity:0;
+	pointer-events: none;
+}
+
+.mediabar {
+	height: 28px;
+	font-size: small;
+	display: flex;
+	align-items: center;
+}
+
+.mediabar > button {
+	width: 28px;
+	height: 28px;
+	background: transparent;
+	border-radius: 0;
+}
+
+.mediabar > button:hover {
+	background-color: var(--transparent-hover);
+}
+
+.mediabar > label {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+/* ------ CHAT AREA ------ */
+
+messageslist {
+	display:flex;
+	flex-direction: column;
+	width: 100%;
+	height:100%;
+	overflow:auto;
+	padding:3px;
+	padding: 0px 10% 0px 10%;
+}
+
+msgscont {
+	display:flex;
+	flex-direction: column;
+}
+
+msgscont > msgcont:not(:first-child) > img {
+	visibility: hidden;
+}
+
+msgscont > msgcont:not(:first-child) > msgmain > msgsender {
+	display: none;
 }
 
 pinbar {
@@ -342,25 +546,6 @@ msgbar > div > textarea {
 	resize: vertical;
 }
 
-.transparentbtn {
-	background:transparent;
-	cursor:pointer;
-}
-
-.transparentbtn:hover {
-	background: var(--transparent-hover)
-}
-
-.circleimg {
-	border-radius: 100%;
-	width: 32px;
-	height: 32px;
-	margin: 4px;
-	background:white;
-	flex-shrink: 0;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-}
-
 .chatitem {
 	display:flex;
 	padding: 8px;
@@ -440,22 +625,27 @@ ma {
 	margin:auto;
 }
 
-.reactionbtn {
+.reactionsbar {
+	width: 315px;
+}
+
+.reactionsbar > button {
 	transition: transform 100ms;
 	border-radius: 100%;
 	font-size: 20px;
 	width: 35px !important;
 	height: 35px;
 	padding: 4px !important;
+	flex-shrink: 0;
 }
-.reactionbtn.reacted {
+.reactionsbar > button.reacted {
 	background-color: var(--transparent-hover);
 	transform: scale(0.9);
 }
-.reactionbtn:hover:not(.reacted) {
+.reactionsbar > button:hover:not(.reacted) {
 	transform: scale(1.2);
 }
-.reactionbtn:active {
+.reactionsbar > button:active {
 	transform: scale(0.9);
 }
 
@@ -553,148 +743,6 @@ msgreacts > button.rcted {
 	animation-duration: 0.5s;
 }*/
 
-.errorlabel {
-	color: red;
-	padding: 2px;
-	text-align:center;
-	display:block;
-}
-
-.infolabel {
-	padding: 2px;
-	text-align:center;
-	display:block;
-}
-
-button.fab {
-	background:orange;
-	width:60px;
-	height:60px;
-	padding:0;
-	display:flex;
-	align-items:center;
-	justify-content:center;
-	border-radius: 30px;
-	position: absolute;
-	bottom: 20px;
-	right: 20px;
-	z-index:1;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
-}
-button.fab:hover {
-	background:gold;
-	box-shadow: none;
-}
-button.fab:hover:active {
-	transform:scale(0.8);
-}
-
-.contextmenu > *, .customctx > div > * {
-	width:100%;
-}
-
-.contextmenu button, .customctx button {
-	border:none;
-	white-space: nowrap;
-	padding:6px;
-	background: transparent;
-	margin:0px;
-}
-.contextmenu button:hover:not(:disabled), .customctx button:hover:not(:disabled) {
-	background: var(--transparent-hover);
-}
-.contextmenu {
-	outline: 1px solid gray;
-	z-index: 100;
-	border-radius:8px;
-	overflow:hidden;
-	background: rgb(240,240,240);
-	transition: opacity 200ms;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-}
-
-.customctx {
-	z-index:100;
-	transition: opacity 200ms;
-}
-.customctx > div {
-	outline: 1px solid gray;
-	border-radius:8px;
-	overflow:hidden;
-	background: rgb(240,240,240);
-	transition: opacity 200ms;
-	width: fit-content;
-	animation-name: ctxappear;
-	animation-duration: 200ms;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-}
-
-.popupmenu {
-	position: fixed;
-	outline: 1px solid gray;
-	z-index:100000;
-	border-radius:8px;
-	overflow: auto;
-	background: rgb(240,240,240);
-	transition: opacity 200ms;
-	/*max-height: 0px;*/
-	opacity: 0;
-	display: flex;
-	flex-direction: column;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-}
-
-.popupmenu > button {
-	display: flex;
-	align-items: center;
-	background: transparent;
-}
-
-.popupmenu > button:hover {
-	background: var(--transparent-hover);
-}
-
-.popupmenu > button > div {
-	flex-shrink: 0;
-	width: 24px;
-	height: 24px;
-}
-
-.popupmenu > button > label {
-	padding-left: 8px;
-	padding-right: 32px;
-	display: block;
-	cursor: pointer;
-}
-
-.loading {
-	animation-name: loading;
-	animation-duration: 2s;
-	animation-iteration-count: infinite;
-	background-color:gray;
-	color: transparent;
-	position: relative;
-	overflow: hidden;
-	display: inline-block;
-}
-
-.loading::before {
-	content: '';
-	width: 10%;
-	background-color: lightgray;
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	animation-name: loadingbar;
-	animation-duration: 1s;
-	animation-iteration-count: infinite;
-}
-
-a {
-	color:black;
-}
-
 .filed {
 	display:flex;
 	align-items:center;
@@ -736,49 +784,7 @@ a {
 	transition: opacity 0.5s;
 }
 
-.bgcover {
-	background: rgba(0,0,0,0.3);
-	display:flex;
-	position:fixed;
-	top:0;
-	left:0;
-	right:0;
-	bottom:0;
-	z-index:6;
-	backdrop-filter: blur(8px);
-	animation-name: bgappear;
-	animation-duration: 200ms;
-}
-
-.bgcover.closing {
-	animation-name: bgdisappear;
-	opacity:0;
-	pointer-events: none;
-}
-
-.mediabar {
-	height: 28px;
-	font-size: small;
-	display: flex;
-	align-items: center;
-}
-
-.mediabar > button {
-	width: 28px;
-	height: 28px;
-	background: transparent;
-	border-radius: 0;
-}
-
-.mediabar > button:hover {
-	background-color: var(--transparent-hover);
-}
-
-.mediabar > label {
-	text-overflow: ellipsis;
-	overflow: hidden;
-	white-space: nowrap;
-}
+/* ------ ANIMATIONS ------ */
 
 @keyframes bgappear {
 	from {opacity:0;backdrop-filter: none;}
@@ -845,10 +851,12 @@ a {
   	to {transform:translateY(100%);opacity:0;}
 }
 
+
+/* ------ MEDIA RULES ------ */
+
 @media only screen and (min-width: 2000px) {
 	messageslist {
-		padding-left:10%;
-		padding-right:10%;
+		padding: 0px 15% 0px 15%;
 	}
 }
 /*@media only screen and (min-width: 1900px) {
@@ -879,12 +887,17 @@ a {
 	}
 	rightarea {
 		display:none;
-		position:absolute;top:0;left:100%;transition: left 0.5s;
+		position:absolute;
+		top:0;
+		left:0;
+		transition: transform 0.5s;
+		transform: translateX(100%);
 	}
 	centeredPopup {
 		width:100%;
 		height:100%;
 		animation-name: slideup;
+		border-radius: 0px;
 	}
 	centeredPopup.closing {
 		animation-name: slidedown;

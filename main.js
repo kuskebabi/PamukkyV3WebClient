@@ -1316,7 +1316,7 @@ function openMainArea() {
 			rightArea.style.display = "flex";
 			currentchatview.backbutton.style.display = ""
 			currentchatview.backbutton.onclick = function() {
-				rightArea.style.left = "";
+				rightArea.style.transform = "";
 				leftArea.style.display = "";
 				currentchatid = "";
 				location.href = "#mainarea";
@@ -1334,7 +1334,7 @@ function openMainArea() {
 			}
 			requestAnimationFrame(function() {
 				setTimeout(function() {
-					rightArea.style.left = "0px";
+					rightArea.style.transform = "translateX(0%)";
 					leftArea.style.opacity = "0";
 					setTimeout(function() {
 						leftArea.style.display = "none";
@@ -2224,7 +2224,7 @@ function openMainArea() {
 		attachbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M640-520v-200h80v200h-80ZM440-244q-35-10-57.5-39T360-350v-370h80v476Zm30 164q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v300h-80v-300q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q25 0 47.5-6.5T560-186v89q-21 8-43.5 12.5T470-80Zm170-40v-120H520v-80h120v-120h80v120h120v80H720v120h-80Z"/></svg>';
 		mgbd.appendChild(attachbtn)
 		let msginput = document.createElement("textarea");
-		
+		msginput.style.height = "40px";
 		mgbd.appendChild(msginput)
 		
 		let sendbtn = document.createElement("button");
@@ -2592,13 +2592,10 @@ function openMainArea() {
 				ctxdiv.style.width = "315px";
 				if (crole.AllowSendingReactions == true) {
 					let reactionsdiv = document.createElement("div");
-					reactionsdiv.style.maxWidth = "315px";
-					reactionsdiv.style.overflow = "visible";
-					reactionsdiv.style.marginBottom = "8px";
+					reactionsdiv.classList.add("reactionsbar");
 					reactionemojis.forEach((item) => {
 						let itm = item.toString();
 						let reactionbtn = document.createElement("button");
-						reactionbtn.classList.add("reactionbtn");
 						let reacted = false;
 						if (msg.reactions) {
 							if (msg.reactions[itm]) {
@@ -3299,7 +3296,6 @@ function openMainArea() {
 			}
 		})
 
-		let readupdates = [];
 
 		function updateTypingUsers() {
 			if (typingUsers.length == 0) {
@@ -3320,7 +3316,6 @@ function openMainArea() {
 		}
 		
 		function applyChatUpdates(json) {
-			console.log(json)
 			let keys = Object.keys(json);
 			keys.forEach((i) => {
 				updatessince = i;
@@ -3347,8 +3342,7 @@ function openMainArea() {
 						}
 					}
 					updateTypingUsers();
-				}else if (!readupdates.includes(i)) {
-					readupdates.push(i);
+				}else {
 					let key = val.id;
 					if (val.event == "NEWMESSAGE") {
 						if (messageslist.getItemData(key) == undefined) {
@@ -3364,7 +3358,7 @@ function openMainArea() {
 							updatepinnedbar();
 						}
 					}
-					if (val.event == "REACTIONS") {
+					if (val.event == "REACTIONS") { //Legacy
 						let data = messageslist.getItemData(key);
 						if (data) {
 							data.reactions = val.rect;
