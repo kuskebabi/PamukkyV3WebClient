@@ -47,6 +47,11 @@ a {
 	color:black;
 }
 
+a:hover {
+	background-color: var(--transparent-hover);
+	text-decoration: none;
+}
+
 select {
 	border:none;
 	cursor:pointer;
@@ -652,6 +657,7 @@ ma {
 msgcont {
 	width:100%;
 	display:flex;
+	/*align-items: flex-end;*/
 	animation-name: msgcappear;
 	animation-duration: 0.5s;
 	flex-shrink: 0;
@@ -670,12 +676,18 @@ msgcont > img {
 	margin: 0px 8px 0px 8px;
 	background:white;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	/*position: absolute;*/
+}
+
+msgcont > img.hidden {
+	visibility: hidden;
 }
 
 msgmain {
 	display:flex;
 	flex-direction:column;
 	max-width: 80%;
+	/*margin: 0px 56px 0px 56px;*/
 }
 
 msgmain > msgbubble {
@@ -689,6 +701,10 @@ msgmain > msgbubble {
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
+msgmain > msgsender.hidden {
+	display:none;
+}
+
 msgmain.sender > msgbubble {
 	background: rgba(255,170,0,0.4);
 }
@@ -699,6 +715,7 @@ msgmain.sender > msgsender {
 
 msgmain > msgsender > label {
 	font-size: 10px;
+	font-weight: bold;
 }
 
 msgmain > msgtime > label {

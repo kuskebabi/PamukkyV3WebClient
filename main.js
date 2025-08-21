@@ -490,7 +490,7 @@ function openMainArea() {
 						desttl.innerText = "Bio";
 						desrow.appendChild(desttl);
 						let desval = document.createElement("td");
-						desval.innerText = infod.description;
+						desval.innerText = infod.bio;
 						desrow.appendChild(desval);
 
 						infotable.appendChild(namerow);
@@ -942,7 +942,9 @@ function openMainArea() {
 	let activePopupCount = 0;
 
 	function inertMainUI() {
-		rightArea.inert = leftArea.inert = activePopupCount > 0;
+		Array.prototype.forEach.call(maincont.children, function(child) {
+			child.inert = activePopupCount > 0;
+		});
 	}
 	
 	function opendialog() {
@@ -1403,8 +1405,8 @@ function openMainArea() {
 			}else {
 				let msg = Object.values(data)[0];
 				if (msg) {
-					let dt = new Date(msg.time);
-					let dtt = new Date(msg.time);
+					let dt = new Date(msg.sendTime);
+					let dtt = new Date(msg.sendTime);
 					let nowdate = new Date();
 					//try {
 					if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
@@ -1413,13 +1415,13 @@ function openMainArea() {
 						lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
 					}
 					lastmsgcontent.innerText = "User: " + msg.content.split("\n")[0];
-					if (msg.sender == "0") {
+					if (msg.senderUID == "0") {
 						formatSystemMessage(msg.content, function(text) {
 							lastmsgcontent.innerText = text;
 							lastmsgcontent.classList.remove("loading");
 						});
 					}else {
-						getInfo(msg.sender, function(sender) {
+						getInfo(msg.senderUID, function(sender) {
 							lastmsgcontent.innerText = sender.name + ": " + msg.content.split("\n")[0];
 							lastmsgcontent.classList.remove("loading");
 						});
@@ -1688,7 +1690,7 @@ function openMainArea() {
 		desrow.appendChild(desttl);
 		let desval = document.createElement("td");
 		let desinp = document.createElement("input");
-		desinp.value = currentuser.description;
+		desinp.value = currentuser.bio;
 		desval.appendChild(desinp);
 		desrow.appendChild(desval);
 		
@@ -1774,22 +1776,22 @@ function openMainArea() {
 					if (data.status == "success") {
 						ufl = false;
 						currentuser.picture = data.url;
-						fetch(currentServer + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value }),method: 'POST'}).then((res) => {
+						fetch(currentServer + "editprofile", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture, 'bio': desinp.value }),method: 'POST'}).then((res) => {
 							if (res.ok) {
 								namelbl.innerText = nameinp.value;
 								pfpimg.src = getpfp(currentuser.picture);
 								currentuser.name = nameinp.value;
-								currentuser.description = desinp.value;
+								currentuser.bio = desinp.value;
 							}
 						})
 					}
 				})}).catch(function(error) {console.error(error);});
 			}else {
-				fetch(currentServer + "updateuser", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture,'description': desinp.value  }),method: 'POST'}).then((res) => {
+				fetch(currentServer + "editprofile", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture, 'bio': desinp.value  }),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						namelbl.innerText = nameinp.value;
 						currentuser.name = nameinp.value;
-						currentuser.description = desinp.value;
+						currentuser.bio = desinp.value;
 					}
 				})
 			}
@@ -2037,6 +2039,9 @@ function openMainArea() {
 
 		let messageslist = createDynamicList("messageslist","msgcont");
 		messageslist.setDirection(-1);
+		/*messageslist.element.addEventListener("scroll", function() {
+			messageslist.updateItem();
+		});*/
 		let pinnedmessageslist = createDynamicList("messageslist","msgcont");
 		pinnedmessageslist.element.style.display = "none";
 
@@ -2091,7 +2096,7 @@ function openMainArea() {
 				}
 				pinnedbar.style.display = "";
 				let msg = pinnedmessages[k[k.length - 1]];
-				if (msg.sender == "0") {
+				if (msg.senderUID == "0") {
 					pincontent.innerText = "Pamuk is here!";
 					formatSystemMessage(msg.content, function(text) {
 						pincontent.innerText = text;
@@ -2101,7 +2106,7 @@ function openMainArea() {
 				}
 				pinsender.classList.add("loading");
 				pinsender.innerText = "loading...";
-				getInfo(msg.sender,function(info) {
+				getInfo(msg.senderUID,function(info) {
 					pinsender.classList.remove("loading");
 					pinsender.innerText = info.name;
 				})
@@ -2299,19 +2304,19 @@ function openMainArea() {
 		function addmsg(msg,id,order = 1) {
 			if (messageslist.getItemData(id)) return;
 			if (msg.type != "time") {
-				let dt = new Date(msg.time);
+				let dt = new Date(msg.sendTime);
 				let list = messageslist.getList();
 				let keys = Object.keys(list);
 				let lastmsg = list[keys[keys.length - 1]];
 				let lastmsgtime;
 				if (lastmsg) {
-					lastmsgtime = new Date(lastmsg.data.time);
+					lastmsgtime = new Date(lastmsg.data.sendTime);
 				}else {
 					lastmsgtime = new Date(0);
 				}
 				if (dt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
 					addmsg({
-						sender:0,
+						senderUID: "0",
 						content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
 						time: dt,
 						loadolder: addloadoldermessages,
@@ -2327,7 +2332,7 @@ function openMainArea() {
 			}
 
 			messageslist.addItem(id,{
-				size: (msg.sender == logininfo.uid) ? 61 : (msg.sender == 0) ? 34 : 68,
+				size: (msg.senderUID == logininfo.uid) ? 61 : (msg.senderUID == 0) ? 34 : 68,
 				data: msg,
 				generator: function(data, element, id) {
 					createmsg(data,id,element);
@@ -2341,7 +2346,7 @@ function openMainArea() {
 
 		function addpinnedmsg(key, msg) {
 			pinnedmessageslist.addItem(key,{
-				size: (msg.sender == logininfo.uid) ? 61 : (msg.sender == 0) ? 34 : 68,
+				size: (msg.senderUID == logininfo.uid) ? 61 : (msg.senderUID == 0) ? 34 : 68,
 				data: msg,
 				generator: function(data, element, id) {
 					createmsg(data, key, element, {pinnedmessageslist: true})
@@ -2356,6 +2361,33 @@ function openMainArea() {
 			}else {
 				element.style.background = "";
 			}
+			/*let senderStuff = element.getElementsByClassName("sender");
+			let listdata = messageslist.getList();
+			if (listdata) {
+				let keys = Object.keys(listdata);
+				let thisMessageIndex = keys.indexOf(id);
+				let isLastMessageBySender = true;
+				if (thisMessageIndex > -1 && thisMessageIndex + 1 < listdata.length - 1) {
+					let nextMessage = listdata[keys[thisMessageIndex + 1]];
+					if (nextMessage.data.senderUID == data.senderUID) isLastMessageBySender = false;
+				}
+				Array.prototype.forEach.call(senderStuff, function(i) {
+					if (isLastMessageBySender) {
+						i.classList.remove("hidden");
+						if (i.tagName.toLowerCase() == "img") {
+							if (chatslist.element.scrollTop + chatslist.element.offsetHeight - (element.offsetTop + element.offsetHeight) < 0) {
+								i.style.outline = "1px solid orange";
+								i.style.top = ((chatslist.element.scrollHeight - (chatslist.element.scrollTop + chatslist.element.offsetHeight)) - (element.offsetParent.offsetHeight - element.offsetParent.scrollTop - element.offsetTop - element.offsetHeight)) + "px";
+							}else {
+								i.style.outline = "";
+								i.style.bottom = "16px";
+							}
+						}
+					}else {
+						i.classList.add("hidden");
+					}
+				});
+			}*/
 			let msgreactions = element.querySelector("msgreacts");
 			if (msgreactions) {
 				msgreactions.innerHTML = "";
@@ -2382,7 +2414,7 @@ function openMainArea() {
 						let doescontaincurr = false;
 						Object.keys(react).forEach(function(aa) {
 							let a = react[aa];
-							if (a.sender == logininfo.uid) {
+							if (a.senderUID == logininfo.uid) {
 								doescontaincurr = true;
 							}
 						})
@@ -2422,7 +2454,7 @@ function openMainArea() {
 								userpfp.loading = "lazy";
 								userpfp.style.cursor = "pointer";
 								userpfp.addEventListener("click",function() {
-									viewInfo(item.sender, "user");
+									viewInfo(item.senderUID, "user");
 								});
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
@@ -2431,7 +2463,7 @@ function openMainArea() {
 								usernamelbl.style.marginRight = "8px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
-								getInfo(item.sender, function(uii) {
+								getInfo(item.senderUID, function(uii) {
 									userpfp.src = getpfp(uii.picture);
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
@@ -2450,7 +2482,7 @@ function openMainArea() {
 				}
 				// No need to check for these if there wasn't reaction container. Because these wouldn't exist too.
 				let msgpinned = element.querySelector(".msgpinned");
-				if (msgpinned) msgpinned.style.display = data.pinned ? "" : "none";
+				if (msgpinned) msgpinned.style.display = data.isPinned ? "" : "none";
 				let msgstatus = element.querySelector(".msgstatus");
 				if (msgstatus) {
 					if (data.status == "sending") {
@@ -2473,9 +2505,9 @@ function openMainArea() {
 							let list = messageslist.getList();
 							if (messageslist.getItemData(mkeys[0]) == undefined) {
 								let oldfirstmsg = list[Object.keys(list)[0]];
-								let lastmsgtime = new Date(oldfirstmsg.data.time);
+								let lastmsgtime = new Date(oldfirstmsg.data.sendTime);
 								let newfirstmsg = chatpage[mkeys[0]];
-								let newmsgtime = new Date(newfirstmsg.time);
+								let newmsgtime = new Date(newfirstmsg.sendTime);
 								if (idtoremove != undefined && newmsgtime.setHours(0,0,0,0) == lastmsgtime.setHours(0,0,0,0)) {
 									messageslist.removeItem(idtoremove);
 								}
@@ -2484,7 +2516,7 @@ function openMainArea() {
 							mkeys.forEach((i,idx) => {
 								if (messageslist.getItemData(i) == undefined) {
 									let msg = chatpage[i];
-									let dt = new Date(msg.time);
+									let dt = new Date(msg.sendTime);
 									
 									addmsg(msg, i, -1);
 									if (idx == mkeys.length - 1) {
@@ -2538,7 +2570,7 @@ function openMainArea() {
 			if (msgc == undefined) {
 				return;
 			}
-			let dt = new Date(msg.time);
+			let dt = new Date(msg.sendTime);
 			function selectmessage() {
 				let idx = selectedMessages.indexOf(id);
 				if (idx > -1) {
@@ -2554,7 +2586,7 @@ function openMainArea() {
 			function reply() {
 				replymsgid = id;
 				rc.style.display = "";
-				if (msg.sender == "0") {
+				if (msg.senderUID == "0") {
 					replycnt.innerText = "Pamuk is here!";
 					formatSystemMessage(msg.content, function(text) {
 						replycnt.innerText = text;
@@ -2562,7 +2594,7 @@ function openMainArea() {
 				}else {
 					replycnt.innerText = msg.content.length > 0 ? msg.content : "Message";
 				}
-				getInfo(msg.sender,(user) => {
+				getInfo(msg.senderUID,(user) => {
 					replysname.innerText = user.name;
 				})
 				if (pinnedmessageslist.element.style.display == "") {
@@ -2600,7 +2632,7 @@ function openMainArea() {
 						if (msg.reactions) {
 							if (msg.reactions[itm]) {
 								Object.values(msg.reactions[itm]).forEach(function(s) {
-									if (s.sender == logininfo.uid) {
+									if (s.senderUID == logininfo.uid) {
 										reactionbtn.classList.add("reacted");
 										reacted = true;
 									}
@@ -2794,7 +2826,7 @@ function openMainArea() {
 				if (selectedMessages.length > 0) {
 					deletebutton.disabled = false;
 				}else {
-					deletebutton.disabled = !(crole.AllowMessageDeleting || msg.sender == logininfo.uid);
+					deletebutton.disabled = !(crole.AllowMessageDeleting || msg.senderUID == logininfo.uid);
 				}
 
 				ctxdiv.style.opacity = "0";
@@ -2837,11 +2869,13 @@ function openMainArea() {
 			let msgsender = document.createElement("msgsender");
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
+			msgsender.classList.add("sender");
+			msgpfp.classList.add("sender");
 			msgpfp.classList.add("loading");
 			msgsendertxt.innerText = "loading..."
 			msgsendertxt.classList.add("loading");
 			msgcontent.style.overflowWrap = "break-word";
-			if (msg.sender == "0") {
+			if (msg.senderUID == "0") {
 				msgcontent.innerText = "Pamuk is here!";
 				formatSystemMessage(msg.content, function(text) {
 					msgcontent.innerText = text;
@@ -2851,7 +2885,7 @@ function openMainArea() {
 			}
 			msgtimelbl.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
 
-			if (msg.forwardedfrom != undefined) {
+			if (msg.forwardedFromUID != undefined) {
 				let il = document.createElement("div");
 				il.style.fontSize = "12px";
 				il.innerText = "Forwarded from "
@@ -2860,9 +2894,9 @@ function openMainArea() {
 				fu.style.cursor = "pointer";
 				fu.innerText = "loading..."
 				fu.addEventListener("click",function() {
-					viewInfo(msg.forwardedfrom, "user")
+					viewInfo(msg.forwardedFromUID, "user")
 				})
-				getInfo(msg.forwardedfrom,function(user) {
+				getInfo(msg.forwardedFromUID,function(user) {
 					fu.innerText = user.name;
 					fu.classList.remove("loading");
 				})
@@ -2870,30 +2904,30 @@ function openMainArea() {
 				msgbubble.appendChild(il);
 			}
 
-			if (msg.replymsgcontent != undefined) {
+			if (msg.replyMessageContent != undefined) {
 				let rc = document.createElement("button");
 				rc.classList.add("replycont");
 				addRipple(rc,"rgba(255,200,0,0.6)");
 				rc.addEventListener("click",function() {
-					showmessage(msg.replymsgid);
+					showmessage(msg.replyMessageID);
 				})
 				let replysname = document.createElement("b");
 				replysname.innerText = "loading...";
 				replysname.classList.add("loading");
-				getInfo(msg.replymsgsender,function(user) {
+				getInfo(msg.replyMessageSender,function(user) {
 					replysname.innerText = user.name;
 					replysname.classList.remove("loading");
 				})
 
 				rc.appendChild(replysname);
 				let replycnt = document.createElement("label");
-				if (msg.replymsgsender == "0") {
+				if (msg.replyMessageSender == "0") {
 					replycnt.innerText = "Pamuk is here!";
-					formatSystemMessage(msg.replymsgcontent, function(text) {
+					formatSystemMessage(msg.replyMessageContent, function(text) {
 						replycnt.innerText = text;
 					})
 				}else {
-					replycnt.innerText = msg.replymsgcontent.length > 0 ? msg.replymsgcontent : "Message";
+					replycnt.innerText = msg.replyMessageContent.length > 0 ? msg.replyMessageContent : "Message";
 				}
 				rc.appendChild(replycnt);
 				msgbubble.appendChild(rc);
@@ -2901,9 +2935,9 @@ function openMainArea() {
 
 
 
-			if (msg.sender != 0) {
+			if (msg.senderUID != 0) {
 				msgm.appendChild(msgsender);
-				getInfo(msg.sender,(user) => {
+				getInfo(msg.senderUID,(user) => {
 					msgpfp.classList.remove("loading");
 					msgsendertxt.classList.remove("loading");
 					msgsendertxt.innerText = user.name;
@@ -2913,7 +2947,7 @@ function openMainArea() {
 
 				msgpfp.style.cursor = "pointer";
 				msgpfp.addEventListener("click",function() {
-					viewInfo(msg.sender,"user")
+					viewInfo(msg.senderUID,"user")
 				})
 			}
 			msgm.appendChild(msgbubble);
@@ -3034,11 +3068,11 @@ function openMainArea() {
 			let msgpinned = document.createElement("div");
 			msgpinned.classList.add("msgpinned");
 			msgpinned.title = "Pinned";
-			msgpinned.style.display = msg.pinned ? "" : "none";
+			msgpinned.style.display = msg.isPinned ? "" : "none";
 			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
 
 
-			if (msg.sender == logininfo.uid) {
+			if (msg.senderUID == logininfo.uid) {
 				msgm.classList.add("sender");
 				msgc.appendChild(document.createElement("ma"));
 				msgsender.appendChild(document.createElement("ma"));
@@ -3052,7 +3086,7 @@ function openMainArea() {
 				msgc.appendChild(msgm);
 				msgc.appendChild(msgpfp);
 			}else {
-				if (msg.sender == 0) {
+				if (msg.senderUID == 0) {
 					msgc.appendChild(document.createElement("ma"));
 					msgc.appendChild(msgm);
 					msgc.appendChild(document.createElement("ma"));
@@ -3380,7 +3414,7 @@ function openMainArea() {
 							data.reactions[emoji][val.userID] = {
 								reaction: emoji,
 								sender: val.userID,
-								time: val.time
+								time: val.sendTime
 							}
 							messageslist.updateItem(key, data);
 						}
@@ -3411,7 +3445,7 @@ function openMainArea() {
 					if (val.event == "PINNED") {
 						let data = messageslist.getItemData(key);
 						if (data) {
-							data.pinned = true;
+							data.isPinned = true;
 							messageslist.updateItem(key, data);
 						}
 						pinnedmessages[key] = val;
@@ -3421,7 +3455,7 @@ function openMainArea() {
 					if (val.event == "UNPINNED") {
 						let data = messageslist.getItemData(key);
 						if (data) {
-							data.pinned = false;
+							data.isPinned = false;
 							messageslist.updateItem(key, data);
 						}
 						if (pinnedmessages[key]) {
