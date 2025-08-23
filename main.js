@@ -989,6 +989,7 @@ function openMainArea() {
 			inertMainUI();
 
 			dialoginside.classList.add("closing");
+			dialoginside.inert = true;
 			bgcover.classList.add("closing");
 			setTimeout(function() {
 				if (isatdock) {
@@ -2914,14 +2915,14 @@ function openMainArea() {
 				let replysname = document.createElement("b");
 				replysname.innerText = "loading...";
 				replysname.classList.add("loading");
-				getInfo(msg.replyMessageSender,function(user) {
+				getInfo(msg.replyMessageSenderUID,function(user) {
 					replysname.innerText = user.name;
 					replysname.classList.remove("loading");
 				})
 
 				rc.appendChild(replysname);
 				let replycnt = document.createElement("label");
-				if (msg.replyMessageSender == "0") {
+				if (msg.replyMessageSenderUID == "0") {
 					replycnt.innerText = "Pamuk is here!";
 					formatSystemMessage(msg.replyMessageContent, function(text) {
 						replycnt.innerText = text;

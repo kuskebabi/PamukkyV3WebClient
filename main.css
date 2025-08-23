@@ -329,7 +329,7 @@ button.fab:hover:active {
 }
 
 .popupmenu > button > label {
-	padding: 8px 32px 8px 8px;
+	padding: 4px 32px 4px 4px;
 	display: block;
 	cursor: pointer;
 }
@@ -366,7 +366,6 @@ button.fab:hover:active {
 	right:0;
 	bottom:0;
 	z-index:6;
-	backdrop-filter: blur(8px);
 	animation-name: bgappear;
 	animation-duration: 200ms;
 }
@@ -804,8 +803,7 @@ msgreacts > button.rcted {
 /* ------ ANIMATIONS ------ */
 
 @keyframes bgappear {
-	from {opacity:0;backdrop-filter: none;}
-	to {backdrop-filter: blur(8px);}
+	from {opacity:0;}
 }
 
 @keyframes bgdisappear {
@@ -946,7 +944,7 @@ msgreacts > button.rcted {
 }
 
 @media print {
-	leftarea, .customctx, titlebar, pinbar, msgbar, .bgcover {
+	leftarea, .customctx, titlebar, pinbar, msgbar, .bgcover, centeredPopup {
 		display:none !important;
 	}
 	rightarea {
@@ -957,12 +955,8 @@ msgreacts > button.rcted {
 	msgcont {
 		break-inside: avoid;
 	}
-	messageslist {
+	messageslist,html,body,main {
 		overflow:visible !important;
-	}
-	html,body,main {
-		overflow:visible;
 		background:white;
 	}
-	
 }
