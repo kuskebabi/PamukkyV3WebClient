@@ -554,7 +554,7 @@ function openMainArea() {
 						let pubval = document.createElement("td");
 						let pubinp = document.createElement("input");
 						pubinp.type = "checkbox";
-						pubinp.checked = infod.publicgroup;
+						pubinp.checked = infod.isPublic;
 						pubval.appendChild(pubinp);
 						pubrow.appendChild(pubval);
 						infotable.appendChild(pubrow);
@@ -666,7 +666,7 @@ function openMainArea() {
 								userpfp.loading = "lazy";
 								userpfp.style.cursor = "pointer";
 								userpfp.addEventListener("click",function() {
-									viewInfo(user.user,"user");
+									viewInfo(user.userID,"user");
 								});
 								let usernamelbl = document.createElement("label");
 								usernamelbl.classList.add("loading");
@@ -675,7 +675,7 @@ function openMainArea() {
 								usernamelbl.style.marginRight = "8px";
 								uname.appendChild(userpfp);
 								uname.appendChild(usernamelbl);
-								getInfo(user.user,function(uii) {
+								getInfo(user.userID,function(uii) {
 									userpfp.src = getpfp(uii.picture);
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
@@ -702,7 +702,7 @@ function openMainArea() {
 									roleselect.value = user.role;
 									roleselect.addEventListener("change",function() {
 										//alert("wait..")
-										fetch(currentServer + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.user, 'role': roleselect.value }),method: 'POST'}).then((res) => {
+										fetch(currentServer + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID, 'role': roleselect.value }),method: 'POST'}).then((res) => {
 											if (res.ok) {
 												res.text().then((text) => {
 
@@ -732,7 +732,7 @@ function openMainArea() {
 										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
 										kickbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to kick this user?")) {
-												fetch(currentServer + "kickuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'uid': user.user}),method: 'POST'}).then((res) => {
+												fetch(currentServer + "kickmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID}),method: 'POST'}).then((res) => {
 													if (res.ok) {
 														remove();
 													}
@@ -748,7 +748,7 @@ function openMainArea() {
 										banbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q54 0 104-17.5t92-50.5L228-676q-33 42-50.5 92T160-480q0 134 93 227t227 93Zm252-124q33-42 50.5-92T800-480q0-134-93-227t-227-93q-54 0-104 17.5T284-732l448 448Z"/></svg>';
 										banbtn.addEventListener("click",function() {
 											if (confirm("Do you really want to ban this user?")) {
-												fetch(currentServer + "banuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'uid': user.user}),method: 'POST'}).then((res) => {
+												fetch(currentServer + "banmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID}),method: 'POST'}).then((res) => {
 													if (res.ok) {
 														remove();
 													}
@@ -767,7 +767,7 @@ function openMainArea() {
 									res.text().then((text) => {
 										roles = JSON.parse(text);
 										rokeys = Object.keys(roles);
-										fetch(currentServer + "getgroupusers", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
+										fetch(currentServer + "getgroupmembers", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 											if (res.ok) {
 												res.text().then((text) => {
 													users = JSON.parse(text);
@@ -847,7 +847,7 @@ function openMainArea() {
 									unbanbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>';
 									unbanbtn.addEventListener("click",function() {
 										if (confirm("Do you really want to unban this user?")) {
-											fetch(currentServer + "unbanuser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'uid': user}),method: 'POST'}).then((res) => {
+											fetch(currentServer + "unbanmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user}),method: 'POST'}).then((res) => {
 												if (res.ok) {
 													remove();
 												}else {
@@ -881,7 +881,7 @@ function openMainArea() {
 								fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
 									ufl = false;
 									if (data.status == "success") {
-										fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
+										fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'ispublic': pubinp.checked }),method: 'POST'}).then((res) => {
 											if (res.ok) {
 
 											}else {
@@ -891,7 +891,7 @@ function openMainArea() {
 									}
 								})}).catch(function(error) {console.error(error);});
 							}else {
-								fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles, 'publicgroup': pubinp.checked }),method: 'POST'}).then((res) => {
+								fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles, 'ispublic': pubinp.checked }),method: 'POST'}).then((res) => {
 									if (res.ok) {
 
 									}else {
@@ -2398,7 +2398,7 @@ function openMainArea() {
 						let reacc = document.createElement("button");
 						reacc.style.cursor = "pointer";
 						reacc.addEventListener("click",function() {
-							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: ir}),method: 'POST'}).then((res) => {
+							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageid': id, 'reaction': ir}),method: 'POST'}).then((res) => {
 								
 							})
 						})
@@ -2642,7 +2642,7 @@ function openMainArea() {
 						reactionbtn.innerText = itm;
 						reactionsdiv.appendChild(reactionbtn);
 						reactionbtn.addEventListener("click",function() {
-							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgid': id, reaction: itm}),method: 'POST'})
+							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageid': id, 'reaction': itm}),method: 'POST'})
 							if (reacted) {
 								reactionbtn.classList.remove("reacted");
 							}else {
@@ -2748,7 +2748,7 @@ function openMainArea() {
 					sendButton.onclick = function() {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
-						fetch(currentServer + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages, 'tochats': fchatselectsid}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "forwardmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': messages, 'chatidstosend': fchatselectsid}),method: 'POST'}).then((res) => {
 
 						})
 						diag.closebtn.click();
@@ -2770,7 +2770,7 @@ function openMainArea() {
 				savebtn.addEventListener("click", function() {
 					let messages = selectedMessages;
 					if (messages.length == 0) messages = [id];
-					fetch(currentServer + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+					fetch(currentServer + "savemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': messages}),method: 'POST'}).then((res) => {
 
 					})
 					clik();
@@ -2782,7 +2782,7 @@ function openMainArea() {
 				pinbtn.addEventListener("click", function() {
 					let messages = selectedMessages;
 					if (messages.length == 0) messages = [id];
-					fetch(currentServer + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+					fetch(currentServer + "pinmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': messages}),method: 'POST'}).then((res) => {
 						
 					})
 					clik();
@@ -2804,7 +2804,7 @@ function openMainArea() {
 					if (confirm("Do you really want to delete?")) {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
-						fetch(currentServer + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'msgs': messages}),method: 'POST'}).then((res) => {
+						fetch(currentServer + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': messages}),method: 'POST'}).then((res) => {
 							
 						})
 					}
@@ -3196,12 +3196,12 @@ function openMainArea() {
 		
 		sendbtn.addEventListener("click",function() {
 			let content = msginput.value.trim();
-			
+			let replymessageid = replymsgid;
 			let msgid = "send" + Math.round(Math.random() * 100000);
 			addmsg({
-				sender:logininfo.uid,
+				senderUID:logininfo.uid,
 				content: content,
-				time: new Date(),
+				sendTime: new Date(),
 				status: "sending"
 			},msgid);
 
@@ -3223,7 +3223,7 @@ function openMainArea() {
 				}
 			}
 			function send() {
-				fetch(currentServer + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': content,replymsg: replymsgid,files: (files.length > 0 ? files : null)}),method: 'POST'}).then((res) => {
+				fetch(currentServer + "sendmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'content': content, 'replymessageid': replymessageid, 'files': (files.length > 0 ? files : null)}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.text().then((text) => {
 							res = JSON.parse(text);
@@ -3405,16 +3405,16 @@ function openMainArea() {
 							pinnedmessageslist.updateItem(key, pdata);
 						}
 					}
-					if (val.event == "REACT") {
+					if (val.event == "REACTED") {
 						let data = messageslist.getItemData(key);
 						let emoji = val.reaction;
 						if (data) {
 							if (!data.reactions.hasOwnProperty(emoji)) data.reactions[emoji] = {}; // Create emoji subobject if doesn't exist.
 
-							data.reactions[emoji][val.userID] = {
+							data.reactions[emoji][val.senderUID] = {
 								reaction: emoji,
-								sender: val.userID,
-								time: val.sendTime
+								senderUID: val.senderUID,
+								sendTime: val.sendTime
 							}
 							messageslist.updateItem(key, data);
 						}
@@ -3425,11 +3425,11 @@ function openMainArea() {
 							pinnedmessageslist.updateItem(key, pdata);
 						}
 					}
-					if (val.event == "UNREACT") {
+					if (val.event == "UNREACTED") {
 						let data = messageslist.getItemData(key);
 						let emoji = val.reaction;
 						if (data) {
-							delete data.reactions[emoji][val.userID];
+							delete data.reactions[emoji][val.senderUID];
 							if (Object.keys(data.reactions[emoji]).length == 0) {
 								delete data.reactions[emoji];
 							}
