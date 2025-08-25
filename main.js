@@ -2301,7 +2301,7 @@ function openMainArea() {
 
 		let timemsgid = 0;
 		let messagescount = 0;
-		let addloadoldermessages = true;
+		let addLoadOlderMessages = true;
 		function addmsg(msg,id,order = 1) {
 			if (messageslist.getItemData(id)) return;
 			if (msg.type != "time") {
@@ -2319,12 +2319,12 @@ function openMainArea() {
 					addmsg({
 						senderUID: "0",
 						content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
-						time: dt,
-						loadolder: addloadoldermessages,
+						sendTime: dt,
+						loadOlder: addLoadOlderMessages,
 						type: "time"
 					},timemsgid,order)
 					timemsgid++;
-					addloadoldermessages = false;
+					addLoadOlderMessages = false;
 				}
 
 				if (id > timemsgid) {
@@ -2337,7 +2337,7 @@ function openMainArea() {
 				data: msg,
 				generator: function(data, element, id) {
 					createmsg(data,id,element);
-					if (data.loadolder) {
+					if (data.loadOlder) {
 						getoldermessages("#" + messagescount + "-#" + (messagescount + 48), undefined, id);
 					}
 				},
@@ -2522,10 +2522,11 @@ function openMainArea() {
 									addmsg(msg, i, -1);
 									if (idx == mkeys.length - 1) {
 										addmsg({
-											sender:0,
+											senderUID: "0",
 											content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
-											time: dt,
-											loadolder: true
+											sendTime: dt,
+											loadOlder: true,
+											type: "time"
 										},timemsgid,-1)
 										timemsgid++;
 									}
