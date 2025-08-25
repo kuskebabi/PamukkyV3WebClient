@@ -1124,6 +1124,9 @@ function openMainArea() {
 		popupmenu.addEventListener("keydown",function(e) {
 			if (e.key == "Escape") close();
 		})
+
+		addKeyboardListSelectionSupport(popupmenu);
+		popupmenu.focus();
 	}
 	
 	let currentchatview;
@@ -1457,15 +1460,25 @@ function openMainArea() {
 			rfb.addEventListener("click",function() {
 				loadchats();
 			})
+			element.addEventListener("focus",function() {
+				rfb.focus();
+			})
 			rfb.innerText = "Refresh"
 			element.appendChild(rfb);
 			return;
 		}
 		if (index == list.length - 1) {
-			let fabhint = document.createElement("label");
+			let fabhint = document.createElement("button");
+			fabhint.classList.add("buttonlabel");
 			fabhint.style.display = "block";
 			fabhint.style.margin = "8px";
 			fabhint.innerText = "Click on the \"+\" button to add a new chat.";
+			element.addEventListener("click",function() {
+				fab.click();
+			})
+			element.addEventListener("focus",function() {
+				fabhint.focus();
+			})
 			element.appendChild(fabhint);
 			return;
 		}
@@ -1477,6 +1490,10 @@ function openMainArea() {
 
 		let id = item["chatid"] ?? item.group;
 		chatsListItemGenerator(item, itmbtn);
+
+		element.addEventListener("focus",function() {
+			itmbtn.focus();
+		})
 
 		itmbtn.addEventListener("click",function() {
 			openchat(id);
@@ -1958,7 +1975,7 @@ function openMainArea() {
 		let fileslist = [];
 		let isuserchat = chatid.includes("-");
 		let pinnedmessages = {};
-		let mchat = document.createElement("mchat");
+		let mainChatArea = document.createElement("mchat");
 		let titlebar = document.createElement("titlebar");
 		let backbtn = document.createElement("button");
 		addRipple(backbtn,"rgba(255,200,0,0.6)");
@@ -2035,7 +2052,7 @@ function openMainArea() {
 		})
 		
 		titlebar.appendChild(optionsbtn);
-		mchat.appendChild(titlebar);
+		mainChatArea.appendChild(titlebar);
 
 
 		let messageslist = createDynamicList("messageslist","msgcont");
@@ -2066,7 +2083,7 @@ function openMainArea() {
 		pinsbtn.classList.add("cb")
 		pinsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
 		pinnedbar.appendChild(pinsbtn);
-		mchat.appendChild(pinnedbar);
+		mainChatArea.appendChild(pinnedbar);
 
 
 		pinsbtn.addEventListener("click",function() {
@@ -2119,8 +2136,8 @@ function openMainArea() {
 			}
 		}
 		
-		mchat.appendChild(pinnedmessageslist.element);
-		mchat.appendChild(messageslist.element);
+		mainChatArea.appendChild(pinnedmessageslist.element);
+		mainChatArea.appendChild(messageslist.element);
 
 		
 		let mgb = document.createElement("msgbar");
@@ -2197,17 +2214,17 @@ function openMainArea() {
 		
 		rc.style.display = "none";
 		
-		mchat.addEventListener('dragover', (e) => {
+		mainChatArea.addEventListener('dragover', (e) => {
 			e.preventDefault()
 		});
-		mchat.addEventListener('drop', (e) => {
+		mainChatArea.addEventListener('drop', (e) => {
 			Array.prototype.forEach.call(e.dataTransfer.files,function(i) {
 				uploadfile(i);
 			});
 			e.preventDefault()
 		});
 		
-		mchat.addEventListener("paste", async e => {
+		mainChatArea.addEventListener("paste", async e => {
 			
 			if (!e.clipboardData.files.length) {
 				return;
@@ -2248,7 +2265,7 @@ function openMainArea() {
 		typinglabel.style.opacity = "0";
 		mgb.appendChild(typinglabel);
 
-		mchat.appendChild(mgb)
+		mainChatArea.appendChild(mgb)
 		
 		let chatpage;
 		let selectedMessages = [];
@@ -2574,6 +2591,7 @@ function openMainArea() {
 			}
 			let dt = new Date(msg.sendTime);
 			function selectmessage() {
+				if (msg.type == "time") return;
 				let idx = selectedMessages.indexOf(id);
 				if (idx > -1) {
 					selectedMessages.splice(idx,1);
@@ -2604,6 +2622,19 @@ function openMainArea() {
 				}
 				msginput.focus();
 			}
+
+			msgc.addEventListener("keydown",function(e) {
+				e.preventDefault();
+				if (e.key == "r") {
+					reply();
+				}
+				if (e.key == "s") {
+					selectmessage();
+				}
+				if (e.key == "m") {
+					spawnmenu({});
+				}
+			})
 
 			msgc.addEventListener("click",function() {
 				if (selectedMessages.length > 0) {
@@ -2657,6 +2688,9 @@ function openMainArea() {
 				}
 				let cnt = document.createElement("div");
 				ctxdiv.appendChild(cnt);
+				addKeyboardListSelectionSupport(cnt);
+				setTimeout(function() {cnt.focus();}, 100);
+
 				if (extra) {
 					if (extra.pinnedmessageslist == true) {
 						let gotobutton = document.createElement("button");
@@ -3475,7 +3509,7 @@ function openMainArea() {
 		}
 
 		return {
-			chat: mchat,
+			chat: mainChatArea,
 			titlebar: titlebar,
 			pfp: pfpimg,
 			titlelabel: titletxt,
@@ -3536,6 +3570,54 @@ function humanFileSize(bytes, si=false, dp=1) {
 }
 
 //something I made
+
+function addKeyboardListSelectionSupport(element, options = {}) {
+	let direction = options.direction ?? "vertical";
+	let startIndex = options.startIndex ?? 0;
+	let index = -1;
+	
+	let prevItemKey = direction == "horizontal" ? "ArrowLeft" : "ArrowUp";
+	let nextItemKey = direction == "horizontal" ? "ArrowRight" : "ArrowDown";
+	let listenningKeys = [prevItemKey, nextItemKey];
+
+	function selectItem(index) {
+		element.children[index].focus();
+	}
+
+	element.tabIndex = "0";
+	element.addEventListener("keydown", function(e) {
+		if (listenningKeys.includes(e.key)) {
+			e.preventDefault();
+			if (index == -1) {
+				if (startIndex < 0) {
+					index = element.children.length + startIndex;
+				}else {
+					index = startIndex;
+				}
+			}
+			if (e.key == prevItemKey) {
+				index--;
+				if (index < 0) index = 0;
+				selectItem(index);
+			}
+			if (e.key == nextItemKey) {
+				index++;
+				if (index > element.children.length - 1) index = element.children.length - 1;
+				selectItem(index);
+			}
+		}
+	});
+
+	return {
+		setStartIndex: function(index) {
+			startIndex = index;
+		},
+		setDirection: function(dir) {
+			direction = dir;
+		},
+	}
+}
+
 function createDynamicList(elemtype = "div", innertype = "div") {
 	let list = {};
 	
@@ -3547,6 +3629,8 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 
 	let listelement = document.createElement(elemtype);
 	listelement.style.overflow = "auto";
+	// Keyboard item selection support
+	let kbdConf = addKeyboardListSelectionSupport(listelement);
 
 	listelement.addEventListener("scroll",function() {
 		if (listelement.scrollTop > lastscrollpos) {
@@ -3581,6 +3665,7 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 			return;
 		}
 		let element = document.createElement(innertype);
+		element.tabIndex = "0";
 		element.style.height = item.size + "px"; //Assumed size, will be removed when element loads.
 		if (order == 1) {
 			listelement.appendChild(element)
@@ -3665,10 +3750,12 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		if (direction == -1) {
 			pos = 1;
 			scrolldirection = -1;
+			kbdConf.setStartIndex(-1);
 		}
 		if (direction == 1) {
 			pos = -1;
 			scrolldirection = 1;
+			kbdConf.setStartIndex(0);
 		}
 	}
 
@@ -3700,6 +3787,8 @@ function createLazyList(elemtype = "div",innertype = "div") {
 	let list = [];
 	let listelement = document.createElement(elemtype);
 	listelement.style.overflow = "auto";
+	// Keyboard item selection support
+	addKeyboardListSelectionSupport(listelement);
 
 	let itemgenerator = function(list,index,element) {};
 	let itemupdater = function(list,index,element) {};
@@ -3726,6 +3815,7 @@ function createLazyList(elemtype = "div",innertype = "div") {
 		list.forEach(function(i,idx) {
 			let size = getsize(list,idx);
 			let element = document.createElement(innertype);
+			element.tabIndex = "0";
 			element.style.height = size + "px"; //Assumed size, will be removed when element loads.
 			listelement.appendChild(element);
 			let viewobserver = new IntersectionObserver(onintersection, {root: null, threshold: 0})

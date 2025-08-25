@@ -212,6 +212,10 @@ titlebar {
 	background: var(--transparent-hover)
 }
 
+.buttonlabel {
+	background: transparent;
+}
+
 .circleimg {
 	border-radius: 100%;
 	width: 32px;
@@ -425,6 +429,10 @@ msgscont > msgcont:not(:first-child) > msgmain > msgsender {
 	display: none;
 }
 
+msgcont:focus-visible {
+	background: var(--transparent-hover);
+}
+
 pinbar {
 	display:flex;
 	height: 56px;
@@ -566,6 +574,11 @@ msgbar > div > textarea {
 }
 
 .chatitem:hover {
+	background: var(--transparent-hover);
+	border-bottom: 1px solid transparent;
+}
+
+.chatitem:focus-visible {
 	background: var(--transparent-hover);
 	border-bottom: 1px solid transparent;
 }
