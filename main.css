@@ -274,7 +274,7 @@ button.fab:hover:active {
 	background: transparent;
 	margin:0px;
 }
-.contextmenu button:hover:not(:disabled), .customctx button:hover:not(:disabled) {
+.contextmenu button:hover:not(:disabled), .customctx button:hover:not(:disabled), .customctx button:focus-visible {
 	background: var(--transparent-hover);
 }
 .contextmenu {
@@ -322,7 +322,7 @@ button.fab:hover:active {
 	background: transparent;
 }
 
-.popupmenu > button:hover {
+.popupmenu > button:hover, .popupmenu > button:focus-visible {
 	background: var(--transparent-hover);
 }
 
@@ -573,12 +573,7 @@ msgbar > div > textarea {
 	border-bottom: 1px solid gray;
 }
 
-.chatitem:hover {
-	background: var(--transparent-hover);
-	border-bottom: 1px solid transparent;
-}
-
-.chatitem:focus-visible {
+.chatitem:hover, .chatitem:focus-visible {
 	background: var(--transparent-hover);
 	border-bottom: 1px solid transparent;
 }
