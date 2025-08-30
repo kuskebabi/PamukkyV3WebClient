@@ -20,8 +20,11 @@ body,html {
 	accent-color:orange;
 	overflow:hidden;
 	background:wheat;
-	--main-bg: #ebebeb;
+	
+	--main-bg: rgb(220,220,220);
 	--transparent-hover: rgba(0,0,0,0.2);
+	--pop-box-shandow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	--container-background: rgb(240,240,240);
 }
 
 flex {
@@ -88,12 +91,12 @@ centeredPopup {
 	min-width: 300px;
 	max-width: 100%;
 	max-height: 100%;
-	background-color: var(--main-bg);
+	background-color: var(--container-background);
 	border-radius: 8px;
 	padding:8px;
 	animation-name: dialogappear;
 	animation-duration: 0.5s;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 }
 
 centeredPopup.closing {
@@ -143,7 +146,7 @@ rightarea {
 	width:100%;
 	display:flex;
 	flex-direction: column;
-	background: rgb(240,240,240);
+	background: var(--container-background);
 	min-width: 0;
 }
 
@@ -160,10 +163,12 @@ input, textarea {
 	border-radius:8px;
 	outline:none;
 	font: inherit;
+	background-color: rgba(20,20,20,0.2);
 }
 
 input:focus, textarea:focus {
 	outline:1px solid gray;
+	background-color: var(--transparent-hover);
 }
 
 button {
@@ -172,6 +177,12 @@ button {
 	border-radius:8px;
 	cursor:pointer;
 	margin:2px;
+	background-color: rgba(20,20,20,0.1);
+	transition: background-color 200ms;
+}
+button:hover {
+	background-color: var(--transparent-hover);
+	outline:1px solid gray;
 }
 button:disabled {
 	opacity:0.5;
@@ -208,12 +219,8 @@ titlebar {
 	cursor:pointer;
 }
 
-.transparentbtn:hover {
-	background: var(--transparent-hover)
-}
-
 .buttonlabel {
-	background: transparent;
+	background: transparent !important;
 }
 
 .circleimg {
@@ -223,7 +230,7 @@ titlebar {
 	margin: 4px;
 	background:white;
 	flex-shrink: 0;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 }
 
 .errorlabel {
@@ -252,7 +259,7 @@ button.fab {
 	bottom: 20px;
 	right: 20px;
 	z-index:1;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 button.fab:hover {
@@ -281,9 +288,9 @@ button.fab:hover:active {
 	outline: 1px solid gray;
 	z-index: 100;
 	border-radius:8px;
-	background: rgb(240,240,240);
+	background: var(--container-background);
 	transition: opacity 200ms;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 }
 
 .customctx {
@@ -293,11 +300,11 @@ button.fab:hover:active {
 .customctx > div {
 	outline: 1px solid gray;
 	border-radius:8px;
-	background: rgb(240,240,240);
+	background: var(--container-background);
 	transition: opacity 200ms;
 	animation-name: ctxappear;
 	animation-duration: 200ms;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 	margin-bottom: 8px;
 }
 
@@ -307,13 +314,13 @@ button.fab:hover:active {
 	z-index: 100;
 	border-radius:8px;
 	overflow: auto;
-	background: rgb(240,240,240);
+	background: var(--container-background);
 	transition: opacity 200ms;
 	/*max-height: 0px;*/
 	opacity: 0;
 	display: flex;
 	flex-direction: column;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 }
 
 .popupmenu > button {
@@ -493,7 +500,7 @@ attachmentscont > uploaditm {
 	transition: box-shadow 200ms;
 }
 .msgimg:hover {
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 }
 
 uploaditm {
@@ -566,7 +573,6 @@ msgbar > div > textarea {
 	/*height:54px;*/
 	margin: unset;
 	cursor:pointer;
-	transition: background-color 300ms, border-radius 300ms, transform 300ms;
 	text-align: inherit;
 	font-size: inherit;
 	background:transparent;
@@ -590,7 +596,7 @@ msgbar > div > textarea {
 	margin-right: 5px;
 	flex-shrink:0;
 	background:white;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 }
 
 .chatitem > infoarea {
@@ -682,7 +688,7 @@ msgcont > img {
 	border-radius: 100%;
 	margin: 0px 8px 0px 8px;
 	background:white;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 	/*position: absolute;*/
 }
 
@@ -705,7 +711,7 @@ msgmain > msgbubble {
 	width:auto;
 	animation-name: msgbappear;
 	animation-duration: 0.5s;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	box-shadow: var(--pop-box-shandow);
 }
 
 msgmain > msgsender.hidden {
@@ -930,14 +936,9 @@ msgreacts > button.rcted {
 @media (prefers-color-scheme: dark) {
 	html,body {
 		background:#2b230c;
-		--main-bg: #171717;
+		--main-bg: rgb(40,40,40);
 		--transparent-hover: rgba(255,255,255,0.2);
-	}
-	rightarea {
-		background: rgb(20,20,20);
-	}
-	.contextmenu, .customctx > div, .popupmenu {
-		background: rgb(40,40,40);
+		--container-background: rgb(30,30,30);
 	}
 	filed > div > label, a {
 		color:white;
