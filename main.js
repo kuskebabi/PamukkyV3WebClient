@@ -3023,7 +3023,7 @@ function openMainArea() {
 					//vid.autoplay = true;
 					vid.controls = true;
 					vid.src = i.url.replace(/%SERVER%/g,currentServer);
-					vid.style.aspectRatio = "16/9";
+					//vid.style.aspectRatio = "16/9";
 					vid.style.width = "100%";
 					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
 					vid.title = filename;

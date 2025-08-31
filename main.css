@@ -202,7 +202,6 @@ button:disabled {
 	flex-shrink:0;
 	min-height:30;
 	align-items:center;
-	background: var(--main-bg);
 }
 
 titlebar {
@@ -655,6 +654,7 @@ ma {
 	height: 35px;
 	padding: 4px !important;
 	flex-shrink: 0;
+	outline: none !important;
 }
 .reactionsbar > button.reacted {
 	background-color: var(--transparent-hover);
