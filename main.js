@@ -2910,7 +2910,7 @@ function openMainArea() {
 					event.preventDefault();
 				}
 			});
-			let selectid = document.createElement("div");
+			
 			let msgm = document.createElement("msgmain");
 			let msgbubble = document.createElement("msgbubble");
 			let msgcontent = document.createElement("msgcontent");
@@ -2920,7 +2920,7 @@ function openMainArea() {
 			let msgsender = document.createElement("msgsender");
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
-			selectid.classList.add("selectid");
+			
 			msgsender.classList.add("sender");
 			msgpfp.classList.add("sender");
 			msgpfp.classList.add("loading");
@@ -2928,7 +2928,11 @@ function openMainArea() {
 			msgsendertxt.classList.add("loading");
 			msgcontent.style.overflowWrap = "break-word";
 
-			if (msg.type != "time") msgc.appendChild(selectid);
+			if (msg.type != "time") {
+				let selectid = document.createElement("div");
+				selectid.classList.add("selectid");
+				msgc.appendChild(selectid);
+			};
 
 			if (msg.senderUID == "0") {
 				msgcontent.innerText = "Pamuk is here!";
