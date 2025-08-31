@@ -670,16 +670,44 @@ ma {
 msgcont {
 	width:100%;
 	display:flex;
+	position: relative;
 	/*align-items: flex-end;*/
 	animation-name: msgcappear;
 	animation-duration: 0.5s;
 	flex-shrink: 0;
-	transition: background-color 100ms;
+	transition: background-color 200ms;
 	padding: 2px;
 }
 
 msgcont.hint {
 	background: rgba(255, 200, 0, 0.5);
+}
+
+msgcont > .selectid {
+	border: 1px solid white;
+	width: 24px;
+	height: 24px;
+	border-radius: 12px;
+	font-size: medium;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	align-self: center;
+	animation-name: slideright;
+	animation-duration: 200ms;
+}
+
+msgcont.selected {
+	background-color: orange;
+}
+
+msgcont.selected > .selectid{
+	background-color: orange;
+}
+
+messageslist:not(.selection) > msgcont:not(.selected) > .selectid {
+	display: none;
 }
 
 msgcont > img {
@@ -878,6 +906,11 @@ msgreacts > button.rcted {
 @keyframes slidedown {
 	from {transform:translateY(0);opacity:1;}
   	to {transform:translateY(100%);opacity:0;}
+}
+
+@keyframes slideright {
+	from {transform:translateX(-100%);opacity:0;}
+  	to {transform:translateX(0);opacity:1;}
 }
 
 

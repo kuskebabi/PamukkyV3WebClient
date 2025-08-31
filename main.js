@@ -2374,10 +2374,15 @@ function openMainArea() {
 		}
 
 		function chatmsgupdater(data,element,id) {
-			if (selectedMessages.includes(id)) {
-				element.style.background = "orange";
-			}else {
-				element.style.background = "";
+			let selectid = element.querySelector(".selectid");
+			if (selectid) {
+				if (selectedMessages.includes(id)) {
+					element.classList.add("selected");
+					selectid.innerText = selectedMessages.indexOf(id) + 1;
+				}else {
+					element.classList.remove("selected");
+					selectid.innerText = "";
+				}
 			}
 			/*let senderStuff = element.getElementsByClassName("sender");
 			let listdata = messageslist.getList();
@@ -2585,6 +2590,13 @@ function openMainArea() {
 			}
 		}
 
+		function updateMessage(id) {
+			messageslist.updateItem(id);
+			if (pinnedmessages[id]) {
+				pinnedmessageslist.updateItem(id);
+			}
+		}
+
 		function createmsg(msg,id,msgc,extra) {
 			if (msgc == undefined) {
 				return;
@@ -2595,13 +2607,15 @@ function openMainArea() {
 				let idx = selectedMessages.indexOf(id);
 				if (idx > -1) {
 					selectedMessages.splice(idx,1);
+					updateMessage(id);
 				}else {
 					selectedMessages.push(id);
 				}
-				messageslist.updateItem(id);
-				if (pinnedmessages[id]) {
-					pinnedmessageslist.updateItem(id);
-				}
+				messageslist.element.classList.toggle("selection", selectedMessages.length > 0);
+				pinnedmessageslist.element.classList.toggle("selection", selectedMessages.length > 0);
+				selectedMessages.forEach(function(msgid) {
+					updateMessage(msgid);
+				})
 			}
 			function reply() {
 				replymsgid = id;
@@ -2896,6 +2910,7 @@ function openMainArea() {
 					event.preventDefault();
 				}
 			});
+			let selectid = document.createElement("div");
 			let msgm = document.createElement("msgmain");
 			let msgbubble = document.createElement("msgbubble");
 			let msgcontent = document.createElement("msgcontent");
@@ -2905,12 +2920,16 @@ function openMainArea() {
 			let msgsender = document.createElement("msgsender");
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
+			selectid.classList.add("selectid");
 			msgsender.classList.add("sender");
 			msgpfp.classList.add("sender");
 			msgpfp.classList.add("loading");
 			msgsendertxt.innerText = "loading..."
 			msgsendertxt.classList.add("loading");
 			msgcontent.style.overflowWrap = "break-word";
+
+			if (msg.type != "time") msgc.appendChild(selectid);
+
 			if (msg.senderUID == "0") {
 				msgcontent.innerText = "Pamuk is here!";
 				formatSystemMessage(msg.content, function(text) {
@@ -3422,6 +3441,10 @@ function openMainArea() {
 					}
 					if (val.event == "DELETED") {
 						messageslist.removeItem(key);
+						let selectedMessagesIndex = selectedMessages.indexOf(key);
+						if (selectedMessagesIndex != -1) {
+							selectedMessages.splice(selectedMessagesIndex, 1);
+						}
 						if (pinnedmessages[key]) {
 							delete pinnedmessages[key];
 							pinnedmessageslist.removeItem(key);
