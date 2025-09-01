@@ -1165,8 +1165,12 @@ function openMainArea() {
 
 		getEmojis(function(emojis) {
 			emojis.forEach(function(emoji, index) {
-				let emojiunc = unicodeToString(emoji["unicode"][0]);
+				let emojiunc = "";
 				let name = emoji["name"];
+				
+				emoji["unicode"].forEach(function(u) {
+					emojiunc += unicodeToString(u)
+				})
 
 				let button = document.createElement("button");
 				button.innerText = emojiunc;
@@ -2812,6 +2816,7 @@ function openMainArea() {
 
 					let morebtn = document.createElement("button");
 					morebtn.innerText = "More emojis...";
+					addRipple(morebtn,"rgba(255,200,0,0.6)");
 					reactionsdiv.appendChild(morebtn);
 					morebtn.addEventListener("click", function() {
 						openEmojiMenu(morebtn, function(emoji) {
@@ -2830,7 +2835,7 @@ function openMainArea() {
 				if (extra) {
 					if (extra.pinnedmessageslist == true) {
 						let gotobutton = document.createElement("button");
-						addRipple(gotobutton,"rgba(255,200,0,0.6)",true);
+						addRipple(gotobutton,"rgba(255,200,0,0.6)");
 						gotobutton.innerText = "Go to message";
 						gotobutton.disabled = !crole.AllowSending;
 						gotobutton.addEventListener("click", function() {
@@ -2844,7 +2849,7 @@ function openMainArea() {
 					}
 				}
 				let replybutton = document.createElement("button");
-				addRipple(replybutton,"rgba(255,200,0,0.6)",true);
+				addRipple(replybutton,"rgba(255,200,0,0.6)");
 				replybutton.innerText = "Reply";
 				replybutton.disabled = !crole.AllowSending;
 				replybutton.addEventListener("click", function() {
@@ -2853,7 +2858,7 @@ function openMainArea() {
 				})
 				cnt.appendChild(replybutton);
 				let forwardbutton = document.createElement("button");
-				addRipple(forwardbutton,"rgba(255,200,0,0.6)",true);
+				addRipple(forwardbutton,"rgba(255,200,0,0.6)");
 				forwardbutton.innerText = "Forward message...";
 				forwardbutton.addEventListener("click", function() {
 					let diag = opendialog();
@@ -2930,7 +2935,7 @@ function openMainArea() {
 				cnt.appendChild(forwardbutton);
 				let selectbutton = document.createElement("button");
 				selectbutton.innerText = "Select...";
-				addRipple(selectbutton,"rgba(255,200,0,0.6)",true);
+				addRipple(selectbutton,"rgba(255,200,0,0.6)");
 				selectbutton.addEventListener("click", function() {
 					selectmessage();
 					clik();
@@ -2938,7 +2943,7 @@ function openMainArea() {
 				cnt.appendChild(selectbutton);
 				let savebtn = document.createElement("button");
 				savebtn.innerText = "Save message";
-				addRipple(savebtn,"rgba(255,200,0,0.6)",true);
+				addRipple(savebtn,"rgba(255,200,0,0.6)");
 				savebtn.addEventListener("click", function() {
 					let messages = selectedMessages;
 					if (messages.length == 0) messages = [id];
@@ -2950,7 +2955,7 @@ function openMainArea() {
 				cnt.appendChild(savebtn);
 				let pinbtn = document.createElement("button");
 				pinbtn.innerText = msgpinned.style.display == "" ? "Unpin message" : "Pin message";
-				addRipple(pinbtn,"rgba(255,200,0,0.6)",true);
+				addRipple(pinbtn,"rgba(255,200,0,0.6)");
 				pinbtn.addEventListener("click", function() {
 					let messages = selectedMessages;
 					if (messages.length == 0) messages = [id];
@@ -2962,7 +2967,7 @@ function openMainArea() {
 				pinbtn.disabled = !crole.AllowPinningMessages;
 				cnt.appendChild(pinbtn);
 				let copybutton = document.createElement("button");
-				addRipple(copybutton,"rgba(255,200,0,0.6)",true);
+				addRipple(copybutton,"rgba(255,200,0,0.6)");
 				copybutton.innerText = "Copy selected text";
 				copybutton.addEventListener("click", function() {
 					document.execCommand('copy');
@@ -2970,7 +2975,7 @@ function openMainArea() {
 				})
 				cnt.appendChild(copybutton);
 				let deletebutton = document.createElement("button");
-				addRipple(deletebutton,"rgba(255,0,0,0.6)",true);
+				addRipple(deletebutton,"rgba(255,0,0,0.6)");
 				deletebutton.innerText = "Delete message";
 				deletebutton.addEventListener("click", () => {
 					if (confirm("Do you really want to delete?")) {

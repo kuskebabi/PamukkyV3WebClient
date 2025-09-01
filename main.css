@@ -353,7 +353,7 @@ button.fab:hover:active {
 .emojilist > button {
 	width: 40px;
 	height: 40px;
-	font-size: large;
+	font-size: larger;
 }
 
 .loading {
