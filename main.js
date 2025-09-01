@@ -1098,7 +1098,11 @@ function openMainArea() {
 			let popuprect = popupmenu.getBoundingClientRect();
 			if (popuprect.width + popuprect.left > document.body.clientWidth) {
 				popupmenu.style.left = "";
-				popupmenu.style.right = (document.body.clientWidth - rect.right) + "px";
+				if (document.body.clientWidth - (document.body.clientWidth - rect.left) - popuprect.width > 0) {
+					popupmenu.style.right = (document.body.clientWidth - rect.right) + "px";
+				}else {
+					popupmenu.style.right = "0px";
+				}
 			}
 			if (popuprect.height + popuprect.top > document.body.clientHeight) {
 				popupmenu.style.top = "";
