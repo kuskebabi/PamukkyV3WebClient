@@ -344,6 +344,17 @@ button.fab:hover:active {
 	cursor: pointer;
 }
 
+.emojilist {
+	width: 400px;
+	height: 60vh;
+	overflow: auto;
+}
+
+.emojilist > button {
+	width: 32px;
+	height: 32px;
+}
+
 .loading {
 	animation-name: loading;
 	animation-duration: 2s;

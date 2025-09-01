@@ -1060,7 +1060,7 @@ function openMainArea() {
 		}
 	}
 
-	function openmenu(menuitems, element) {
+	function openPopupMenu(posRef) {
 		activePopupCount++;
 		inertMainUI();
 		
@@ -1068,28 +1068,9 @@ function openMainArea() {
 		popupmenu.classList.add("popupmenu");
 		popupmenu.tabIndex = "0";
 
-		let rect = element.getBoundingClientRect();
+		let rect = posRef ? posRef.getBoundingClientRect() : {width: 1, height: 1};
 		popupmenu.style.top = rect.top + rect.height + "px";
 		popupmenu.style.left = rect.left + "px";
-
-		menuitems.forEach(function(item) {
-			let menuitem = document.createElement("button");
-			let menuitemicon = document.createElement("div");
-			let menuitemlabel = document.createElement("label");
-			menuitem.appendChild(menuitemicon);
-			menuitem.appendChild(menuitemlabel);
-			menuitemlabel.innerText = item.content;
-			if (item.icon) {
-				menuitemicon.innerHTML = item.icon;
-			}
-			addRipple(menuitem,"rgba(255,200,0,0.6)");
-			popupmenu.appendChild(menuitem);
-
-			menuitem.addEventListener("click",function() {
-				close();
-				item.callback();
-			})
-		});
 		
 		let closed = false;
 		function close() {
@@ -1117,6 +1098,10 @@ function openMainArea() {
 				popupmenu.style.left = "";
 				popupmenu.style.right = (document.body.clientWidth - rect.right) + "px";
 			}
+			if (popuprect.height + popuprect.top > document.body.clientHeight) {
+				popupmenu.style.top = "";
+				popupmenu.style.bottom = (document.body.clientHeight - rect.top) + "px";
+			}
 			popupmenu.style.opacity = "1";
 			//popupmenu.style.maxHeight = "calc(100% - " + popupmenu.style.top + ")";
 		});
@@ -1125,8 +1110,110 @@ function openMainArea() {
 			if (e.key == "Escape") close();
 		})
 
-		addKeyboardListSelectionSupport(popupmenu);
 		popupmenu.focus();
+
+		return popupmenu;
+	}
+
+	function openmenu(menuitems, element) {
+		let popupmenu = openPopupMenu(element);
+
+		menuitems.forEach(function(item) {
+			let menuitem = document.createElement("button");
+			let menuitemicon = document.createElement("div");
+			let menuitemlabel = document.createElement("label");
+			menuitem.appendChild(menuitemicon);
+			menuitem.appendChild(menuitemlabel);
+			menuitemlabel.innerText = item.content;
+			if (item.icon) {
+				menuitemicon.innerHTML = item.icon;
+			}
+			addRipple(menuitem,"rgba(255,200,0,0.6)");
+			popupmenu.appendChild(menuitem);
+
+			menuitem.addEventListener("click",function() {
+				close();
+				item.callback();
+			})
+		});
+		
+		addKeyboardListSelectionSupport(popupmenu);
+	}
+
+	function openEmojiMenu(element, buttonclickfn) {
+		let popupmenu = openPopupMenu(element);
+
+		let searchInput = document.createElement("input");
+		searchInput.placeholder = "Search for emojis...";
+		popupmenu.appendChild(searchInput);
+
+		let emojiList = document.createElement("div");
+		emojiList.classList.add("emojilist");
+		popupmenu.appendChild(emojiList);
+
+		let emojibtns = {};
+
+		getEmojis(function(emojis) {
+			emojis.forEach(function(emoji) {
+				let emojiunc = unicodeToString(emoji["unicode"][0]);
+				let name = emoji["name"];
+
+				let button = document.createElement("button");
+				button.innerText = emojiunc;
+				button.title = name;
+				emojibtns[name] = button;
+				emojiList.appendChild(button);
+
+				button.addEventListener("click", function() {
+					buttonclickfn(emojiunc);
+				})
+			})
+		});
+
+		searchInput.addEventListener("input", function() {
+			let query = searchInput.value;
+			Object.keys(emojibtns).forEach(function(key) {
+				let button = emojibtns[key];
+				button.style.display = key.includes(query) ? "" : "none";
+			})
+		})
+
+		searchInput.focus();
+	}
+
+	let emojiCache;
+
+	// Thanks to https://github.com/cheatsnake/emojihub
+	function getEmojis(fn) {
+		if (emojiCache) {
+			fn(emojiCache);
+			return;
+		}
+		fetch("https://emojihub.yurace.pro/api/all").then((res) => {
+			if (res.ok) {
+				res.json().then((json) => {
+					emojiCache = json;
+					fn(json);
+				})
+			}
+		});
+		
+	}
+
+	// https://stackoverflow.com/a/34278578
+	function typeInTextarea(newText, el = document.activeElement) {
+		const start = el.selectionStart
+		const end = el.selectionEnd
+		const text = el.value
+		const before = text.substring(0, start)
+		const after  = text.substring(end, text.length)
+		el.value = (before + newText + after)
+		el.selectionStart = el.selectionEnd = start + newText.length
+		el.focus()
+	}
+
+	function unicodeToString(unicode) {
+		return String.fromCodePoint(parseInt(unicode.split("+")[1], 16))
 	}
 	
 	let currentchatview;
@@ -2249,6 +2336,18 @@ function openMainArea() {
 		let msginput = document.createElement("textarea");
 		msginput.style.height = "40px";
 		mgbd.appendChild(msginput)
+
+		let emojibtn = document.createElement("button");
+		addRipple(emojibtn,"rgba(255,200,0,0.6)");
+		emojibtn.classList.add("cb");
+		emojibtn.title = "Emoji";
+		emojibtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-480Zm0 400q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q43 0 83 8.5t77 24.5v90q-35-20-75.5-31.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160q133 0 226.5-93.5T800-480q0-32-6.5-62T776-600h86q9 29 13.5 58.5T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm320-600v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80ZM620-520q25 0 42.5-17.5T680-580q0-25-17.5-42.5T620-640q-25 0-42.5 17.5T560-580q0 25 17.5 42.5T620-520Zm-280 0q25 0 42.5-17.5T400-580q0-25-17.5-42.5T340-640q-25 0-42.5 17.5T280-580q0 25 17.5 42.5T340-520Zm140 260q68 0 123.5-38.5T684-400H276q25 63 80.5 101.5T480-260Z"/></svg>';
+		mgbd.appendChild(emojibtn);
+		emojibtn.addEventListener("click", function() {
+			openEmojiMenu(emojibtn, function(emoji) {
+				typeInTextarea(emoji, msginput);
+			});
+		})
 		
 		let sendbtn = document.createElement("button");
 		addRipple(sendbtn,"rgba(255,200,0,0.6)");
