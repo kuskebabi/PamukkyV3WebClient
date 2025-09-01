@@ -351,8 +351,9 @@ button.fab:hover:active {
 }
 
 .emojilist > button {
-	width: 32px;
-	height: 32px;
+	width: 40px;
+	height: 40px;
+	font-size: large;
 }
 
 .loading {
@@ -657,7 +658,7 @@ ma {
 	width: 315px;
 }
 
-.reactionsbar > button {
+.reactionsbar > button.emoji {
 	transition: transform 100ms;
 	border-radius: 100%;
 	font-size: 20px;
@@ -671,10 +672,10 @@ ma {
 	background-color: var(--transparent-hover);
 	transform: scale(0.9);
 }
-.reactionsbar > button:hover:not(.reacted) {
+.reactionsbar > button.emoji:hover:not(.reacted) {
 	transform: scale(1.2);
 }
-.reactionsbar > button:active {
+.reactionsbar > button.emoji:active {
 	transform: scale(0.9);
 }
 

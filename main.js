@@ -1090,6 +1090,8 @@ function openMainArea() {
 			},200)
 		}
 
+		popupmenu["close"] = close;
+
 		document.body.appendChild(popupmenu);
 		popupmenu.focus();
 		requestAnimationFrame(function() {
@@ -1100,7 +1102,11 @@ function openMainArea() {
 			}
 			if (popuprect.height + popuprect.top > document.body.clientHeight) {
 				popupmenu.style.top = "";
-				popupmenu.style.bottom = (document.body.clientHeight - rect.top) + "px";
+				if (document.body.clientHeight - (document.body.clientHeight - rect.top) - popuprect.height > 0) {
+					popupmenu.style.bottom = (document.body.clientHeight - rect.top) + "px";
+				}else {
+					popupmenu.style.bottom = "0px";
+				}
 			}
 			popupmenu.style.opacity = "1";
 			//popupmenu.style.maxHeight = "calc(100% - " + popupmenu.style.top + ")";
@@ -1132,7 +1138,7 @@ function openMainArea() {
 			popupmenu.appendChild(menuitem);
 
 			menuitem.addEventListener("click",function() {
-				close();
+				popupmenu.close();
 				item.callback();
 			})
 		});
@@ -1140,7 +1146,7 @@ function openMainArea() {
 		addKeyboardListSelectionSupport(popupmenu);
 	}
 
-	function openEmojiMenu(element, buttonclickfn) {
+	function openEmojiMenu(element, buttonclickfn, persistent = false) {
 		let popupmenu = openPopupMenu(element);
 
 		let searchInput = document.createElement("input");
@@ -1154,17 +1160,18 @@ function openMainArea() {
 		let emojibtns = {};
 
 		getEmojis(function(emojis) {
-			emojis.forEach(function(emoji) {
+			emojis.forEach(function(emoji, index) {
 				let emojiunc = unicodeToString(emoji["unicode"][0]);
 				let name = emoji["name"];
 
 				let button = document.createElement("button");
 				button.innerText = emojiunc;
 				button.title = name;
-				emojibtns[name] = button;
+				emojibtns[name + "|" + index] = button;
 				emojiList.appendChild(button);
 
 				button.addEventListener("click", function() {
+					if (!persistent) popupmenu.close();
 					buttonclickfn(emojiunc);
 				})
 			})
@@ -1174,7 +1181,7 @@ function openMainArea() {
 			let query = searchInput.value;
 			Object.keys(emojibtns).forEach(function(key) {
 				let button = emojibtns[key];
-				button.style.display = key.includes(query) ? "" : "none";
+				button.style.display = key.split("|")[0].includes(query) ? "" : "none";
 			})
 		})
 
@@ -2346,7 +2353,7 @@ function openMainArea() {
 		emojibtn.addEventListener("click", function() {
 			openEmojiMenu(emojibtn, function(emoji) {
 				typeInTextarea(emoji, msginput);
-			});
+			}, true);
 		})
 		
 		let sendbtn = document.createElement("button");
@@ -2774,6 +2781,7 @@ function openMainArea() {
 					reactionemojis.forEach((item) => {
 						let itm = item.toString();
 						let reactionbtn = document.createElement("button");
+						reactionbtn.classList.add("emoji");
 						let reacted = false;
 						if (msg.reactions) {
 							if (msg.reactions[itm]) {
@@ -2797,6 +2805,17 @@ function openMainArea() {
 							clik();
 						});
 					});
+
+					let morebtn = document.createElement("button");
+					morebtn.innerText = "More emojis...";
+					reactionsdiv.appendChild(morebtn);
+					morebtn.addEventListener("click", function() {
+						openEmojiMenu(morebtn, function(emoji) {
+							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageid': id, 'reaction': emoji}),method: 'POST'});
+						})
+						clik();
+					})
+
 					ctxdiv.appendChild(reactionsdiv);
 				}
 				let cnt = document.createElement("div");
