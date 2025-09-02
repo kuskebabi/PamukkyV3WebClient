@@ -73,7 +73,7 @@ function imageView(url) {
 	closebtn.style.width = "48px";
 	closebtn.style.height = "48px";
 	closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" style="fill: white;"><path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z"/></svg>';
-	closebtn.title = "Close";
+	closebtn.title = getString("navigation_close");
 	bg.appendChild(closebtn);
 	closebtn.addEventListener("click",function() {
 		bg.click();
@@ -108,6 +108,44 @@ function imageView(url) {
 	bg.focus();
 	return bg;
 }
+
+let localization = {};
+
+function getFallbackLocalization() {
+	fetch("localization/en.json").then(function(res) {
+		if (res.ok) {
+			res.json().then(function(json) {
+				localization = json;
+			});
+		}
+	});
+}
+
+function getLocalization() {
+	let language = navigator.language.split("-")[0];
+
+	fetch("localization/" + language + ".json").then(function(res) {
+		if (res.ok) {
+			res.json().then(function(json) {
+				localization = json;
+			});
+		}else {
+			getFallbackLocalization();
+		}
+	}).catch(function() {
+		getFallbackLocalization();
+	});
+}
+
+function getString(stringid) {
+	if (localization[stringid]) {
+		return localization[stringid];
+	}
+	return stringid;
+}
+
+
+getLocalization();
 
 let currentServer = "";
 
@@ -210,13 +248,13 @@ function openConnectArea(err) {
 	document.body.innerHTML = "";
 	let connectcnt = document.createElement("centeredPopup");
 	let title = document.createElement("h1");
-	title.innerText = "Welcome To Pamukky!"
+	title.innerText = getString("welcome_to_pamukky");
 	connectcnt.appendChild(title);
 	let infoLabel = document.createElement("label");
-	infoLabel.innerText = "Enter server URL to begin:\n"
+	infoLabel.innerText = getString("server_input_tip");
 	connectcnt.appendChild(infoLabel);
 	let serverInput = document.createElement("input");
-	serverInput.placeholder = "URL or IP address";
+	serverInput.placeholder = getString("server_input_hint");
 	serverInput.style.display = "block";
 	serverInput.style.width = "100%";
 	serverInput.style.marginTop = "5px";
@@ -228,21 +266,21 @@ function openConnectArea(err) {
 	errorLabel.innerText = " ";
 	connectcnt.appendChild(errorLabel);
 	let connectButton = document.createElement("button")
-	connectButton.innerText = "Connect"
+	connectButton.innerText = getString("server_input_submit_button");
 	connectButton.style.width = "100%";
 	connectcnt.appendChild(connectButton);
 	document.body.appendChild(connectcnt);
 	addRipple(connectButton,"rgba(255,200,0,0.6)");
 	
 	if (err) {
-		errorLabel.innerText = "Connection failed."
+		errorLabel.innerText = getString("server_input_error");
 	}
 	
 	connectButton.addEventListener("click",function() {
 		connectButton.disabled = true;
 		errorLabel.classList.remove("errorlabel");
 		errorLabel.classList.add("infolabel");
-		errorLabel.innerText = "Please wait...";
+		errorLabel.innerText = getString("please_wait");;
 		
 		fetch(serverInput.value + "ping").then((res) => {
 			if (res.ok) {
@@ -259,7 +297,7 @@ function openConnectArea(err) {
 			connectButton.disabled = false;
 			errorLabel.classList.add("errorlabel");
 			errorLabel.classList.remove("infolabel");
-			errorLabel.innerText = "Connection failed."
+			errorLabel.innerText = getString("server_input_error");
 		})
 	})
 }
@@ -269,13 +307,13 @@ function openLoginArea() {
 	document.body.innerHTML = "";
 	let logincnt = document.createElement("centeredPopup");
 	let title = document.createElement("h1");
-	title.innerText = "Welcome To Pamukky!"
+	title.innerText = getString("welcome_to_pamukky");
 	logincnt.appendChild(title);
 	let infoLabel = document.createElement("label");
-	infoLabel.innerText = "Login to this Pamukky server:\n"
+	infoLabel.innerText = getString("login_tip");
 	logincnt.appendChild(infoLabel);
 	let emailLabel = document.createElement("input");
-	emailLabel.placeholder = "E-Mail";
+	emailLabel.placeholder = getString("login_email_hint");
 	emailLabel.style.display = "block";
 	emailLabel.style.width = "100%";
 	emailLabel.style.marginTop = "5px";
@@ -283,7 +321,7 @@ function openLoginArea() {
 	emailLabel.style.marginBottom = "5px";
 	logincnt.appendChild(emailLabel);
 	let passwordLabel = document.createElement("input");
-	passwordLabel.placeholder = "Password";
+	passwordLabel.placeholder = getString("login_password_hint");
 	passwordLabel.type = "password";
 	passwordLabel.style.display = "block";
 	passwordLabel.style.width = "100%";
@@ -295,16 +333,16 @@ function openLoginArea() {
 	errorLabel.innerText = " ";
 	logincnt.appendChild(errorLabel);
 	let loginbutton = document.createElement("button")
-	loginbutton.innerText = "Login"
+	loginbutton.innerText = getString("login_login_button");
 	loginbutton.style.width = "100%";
 	logincnt.appendChild(loginbutton);
 	document.body.appendChild(logincnt);
 	let registerButton = document.createElement("button")
-	registerButton.innerText = "Register"
+	registerButton.innerText = getString("login_signup_button");
 	registerButton.style.width = "100%";
 	logincnt.appendChild(registerButton);
 	let backToConnectButton = document.createElement("button")
-	backToConnectButton.innerText = "Connect to other server..."
+	backToConnectButton.innerText = getString("login_changeserver_button");
 	backToConnectButton.style.width = "100%";
 	logincnt.appendChild(backToConnectButton);
 	document.body.appendChild(logincnt);
@@ -392,6 +430,15 @@ function openMainArea() {
 	let leftTitleBar = document.createElement("titlebar");
 	let rightArea = document.createElement("rightarea");
 
+	function formatOnlineStatus(text) {
+		if (text == "Online") {
+			return getString("user_online");
+		}else {
+			let dt = new Date(text);
+			return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+		}
+	}
+
 	function formatSystemMessage(message,callback) {
 		if (!message.includes("|")) {
 			callback(message);
@@ -403,19 +450,19 @@ function openMainArea() {
 			getInfo(user, function(info) {
 				switch (split[0]) {
 					case "PINNEDMESSAGE":
-						callback(info.name + " pinned a message.");
+						callback(getString("username_pinned_a_message").replace("[NAME]", info.name));
 						break;
 					case "UNPINNEDMESSAGE":
-						callback(info.name + " unpinned a message.");
+						callback(getString("username_unpinned_a_message").replace("[NAME]", info.name));
 						break;
 					case "EDITGROUP":
-						callback(info.name + " edited this group.");
+						callback(getString("username_edited_group").replace("[NAME]", info.name));
 						break;
 					case "JOINGROUP":
-						callback(info.name + " joined, say hi!");
+						callback(getString("username_joined_group").replace("[NAME]", info.name));
 						break;
 					case "LEFTGROUP":
-						callback(info.name + " left...");
+						callback(getString("username_left_group").replace("[NAME]", info.name));
 						break;
 					
 				}
@@ -427,7 +474,7 @@ function openMainArea() {
 
 	function viewInfo(id,type) {
 		let diag = opendialog();
-		diag.title.innerText = "Info";
+		diag.title.innerText = getString("info");
 		diag.inner.style.display = "flex";
 		diag.inner.style.flexDirection = "column";
 		diag.inner.style.alignItems = "center";
@@ -465,19 +512,14 @@ function openMainArea() {
 							if (res.ok) {
 								res.text().then((text) => {
 									infotxt.classList.remove("loading");
-									if (text == "Online") {
-										infotxt.innerText = "Online";
-									}else {
-										let dt = new Date(text);
-										infotxt.innerText = "Last Online: " + dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-									}
+									infotxt.innerText = formatOnlineStatus(text);
 								})
 							}
 						});
 						
 						let namerow = document.createElement("tr");
 						let namettl = document.createElement("td");
-						namettl.innerText = "Name";
+						namettl.innerText = getString("name");
 						namettl.style.fontWeight = "bold";
 						namerow.appendChild(namettl);
 						let nameval = document.createElement("td");
@@ -487,7 +529,7 @@ function openMainArea() {
 						let desrow = document.createElement("tr");
 						let desttl = document.createElement("td");
 						desttl.style.fontWeight = "bold";
-						desttl.innerText = "Bio";
+						desttl.innerText = getString("bio");
 						desrow.appendChild(desttl);
 						let desval = document.createElement("td");
 						desval.innerText = infod.bio;
@@ -518,7 +560,7 @@ function openMainArea() {
 						
 						pfpimge.classList.remove("loading");
 						pfpimge.style.cursor = "pointer";
-						pfpimge.title = "Click here to upload";
+						pfpimge.title = getString("upload_hint");
 						pfpimge.src = getpfp(infod.picture,"group.svg");
 						pfpimge.addEventListener("click",function () {f.click();})
 						
@@ -527,7 +569,7 @@ function openMainArea() {
 
 						let namerow = document.createElement("tr");
 						let namettl = document.createElement("td");
-						namettl.innerText = "Name";
+						namettl.innerText = getString("name");
 						namerow.appendChild(namettl);
 						let nameval = document.createElement("td");
 						let nameinp = document.createElement("input");
@@ -538,7 +580,7 @@ function openMainArea() {
 						
 						let desrow = document.createElement("tr");
 						let desttl = document.createElement("td");
-						desttl.innerText = "Description";
+						desttl.innerText = getString("description");
 						desrow.appendChild(desttl);
 						let desval = document.createElement("td");
 						let desinp = document.createElement("input");
@@ -549,7 +591,7 @@ function openMainArea() {
 
 						let pubrow = document.createElement("tr");
 						let pubttl = document.createElement("td");
-						pubttl.innerText = "Public";
+						pubttl.innerText = getString("public");
 						pubrow.appendChild(pubttl);
 						let pubval = document.createElement("td");
 						let pubinp = document.createElement("input");
@@ -567,10 +609,10 @@ function openMainArea() {
 									crole = JSON.parse(text);
 									if (crole.AllowEditingSettings == true) {
 										let editrolesbtn = document.createElement("button");
-										editrolesbtn.innerText = "Edit roles";
+										editrolesbtn.innerText = getString("edit_roles_group");
 										editrolesbtn.addEventListener("click",function() {
 											let diaga = opendialog();
-											diaga.title.innerText = "Edit roles";
+											diaga.title.innerText = getString("edit_roles_group");
 											diaga.inner.style.display = "flex";
 											diaga.inner.style.flexDirection = "column";
 											diaga.inner.style.alignItems = "center";
@@ -639,7 +681,7 @@ function openMainArea() {
 							}
 						});
 						let membersbtn = document.createElement("button");
-						membersbtn.innerText = "Members";
+						membersbtn.innerText = getString("group_members");
 						membersbtn.addEventListener("click",function() {
 							let users = {};
 							let rokeys = {};
@@ -647,7 +689,7 @@ function openMainArea() {
 							diag.inner.style.overflow = "hidden";
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
-							diag.title.innerText = "Members";
+							diag.title.innerText = getString("group_members");
 							let userstable = createLazyList("div","div");
 							userstable.setItemGenerator(function(ukeys,e,urow) {
 								let user = users[ukeys[e]];
@@ -680,7 +722,7 @@ function openMainArea() {
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
 									usernamelbl.classList.remove("loading");
-									userpfp.title = "View profile of " + uii.name;
+									userpfp.title = getString("view_profile_of_username").replace("[NAME]", uii.name);
 								});
 								urow.appendChild(uname);
 								let urole = document.createElement("div");
@@ -691,7 +733,7 @@ function openMainArea() {
 									urole.innerText = user.role;
 								}else {
 									let roleselect = document.createElement("select");
-									roleselect.title = "Change role of this user";
+									roleselect.title = getString("change_role_of_member");
 									roleselect.style.width = "100%";
 									rokeys.forEach(function(i) {
 										let opt = document.createElement("option");
@@ -728,10 +770,10 @@ function openMainArea() {
 									if (crole.AllowKicking) {
 										let kickbtn = document.createElement("button");
 										kickbtn.classList.add("cb");
-										kickbtn.title = "Kick";
+										kickbtn.title = getString("kick_member_from_group");
 										kickbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M640-520v-80h240v80H640Zm-280 40q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm80-80h480v-32q0-11-5.5-20T580-306q-54-27-109-40.5T360-360q-56 0-111 13.5T140-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T440-640q0-33-23.5-56.5T360-720q-33 0-56.5 23.5T280-640q0 33 23.5 56.5T360-560Zm0-80Zm0 400Z"/></svg>';
 										kickbtn.addEventListener("click",function() {
-											if (confirm("Do you really want to kick this user?")) {
+											if (confirm(getString("kick_member_from_group_confirm"))) {
 												fetch(currentServer + "kickmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID}),method: 'POST'}).then((res) => {
 													if (res.ok) {
 														remove();
@@ -744,10 +786,10 @@ function openMainArea() {
 									if (crole.AllowBanning) {
 										let banbtn = document.createElement("button");
 										banbtn.classList.add("cb");
-										banbtn.title = "Ban";
+										banbtn.title = getString("ban_member_from_group");
 										banbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q54 0 104-17.5t92-50.5L228-676q-33 42-50.5 92T160-480q0 134 93 227t227 93Zm252-124q33-42 50.5-92T800-480q0-134-93-227t-227-93q-54 0-104 17.5T284-732l448 448Z"/></svg>';
 										banbtn.addEventListener("click",function() {
-											if (confirm("Do you really want to ban this user?")) {
+											if (confirm(getString("ban_member_from_group_confirm"))) {
 												fetch(currentServer + "banmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID}),method: 'POST'}).then((res) => {
 													if (res.ok) {
 														remove();
@@ -787,7 +829,7 @@ function openMainArea() {
 						diag.inner.appendChild(membersbtn);
 
 						let bannedusersbtn = document.createElement("button");
-						bannedusersbtn.innerText = "Banned members";
+						bannedusersbtn.innerText = getString("banned_members");
 						bannedusersbtn.addEventListener("click",function() {
 							let users = {};
 							let rokeys = {};
@@ -795,7 +837,7 @@ function openMainArea() {
 							diag.inner.style.overflow = "hidden";
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
-							diag.title.innerText = "Banned members";
+							diag.title.innerText = getString("banned_members");
 							let userstable = createLazyList("div","div");
 							userstable.element.style.height = "100%";
 							userstable.setItemGenerator(function(ukeys,e,urow) {
@@ -829,7 +871,7 @@ function openMainArea() {
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
 									usernamelbl.classList.remove("loading");
-									userpfp.title = "View profile of " + uii.name;
+									userpfp.title = getString("view_profile_of_username").replace("[NAME]", uii.name);
 								});
 								urow.appendChild(uname);
 								if (crole.AllowBanning) {
@@ -843,10 +885,10 @@ function openMainArea() {
 									uacts.style.flexShrink = "0";
 									let unbanbtn = document.createElement("button");
 									unbanbtn.classList.add("cb");
-									unbanbtn.title = "Unban";
+									unbanbtn.title = getString("unban_member");
 									unbanbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>';
 									unbanbtn.addEventListener("click",function() {
-										if (confirm("Do you really want to unban this user?")) {
+										if (confirm(getString("unban_member_from_group_confirm"))) {
 											fetch(currentServer + "unbanmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user}),method: 'POST'}).then((res) => {
 												if (res.ok) {
 													remove();
@@ -875,7 +917,7 @@ function openMainArea() {
 
 						
 						let savebtn = document.createElement("button");
-						savebtn.innerText = "Save";
+						savebtn.innerText = getString("save_group");
 						savebtn.addEventListener("click",function() {
 							if (ufl) {
 								fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
@@ -902,9 +944,9 @@ function openMainArea() {
 						})
 
 						let leavebtn = document.createElement("button");
-						leavebtn.innerText = "Leave";
+						leavebtn.innerText = getString("leave_group");
 						leavebtn.addEventListener("click",function() {
-							if (confirm("Do you really want to leave this group?\nIf you are the owner, promote someone else as the owner BEFORE leaving the group.")) {
+							if (confirm(getString("leave_group_confirm"))) {
 								fetch(currentServer + "leavegroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id }),method: 'POST'}).then((res) => {
 									if (res.ok) {
 										diag.closebtn.click();
@@ -975,7 +1017,7 @@ function openMainArea() {
 
 		let closebtn = document.createElement("button");
 		addRipple(closebtn,"rgba(255,200,0,0.6)");
-		closebtn.title = "Close";
+		closebtn.title = getString("navigation_close");
 		closebtn.style.flexShrink = "0";
 		closebtn.style.width = "25px";
 		closebtn.style.height = "25px";
@@ -1009,7 +1051,7 @@ function openMainArea() {
 		
 		let dockbtn = document.createElement("button");
 		addRipple(dockbtn,"rgba(255,200,0,0.6)");
-		dockbtn.title = "Dock to right";
+		dockbtn.title = getString("dialog_dock_to_right");
 		dockbtn.style.flexShrink = "0";
 		dockbtn.style.width = "25px";
 		dockbtn.style.height = "25px";
@@ -1565,7 +1607,7 @@ function openMainArea() {
 			element.addEventListener("focus",function() {
 				rfb.focus();
 			})
-			rfb.innerText = "Refresh"
+			rfb.innerText = getString("refresh");
 			element.appendChild(rfb);
 			return;
 		}
@@ -1574,7 +1616,7 @@ function openMainArea() {
 			fabhint.classList.add("buttonlabel");
 			fabhint.style.display = "block";
 			fabhint.style.margin = "8px";
-			fabhint.innerText = "Click on the \"+\" button to add a new chat.";
+			fabhint.innerText = getString("addchat_fab_tip");
 			element.addEventListener("click",function() {
 				fab.click();
 			})
@@ -1618,11 +1660,11 @@ function openMainArea() {
 	//chatslist.style.paddingBottom = "24px";
 	let fab = document.createElement("button");
 	fab.classList.add("fab");
-	fab.title = "Add new chat";
+	fab.title = getString("add_chat");
 	fab.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 -960 960 960" width="40"><path d="M446.667-446.667H200v-66.666h246.667V-760h66.666v246.667H760v66.666H513.333V-200h-66.666v-246.667Z"/></svg>';
 	leftArea.appendChild(fab);
 	let profilebtn = document.createElement("button");
-	profilebtn.title = "Edit profile...";
+	profilebtn.title = getString("edit_profile");
 	profilebtn.style.height = "100%";
 	profilebtn.classList.add("transparentbtn")
 	profilebtn.style.display = "flex";
@@ -1639,7 +1681,7 @@ function openMainArea() {
 	
 	fab.addEventListener("click",function() {
 		let diag = opendialog();
-		diag.title.innerText = "Add chat";
+		diag.title.innerText = getString("add_chat");
 		diag.inner.style.display = "flex";
 		diag.inner.style.flexDirection = "column";
 		diag.inner.style.alignItems = "center";
@@ -1653,7 +1695,7 @@ function openMainArea() {
 		diag.inner.appendChild(bflex);
 		
 		let adduserchatbtn = document.createElement("button");
-		adduserchatbtn.innerText = "Add user chat";
+		adduserchatbtn.innerText = getString("add_user_chat");
 		adduserchatbtn.addEventListener("click",function() {
 			fetch(currentServer + "adduserchat", {body: JSON.stringify({'token': logininfo.token,'email': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
@@ -1666,7 +1708,7 @@ function openMainArea() {
 		bflex.appendChild(adduserchatbtn);
 		
 		let creategroupbtn = document.createElement("button");
-		creategroupbtn.innerText = "Create group...";
+		creategroupbtn.innerText = getString("create_group");
 		creategroupbtn.addEventListener("click",function() {
 			let f = document.createElement('input');
 			f.type='file';
@@ -1676,7 +1718,7 @@ function openMainArea() {
 			let file;
 			
 			let diaga = opendialog();
-			diaga.title.innerText = "Create group";
+			diaga.title.innerText = getString("create_group");
 			diaga.inner.style.display = "flex";
 			diaga.inner.style.flexDirection = "column";
 			diaga.inner.style.alignItems = "center";
@@ -1686,7 +1728,7 @@ function openMainArea() {
 			pfpimge.style.width = "80px";
 			pfpimge.style.height = "80px";
 			pfpimge.style.cursor = "pointer";
-			pfpimge.title = "Click here to upload";
+			pfpimge.title = getString("upload_hint");
 			//pfpimge.src = currentuser.picture.replace(/%SERVER%/g,currserver);
 			pfpimge.addEventListener("click",function () {f.click();})
 			diaga.inner.appendChild(pfpimge);
@@ -1695,22 +1737,22 @@ function openMainArea() {
 			
 			let namerow = document.createElement("tr");
 			let namettl = document.createElement("td");
-			namettl.innerText = "Name";
+			namettl.innerText = getString("name");
 			namerow.appendChild(namettl);
 			let nameval = document.createElement("td");
 			let nameinp = document.createElement("input");
-			nameinp.value = "New group";
+			nameinp.value = getString("new_group_sample_name");
 			nameval.appendChild(nameinp);
 			namerow.appendChild(nameval);
 			infotable.appendChild(namerow);
 			
 			let desrow = document.createElement("tr");
 			let desttl = document.createElement("td");
-			desttl.innerText = "Description";
+			desttl.innerText = getString("description");
 			desrow.appendChild(desttl);
 			let desval = document.createElement("td");
 			let desinp = document.createElement("input");
-			desinp.value = "This is my new group!";
+			desinp.value = getString("new_group_sample_description");
 			desval.appendChild(desinp);
 			desrow.appendChild(desval);
 			infotable.appendChild(desrow);
@@ -1721,7 +1763,7 @@ function openMainArea() {
 			diaga.inner.appendChild(bflex);
 			
 			let createbtn = document.createElement("button");
-			createbtn.innerText = "Create group";
+			createbtn.innerText = getString("create_group");
 			createbtn.addEventListener("click",function() {
 				if (ufl) {
 					fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
@@ -1758,7 +1800,7 @@ function openMainArea() {
 		bflex.appendChild(creategroupbtn);
 		
 		let joingroupbtn = document.createElement("button");
-		joingroupbtn.innerText = "Join group";
+		joingroupbtn.innerText = getString("join_group");
 		joingroupbtn.addEventListener("click",function() {
 			fetch(currentServer + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
@@ -1777,7 +1819,7 @@ function openMainArea() {
 		let file;
 		
 		let diag = opendialog();
-		diag.title.innerText = "Edit profile";
+		diag.title.innerText = getString("edit_profile");
 		diag.inner.style.display = "flex";
 		diag.inner.style.flexDirection = "column";
 		diag.inner.style.alignItems = "center";
@@ -1788,7 +1830,7 @@ function openMainArea() {
 		pfpimge.style.width = "80px";
 		pfpimge.style.height = "80px";
 		pfpimge.style.cursor = "pointer";
-		pfpimge.title = "Click here to upload";
+		pfpimge.title = getString("upload_hint");
 		pfpimge.src = getpfp(currentuser.picture);
 		pfpimge.addEventListener("click",function () {f.click();})
 		diag.inner.appendChild(pfpimge);
@@ -1796,7 +1838,7 @@ function openMainArea() {
 		let infotable = document.createElement("table");
 		let namerow = document.createElement("tr");
 		let namettl = document.createElement("td");
-		namettl.innerText = "Name";
+		namettl.innerText = getString("name");
 		namerow.appendChild(namettl);
 		let nameval = document.createElement("td");
 		let nameinp = document.createElement("input");
@@ -1806,7 +1848,7 @@ function openMainArea() {
 		
 		let desrow = document.createElement("tr");
 		let desttl = document.createElement("td");
-		desttl.innerText = "Bio";
+		desttl.innerText = getString("bio");
 		desrow.appendChild(desttl);
 		let desval = document.createElement("td");
 		let desinp = document.createElement("input");
@@ -1820,17 +1862,17 @@ function openMainArea() {
 		diag.inner.appendChild(infotable);
 		
 		let cpass = document.createElement("button");
-		cpass.innerText = "Change password";
+		cpass.innerText = getString("change_password");
 		cpass.addEventListener("click",function() {
 			let diag = opendialog();
-			diag.title.innerText = "Change password";
+			diag.title.innerText = getString("change_password");
 			diag.inner.style.display = "flex";
 			diag.inner.style.flexDirection = "column";
 			diag.inner.style.alignItems = "center";
 			let cpasstable = document.createElement("table");
 			let opr = document.createElement("tr");
 			let pprt = document.createElement("td");
-			pprt.innerText = "Old password";
+			pprt.innerText = getString("old_password");
 			opr.appendChild(pprt);
 			let oprv = document.createElement("td");
 			let oprinp = document.createElement("input");
@@ -1840,7 +1882,7 @@ function openMainArea() {
 			
 			let npr = document.createElement("tr");
 			let npt = document.createElement("td");
-			npt.innerText = "New password";
+			npt.innerText = getString("new_password");
 			npr.appendChild(npt);
 			let nprv = document.createElement("td");
 			let nprinp = document.createElement("input");
@@ -1850,7 +1892,7 @@ function openMainArea() {
 			
 			let npc = document.createElement("tr");
 			let npcc = document.createElement("td");
-			npcc.innerText = "Confirm password";
+			npcc.innerText = getString("password_repeat");
 			npc.appendChild(npcc);
 			let nprc = document.createElement("td");
 			let npcinp = document.createElement("input");
@@ -1865,10 +1907,10 @@ function openMainArea() {
 			diag.inner.appendChild(cpasstable);
 			
 			let changebtn = document.createElement("button");
-			changebtn.innerText = "Change";
+			changebtn.innerText = getString("change_password");
 			changebtn.addEventListener("click",function() {
 				if (npcinp.value != nprinp.value) {
-					alert("New and Confirm doesnt match!");
+					alert(getString("changepassword_nomatch"));
 					return;
 				}
 				fetch(currentServer + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
@@ -1880,7 +1922,7 @@ function openMainArea() {
 							return;
 						}
 						//logininfo = info;
-						alert("Password changed!");
+						alert(getString("changepassword_done"));
 					})
 				})
 			});
@@ -1889,7 +1931,7 @@ function openMainArea() {
 		diag.inner.appendChild(cpass);
 		
 		let savebtn = document.createElement("button");
-		savebtn.innerText = "Save";
+		savebtn.innerText = getString("save_profile");
 		savebtn.addEventListener("click",function() {
 			if (ufl) {
 				fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
@@ -1921,8 +1963,9 @@ function openMainArea() {
 		
 		
 		let lout = document.createElement("button");
-		lout.innerText = "Logout";
+		lout.innerText = getString("logout");
 		lout.addEventListener("click",function() {
+			if (!confirm(getString("logout_confirm"))) return;
 			fetch(currentServer + "logout", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					localStorage.setItem("logininfo", null);
@@ -2081,7 +2124,7 @@ function openMainArea() {
 		let titlebar = document.createElement("titlebar");
 		let backbtn = document.createElement("button");
 		addRipple(backbtn,"rgba(255,200,0,0.6)");
-		backbtn.title = "Back";
+		backbtn.title = getString("navigation_back");
 		backbtn.classList.add("cb")
 		backbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M384-96 0-480l384-384 68 68-316 316 316 316-68 68Z"/></svg>';
 		backbtn.style.display = "none";
@@ -2102,7 +2145,7 @@ function openMainArea() {
 		
 		let infobtn = document.createElement("button");
 		addRipple(infobtn,"rgba(255,200,0,0.6)");
-		infobtn.title = "Info";
+		infobtn.title = getString("info");
 		infobtn.classList.add("cb")
 		infobtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M444-288h72v-240h-72v240Zm35.789-312Q495-600 505.5-610.289q10.5-10.29 10.5-25.5Q516-651 505.711-661.5q-10.29-10.5-25.5-10.5Q465-672 454.5-661.711q-10.5 10.29-10.5 25.5Q444-621 454.289-610.5q10.29 10.5 25.5 10.5Zm.487 504Q401-96 331-126q-70-30-122.5-82.5T126-330.958q-30-69.959-30-149.5Q96-560 126-629.5t82.5-122Q261-804 330.958-834q69.959-30 149.5-30Q560-864 629.5-834t122 82.5Q804-699 834-629.276q30 69.725 30 149Q864-401 834-331q-30 70-82.5 122.5T629.276-126q-69.725 30-149 30ZM480-168q130 0 221-91t91-221q0-130-91-221t-221-91q-130 0-221 91t-91 221q0 130 91 221t221 91Zm0-312Z"/></svg>';
 		infobtn.addEventListener("click",function() {
@@ -2112,17 +2155,17 @@ function openMainArea() {
 		titlebar.appendChild(infobtn);
 		let optionsbtn = document.createElement("button");
 		addRipple(optionsbtn,"rgba(255,200,0,0.6)");
-		optionsbtn.title = "Options";
+		optionsbtn.title = getString("popupmenu_hint");
 		optionsbtn.classList.add("cb")
 		optionsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M479.79-192Q450-192 429-213.21t-21-51Q408-294 429.21-315t51-21Q510-336 531-314.79t21 51Q552-234 530.79-213t-51 21Zm0-216Q450-408 429-429.21t-21-51Q408-510 429.21-531t51-21Q510-552 531-530.79t21 51Q552-450 530.79-429t-51 21Zm0-216Q450-624 429-645.21t-21-51Q408-726 429.21-747t51-21Q510-768 531-746.79t21 51Q552-666 530.79-645t-51 21Z"/></svg>';
 		optionsbtn.addEventListener("click",function(e) {
 			openmenu([{
-				content: "Mute...",
+				content: getString("mute"),
 				icon: '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 				callback: function() {
 					openmenu([
 						{
-							content: mutedchats.includes(chatid) ? "Unmute for this client" : "Mute for this client",
+							content: mutedchats.includes(chatid) ? getString("chat_unmute_client") : getString("chat_mute_client"),
 							icon: mutedchats.includes(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 							callback: function() {
 								let index = mutedchats.indexOf(chatid);
@@ -2134,7 +2177,7 @@ function openMainArea() {
 								localStorage.setItem("mutedchats", JSON.stringify(mutedchats));
 							}
 						}, {
-							content: servermutedchats.hasOwnProperty(chatid) ? "Unmute for this account" : "Mute for this account",
+							content: servermutedchats.hasOwnProperty(chatid) ? getString("chat_unmute_account") : getString("chat_mute_account"),
 							icon: servermutedchats.hasOwnProperty(chatid) ? '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-33 8.5-65t25.5-61l60 60q-7 16-10.5 32.5T320-560v280h248L56-792l56-56 736 736-56 56-146-144H160Zm560-154-80-80v-126q0-66-47-113t-113-47q-26 0-50 8t-44 24l-58-58q20-16 43-28t49-18v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v206Zm-276-50Zm36 324q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Zm33-481Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>',
 							callback: function() {
 								fetch(currentServer + "mutechat", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'state': servermutedchats.hasOwnProperty(chatid) ? "unmuted" : "tagsOnly"}),method: 'POST'}).then((res) => {
@@ -2180,7 +2223,7 @@ function openMainArea() {
 			showmessage(k[k.length - 1]);
 		});
 		let pinsbtn = document.createElement("button");
-		pinsbtn.title = "Pinned messages";
+		pinsbtn.title = getString("pinned_messages");
 		addRipple(pinsbtn,"rgba(255,200,0,0.6)");
 		pinsbtn.classList.add("cb")
 		pinsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
@@ -2344,7 +2387,7 @@ function openMainArea() {
 		let attachbtn = document.createElement("button");
 		attachbtn.addEventListener("click", function() {f.click();})
 		addRipple(attachbtn,"rgba(255,200,0,0.6)");
-		attachbtn.title = "Add attachment";
+		attachbtn.title = getString("add_attachment");
 		attachbtn.classList.add("cb")
 		attachbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M640-520v-200h80v200h-80ZM440-244q-35-10-57.5-39T360-350v-370h80v476Zm30 164q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v300h-80v-300q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q25 0 47.5-6.5T560-186v89q-21 8-43.5 12.5T470-80Zm170-40v-120H520v-80h120v-120h80v120h120v80H720v120h-80Z"/></svg>';
 		mgbd.appendChild(attachbtn)
@@ -2367,7 +2410,7 @@ function openMainArea() {
 		let sendbtn = document.createElement("button");
 		addRipple(sendbtn,"rgba(255,200,0,0.6)");
 		sendbtn.classList.add("cb");
-		sendbtn.title = "Send";
+		sendbtn.title = getString("send_message");
 		sendbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
 		mgbd.appendChild(sendbtn)
 		
@@ -2375,7 +2418,7 @@ function openMainArea() {
 
 		let typinglabel = document.createElement("label");
 		typinglabel.classList.add("typinglabel");
-		typinglabel.innerText = "Nobody is typing";
+		typinglabel.innerText = getString("nobody_typing");
 		typinglabel.style.opacity = "0";
 		mgb.appendChild(typinglabel);
 
@@ -2398,7 +2441,7 @@ function openMainArea() {
 							if (crole.AdminOrder == -1) {
 								mgbd.innerHTML = "";
 								let joinbtn = document.createElement("button");
-								joinbtn.innerText = "Join Group";
+								joinbtn.innerText = getString(join_group);
 								joinbtn.style.width = "100%";
 								joinbtn.style.height = "100%";
 								joinbtn.style.borderRadius = "0px";
@@ -2424,7 +2467,7 @@ function openMainArea() {
 				if (res.ok) {
 					res.text().then((text) => {
 						infotxt.classList.remove("loading");
-						infotxt.innerText = text + " Members";
+						infotxt.innerText = getString("group_members_count").replace("[COUNT]", text);
 					})
 				}
 			});
@@ -2564,7 +2607,7 @@ function openMainArea() {
 
 						reacc.addEventListener("contextmenu", function(event) {
 							let diag = opendialog();
-							diag.title.innerText = "Reactions: " + ir;
+							diag.title.innerText = getString("reactions_list") + ": " + ir;
 							diag.inner.style.overflow = "hidden";
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
@@ -2605,7 +2648,7 @@ function openMainArea() {
 									usernamelbl.innerText = uii.name;
 									userpfp.classList.remove("loading");
 									usernamelbl.classList.remove("loading");
-									userpfp.title = "View profile of " + uii.name;
+									userpfp.title = getString("view_profile_of_username").replace("[NAME]", uii.name);
 								});
 								urow.appendChild(uname);
 							});
@@ -2815,7 +2858,7 @@ function openMainArea() {
 					});
 
 					let morebtn = document.createElement("button");
-					morebtn.innerText = "More emojis...";
+					morebtn.innerText = getString("more_reactions");
 					addRipple(morebtn,"rgba(255,200,0,0.6)");
 					reactionsdiv.appendChild(morebtn);
 					morebtn.addEventListener("click", function() {
@@ -2836,7 +2879,7 @@ function openMainArea() {
 					if (extra.pinnedmessageslist == true) {
 						let gotobutton = document.createElement("button");
 						addRipple(gotobutton,"rgba(255,200,0,0.6)");
-						gotobutton.innerText = "Go to message";
+						gotobutton.innerText = getString("goto_message");
 						gotobutton.disabled = !crole.AllowSending;
 						gotobutton.addEventListener("click", function() {
 							if (pinnedmessageslist.element.style.display == "") {
@@ -2850,7 +2893,7 @@ function openMainArea() {
 				}
 				let replybutton = document.createElement("button");
 				addRipple(replybutton,"rgba(255,200,0,0.6)");
-				replybutton.innerText = "Reply";
+				replybutton.innerText = getString("reply_to_message");
 				replybutton.disabled = !crole.AllowSending;
 				replybutton.addEventListener("click", function() {
 					reply();
@@ -2859,10 +2902,10 @@ function openMainArea() {
 				cnt.appendChild(replybutton);
 				let forwardbutton = document.createElement("button");
 				addRipple(forwardbutton,"rgba(255,200,0,0.6)");
-				forwardbutton.innerText = "Forward message...";
+				forwardbutton.innerText = getString("forward_message");
 				forwardbutton.addEventListener("click", function() {
 					let diag = opendialog();
-					diag.title.innerText = "Forward message";
+					diag.title.innerText = getString("forward_message");
 					diag.inner.style.overflow = "hidden";
 					diag.inner.style.display = "flex";
 					diag.inner.style.flexDirection = "column";
@@ -2876,6 +2919,7 @@ function openMainArea() {
 					bottomBar.appendChild(forwardChatsLabel);
 					let sendButton = document.createElement("button");
 					sendButton.classList.add("cb");
+					sendButton.title = getString("send_message");
 					sendButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
 					bottomBar.appendChild(sendButton);
 					let fchatselectsid = [];
@@ -2934,7 +2978,7 @@ function openMainArea() {
 				})
 				cnt.appendChild(forwardbutton);
 				let selectbutton = document.createElement("button");
-				selectbutton.innerText = "Select...";
+				selectbutton.innerText = getString("select_message");
 				addRipple(selectbutton,"rgba(255,200,0,0.6)");
 				selectbutton.addEventListener("click", function() {
 					selectmessage();
@@ -2942,7 +2986,7 @@ function openMainArea() {
 				})
 				cnt.appendChild(selectbutton);
 				let savebtn = document.createElement("button");
-				savebtn.innerText = "Save message";
+				savebtn.innerText = getString("save_message");
 				addRipple(savebtn,"rgba(255,200,0,0.6)");
 				savebtn.addEventListener("click", function() {
 					let messages = selectedMessages;
@@ -2954,7 +2998,7 @@ function openMainArea() {
 				})
 				cnt.appendChild(savebtn);
 				let pinbtn = document.createElement("button");
-				pinbtn.innerText = msgpinned.style.display == "" ? "Unpin message" : "Pin message";
+				pinbtn.innerText = msgpinned.style.display == "" ? getString("unpin_message") : getString("pin_message");
 				addRipple(pinbtn,"rgba(255,200,0,0.6)");
 				pinbtn.addEventListener("click", function() {
 					let messages = selectedMessages;
@@ -2968,7 +3012,7 @@ function openMainArea() {
 				cnt.appendChild(pinbtn);
 				let copybutton = document.createElement("button");
 				addRipple(copybutton,"rgba(255,200,0,0.6)");
-				copybutton.innerText = "Copy selected text";
+				copybutton.innerText = getString("copy_selected_text");
 				copybutton.addEventListener("click", function() {
 					document.execCommand('copy');
 					clik();
@@ -2976,9 +3020,9 @@ function openMainArea() {
 				cnt.appendChild(copybutton);
 				let deletebutton = document.createElement("button");
 				addRipple(deletebutton,"rgba(255,0,0,0.6)");
-				deletebutton.innerText = "Delete message";
+				deletebutton.innerText = getString("delete_message");
 				deletebutton.addEventListener("click", () => {
-					if (confirm("Do you really want to delete?")) {
+					if (confirm(getString("delete_message_confirm"))) {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
 						fetch(currentServer + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': messages}),method: 'POST'}).then((res) => {
@@ -3074,19 +3118,14 @@ function openMainArea() {
 			if (msg.forwardedFromUID != undefined) {
 				let il = document.createElement("div");
 				il.style.fontSize = "12px";
-				il.innerText = "Forwarded from "
-				let fu = document.createElement("b");
-				fu.classList.add("loading");
-				fu.style.cursor = "pointer";
-				fu.innerText = "loading..."
-				fu.addEventListener("click",function() {
+				il.innerText = getString("forwarded_from_username").replace("[NAME]", "???");
+				il.style.cursor = "pointer";
+				il.addEventListener("click",function() {
 					viewInfo(msg.forwardedFromUID, "user")
 				})
 				getInfo(msg.forwardedFromUID,function(user) {
-					fu.innerText = user.name;
-					fu.classList.remove("loading");
+					il.innerText = getString("forwarded_from_username").replace("[NAME]", user.name);
 				})
-				il.appendChild(fu);
 				msgbubble.appendChild(il);
 			}
 
@@ -3253,7 +3292,7 @@ function openMainArea() {
 			let msgstatus = null;
 			let msgpinned = document.createElement("div");
 			msgpinned.classList.add("msgpinned");
-			msgpinned.title = "Pinned";
+			msgpinned.title = getString("message_pinned_hint");
 			msgpinned.style.display = msg.isPinned ? "" : "none";
 			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
 
@@ -3480,12 +3519,7 @@ function openMainArea() {
 
 				if (isuserchat) addOnlineHook(ugid, function(text) {
 					infotxt.classList.remove("loading");
-					if (text == "Online") {
-						infotxt.innerText = "Online";
-					}else {
-						let dt = new Date(text);
-						infotxt.innerText = "Last Online: " + dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-					}
+					infotxt.innerText = formatOnlineStatus(text);
 				});
 
 				res.text().then((text) => {
@@ -3506,7 +3540,7 @@ function openMainArea() {
 				errortitle.innerText = "Couldn't open chat.";
 				errorcont.appendChild(errortitle);
 				let errormsg = document.createElement("label");
-				errormsg.innerText = "Please tell the issue to server's owner if this is not normal.";
+				errormsg.innerText = getString("chat_load_error_info");
 				errorcont.appendChild(errormsg);
 				messageslist.element.style.alignItems = "center";
 				messageslist.element.style.justifyContent = "center";
@@ -3519,7 +3553,7 @@ function openMainArea() {
 
 		function updateTypingUsers() {
 			if (typingUsers.length == 0) {
-				typinglabel.innerText = "Nobody is typing";
+				typinglabel.innerText = getString("nobody_typing");
 				typinglabel.style.opacity = "0";
 			}else {
 				let usernameslist = [];
@@ -3527,7 +3561,7 @@ function openMainArea() {
 					getInfo(i,function(u) {
 						usernameslist.push(u.name);
 						if (typingUsers.length == usernameslist.length) {
-							typinglabel.innerText = usernameslist.join(",") + " is typing...";
+							typinglabel.innerText = getString("list_typing").replace("[LIST]", usernameslist.join(","));
 							typinglabel.style.opacity = "";
 						}
 					})

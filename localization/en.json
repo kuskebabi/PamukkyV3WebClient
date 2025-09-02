@@ -1,0 +1,111 @@
+{
+    "please_wait": "Please wait...",
+    "name": "Name",
+    "info": "Info",
+    "description": "Description",
+    "public": "Public",
+    "bio": "Bio",
+    "navigation_close": "Close",
+    "navigation_back": "Back",
+    "popupmenu_hint": "Menu",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "copy_selected_text": "Copy selected text",
+    "user_online": "Online",
+    "refresh": "Refresh",
+
+    "dialog_dock_to_right": "Dock to right",
+
+
+    "welcome_to_pamukky": "Welcome to Pamukky!",
+
+    "server_input_tip": "Enter server URL to begin",
+    "server_input_hint": "Enter URL or IP address...",
+    "server_input_submit_button": "Connect",
+    "server_input_error": "Connection failed.",
+    
+    "login_tip": "Login to this Pamukky server",
+    "login_email_hint": "E-Mail",
+    "login_password_hint": "Password",
+    "login_login_button": "Login",
+    "login_signup_button": "Sign up",
+    "login_changeserver_button": "Connect to other server...",
+    "password_repeat": "Repeat password",
+
+
+    "upload_hint": "Click here to upload",
+    "group_members": "Members",
+    "view_profile_of_username": "View profile of [NAME]",
+    "change_role_of_member": "Change role of this member",
+    "kick_member_from_group": "Kick",
+    "kick_member_from_group_confirm": "Do you really want to kick this member out of group?",
+    "ban_member_from_group": "Ban",
+    "ban_member_from_group_confirm": "Do you really want to ban this member out of group?",
+    "banned_members": "Banned members",
+    "unban_member": "Unban",
+    "unban_member_from_group_confirm": "Do you really want to unban this user?",
+    "edit_roles_group": "Edit roles",
+    "save_group": "Save group",
+    "leave_group": "Leave",
+    "leave_group_confirm": "Do you really want to leave this group?",
+    "join_group": "Join group",
+
+    "edit_profile": "Edit profile",
+    "save_profile": "Save profile",
+
+    "change_password": "Change password",
+    "old_password": "Old password",
+    "new_password": "New password",
+    "changepassword_nomatch": "New and Repeat doesn't match!",
+    "changepassword_done": "Password changed!",
+
+    "logout": "Log out",
+    "logout_confirm": "Do you really want to log out?",
+
+    "addchat_fab_tip": "Click on the \"+\" button to add a new chat.",
+
+    "add_chat": "Add chat",
+    "add_user_chat": "Add user chat",
+    "create_group": "Create group",
+    "new_group_sample_name": "New group!",
+    "new_group_sample_description": "This is my new group!",
+
+
+    "chat_load_error": "Couldn't open chat.",
+    "chat_load_error_info": "Please tell this issue to server's owner if this is not normal.",
+
+    "group_members_count": "[COUNT] members",
+    "pinned_messages": "Pinned messages",
+
+    "add_attachment": "Add attachment",
+    "send_message": "Send",
+    "nobody_typing": "Nobody is typing",
+    "list_typing": "[LIST] typing...",
+
+    "chat_mute_client": "Mute (This client)",
+    "chat_unmute_client": "Unmute (This client)",
+    "chat_mute_account": "Mute (This account)",
+    "chat_unmute_account": "Unmute (This account)",
+
+    "reactions_list": "Reactions",
+
+    "more_reactions": "More reactions",
+    "goto_message": "Go to message",
+    "reply_to_message": "Reply",
+    "forward_message": "Forward message...",
+    "select_message": "Select...",
+    "save_message": "Save message",
+    "pin_message": "Pin message",
+    "unpin_message": "Unpin message",
+    "delete_message": "Delete message",
+    "delete_message_confirm": "Do you really want to delete this message?",
+
+    "forwarded_from_username": "Forwarded from [NAME]",
+    "message_pinned_hint": "Pinned",
+
+    "username_pinned_a_message": "[NAME] pinned a message.",
+    "username_unpinned_a_message": "[NAME] unpinned a message.",
+    "username_edited_group": "[NAME] edited this group.",
+    "username_joined_group": "[NAME] joined.",
+    "username_left_group": "[NAME] left..."
+}

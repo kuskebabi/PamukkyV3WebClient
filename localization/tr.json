@@ -1,0 +1,111 @@
+{
+    "please_wait": "Lütfen bekleyin...",
+    "name": "İsim",
+    "info": "Bilgi",
+    "description": "Açıklama",
+    "public": "Herkese açık",
+    "bio": "Hakkında",
+    "navigation_close": "Kapat",
+    "navigation_back": "Geri",
+    "popupmenu_hint": "Menü",
+    "mute": "Sesi kapat",
+    "unmute": "Sesi aç",
+    "copy_selected_text": "Seçili yazıyı kopyala",
+    "user_online": "Çevrimiçi",
+    "refresh": "Yenile",
+
+    "dialog_dock_to_right": "Sağa sabitle",
+
+
+    "welcome_to_pamukky": "Pamukky'a hoşgeldiniz!",
+
+    "server_input_tip": "Başlamak için sunucu URLsi girin",
+    "server_input_hint": "URL yada IP adresi girin...",
+    "server_input_submit_button": "Bağlan",
+    "server_input_error": "Bağlantı hatası.",
+    
+    "login_tip": "Bu Pamukky sunucusuna giriş yapın",
+    "login_email_hint": "E-Posta",
+    "login_password_hint": "Şifre",
+    "login_login_button": "Giriş yap",
+    "login_signup_button": "Kayıt ol",
+    "login_changeserver_button": "Başka sunucuya bağlan...",
+    "password_repeat": "Şifre tekrar",
+
+
+    "upload_hint": "Karşıya yüklemek için tıklayın",
+    "group_members": "Katılımcılar",
+    "view_profile_of_username": "[NAME] kullanıcısının profilini görüntüle",
+    "change_role_of_member": "Bu katılımcının rolünü değiştir",
+    "kick_member_from_group": "At",
+    "kick_member_from_group_confirm": "Bu katılımcıyı gerçekten guruptan atmak istiyor musunuz?",
+    "ban_member_from_group": "Yasakla",
+    "ban_member_from_group_confirm": "Bu katılımcıyı gerçekten guruptan yasaklamak istiyor musunuz?",
+    "banned_members": "Yasaklanan katılımcılar",
+    "unban_member": "Yasağı kaldır",
+    "unban_member_from_group_confirm": "Bu kullanıcının yasağını gerçekten kaldırmak istiyor musunuz?",
+    "edit_roles_group": "Rolleri düzenle",
+    "save_group": "Kaydet",
+    "leave_group": "Guruptan çık",
+    "leave_group_confirm": "Bu guruptan gerçekten çıkmak istiyor musunuz?",
+    "join_group": "Guruba katıl",
+
+    "edit_profile": "Profili düzenle",
+    "save_profile": "Profili kaydet",
+
+    "change_password": "Şifreyi değiştir",
+    "old_password": "Eski şifre",
+    "new_password": "Yeni şifre",
+    "changepassword_nomatch": "Yeni şifre ile tekrar aynı değil!",
+    "changepassword_done": "Şifre değiştirildi!",
+
+    "logout": "Çıkış yap",
+    "logout_confirm": "Gerçekten çıkış yapmak istiyor musunuz?",
+
+    "addchat_fab_tip": "Sohbet eklemek için \"+\" tuşuna basın",
+
+    "add_chat": "Sohbet ekle",
+    "add_user_chat": "Kullanıcı sohbeti ekle",
+    "create_group": "Gurup oluştur",
+    "new_group_sample_name": "Yeni gurup!",
+    "new_group_sample_description": "Bu benim yeni gurubum!",
+
+
+    "chat_load_error": "Sohbet açılamadı.",
+    "chat_load_error_info": "Bu normal değilse lütfen sunucu sahibine bildirin.",
+
+    "group_members_count": "[COUNT] katılımcı",
+    "pinned_messages": "Sabitlenmiş mesajlar",
+
+    "add_attachment": "Ek ekle",
+    "send_message": "Gönder",
+    "nobody_typing": "Hiçkimse yazmıyor",
+    "list_typing": "[LIST] yazıyor...",
+
+    "chat_mute_client": "Sesi kapat (Bu istemci)",
+    "chat_unmute_client": "Sesi aç (Bu istemci)",
+    "chat_mute_account": "Sesi kapat (Bu hesap)",
+    "chat_unmute_account": "Sesi aç (Bu hesap)",
+
+    "reactions_list": "Tepkiler",
+
+    "more_reactions": "Daha fazla tepki",
+    "goto_message": "Mesaja git",
+    "reply_to_message": "Mesajı yanıtla",
+    "forward_message": "Mesajı ilet...",
+    "select_message": "Seç...",
+    "save_message": "Mesajı kaydet",
+    "pin_message": "Mesajı sabitle",
+    "unpin_message": "Mesajın sabitini kaldır",
+    "delete_message": "Mesajı sil",
+    "delete_message_confirm": "Bu mesajı gerçekten silmek istiyor musunuz?",
+
+    "forwarded_from_username": "[NAME] tarafından iletildi",
+    "message_pinned_hint": "Sabitlenmiş",
+
+    "username_pinned_a_message": "[NAME] bir mesajı sabitledi.",
+    "username_unpinned_a_message": "[NAME] bir mesajın sabitini kaldırdı.",
+    "username_edited_group": "[NAME] bu gurubu düzenledi.",
+    "username_joined_group": "[NAME] katıldı.",
+    "username_left_group": "[NAME] ayrıldı..."
+}
