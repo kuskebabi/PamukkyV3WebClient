@@ -13,6 +13,7 @@
     "copy_selected_text": "Copy selected text",
     "user_online": "Online",
     "refresh": "Refresh",
+    "user_last_seen_date": "Last seen [DATE]",
 
     "dialog_dock_to_right": "Dock to right",
 

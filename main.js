@@ -111,30 +111,42 @@ function imageView(url) {
 
 let localization = {};
 
-function getFallbackLocalization() {
-	fetch("localization/en.json").then(function(res) {
-		if (res.ok) {
-			res.json().then(function(json) {
-				localization = json;
-			});
-		}
-	});
-}
-
 function getLocalization() {
-	let language = navigator.language.split("-")[0];
-
-	fetch("localization/" + language + ".json").then(function(res) {
+	fetch("localization/languages.json").then(function(res) {
 		if (res.ok) {
-			res.json().then(function(json) {
-				localization = json;
+			res.json().then(function(languages) {
+				let languageToLoad = undefined;
+
+				navigator.languages.forEach(function(language) {
+					if (languageToLoad != undefined) return;
+					language = language.toLocaleLowerCase();
+					if (languages.includes(language)) {
+						languageToLoad = language;
+					}else if (languages.includes(language.split("-")[0])) {
+						languageToLoad = language.split("-")[0];
+					}else {
+						// Lets say user has language as "tr" and not "tr-tr". catch them here.
+						languages.forEach(function(lang) {
+							if (language.split("-")[0] == lang.split("-")[0]) {
+								languageToLoad = lang;
+							}
+						})
+					}
+				});
+
+				if (languageToLoad == undefined) languageToLoad = "en";
+
+				fetch("localization/" + languageToLoad + ".json").then(function(res) {
+					if (res.ok) {
+						res.json().then(function(json) {
+							localization = json;
+							loaded();
+						});
+					}
+				});
 			});
-		}else {
-			getFallbackLocalization();
 		}
-	}).catch(function() {
-		getFallbackLocalization();
-	});
+	})
 }
 
 function getString(stringid) {
@@ -150,7 +162,13 @@ getLocalization();
 let currentServer = "";
 
 // Add load event listener and add delay so splash is visible
-window.onload = function loaded() {setTimeout(init,1000);};
+let loadedCount = 0;
+function loaded() {
+	loadedCount++;
+	if (loadedCount == 2) setTimeout(init,1000);
+}
+
+window.onload = loaded;
 
 // Start the app
 function init() {
@@ -435,7 +453,7 @@ function openMainArea() {
 			return getString("user_online");
 		}else {
 			let dt = new Date(text);
-			return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+			return getString("user_last_seen_date").replace("[DATE]", dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0'));
 		}
 	}
 
@@ -2404,6 +2422,7 @@ function openMainArea() {
 		emojibtn.addEventListener("click", function() {
 			openEmojiMenu(emojibtn, function(emoji) {
 				typeInTextarea(emoji, msginput);
+				onMessageInput();
 			}, true);
 		})
 		
@@ -3406,7 +3425,8 @@ function openMainArea() {
 		
 		sendbtn.disabled = true;
 		let sendtyping = true;
-		msginput.addEventListener("input",function() {
+
+		function onMessageInput() {
 			if (msginput.value.trim().length == 0 && fileslist.length < 1) {
 				sendbtn.disabled = true;
 			}else {
@@ -3417,7 +3437,9 @@ function openMainArea() {
 				sendtyping = false;
 				setTimeout(function() {sendtyping = true}, 2000);
 			}
-		})
+		}
+
+		msginput.addEventListener("input", onMessageInput)
 		
 		sendbtn.addEventListener("click",function() {
 			let content = msginput.value.trim();
