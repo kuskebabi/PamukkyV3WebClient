@@ -3559,7 +3559,7 @@ function openMainArea() {
 				messageslist.element.innerHTML = "";
 				let errorcont = document.createElement("div");
 				let errortitle = document.createElement("h3");
-				errortitle.innerText = "Couldn't open chat.";
+				errortitle.innerText = getString("chat_load_error");
 				errorcont.appendChild(errortitle);
 				let errormsg = document.createElement("label");
 				errormsg.innerText = getString("chat_load_error_info");
