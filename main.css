@@ -180,7 +180,7 @@ button {
 	background-color: rgba(20,20,20,0.1);
 	transition: background-color 200ms;
 }
-button:hover {
+button:not(:disabled):hover {
 	background-color: var(--transparent-hover);
 	outline:1px solid gray;
 }
@@ -356,6 +356,10 @@ button.fab:hover:active {
 	font-size: larger;
 }
 
+.emojilist > button:not(:hover) {
+	background: transparent;
+}
+
 .loading {
 	animation-name: loading;
 	animation-duration: 2s;
@@ -408,12 +412,11 @@ button.fab:hover:active {
 .mediabar > button {
 	width: 28px;
 	height: 28px;
-	background: transparent;
 	border-radius: 0;
 }
 
-.mediabar > button:hover {
-	background-color: var(--transparent-hover);
+.mediabar > button:not(:hover) {
+	background: transparent;
 }
 
 .mediabar > label {
@@ -796,7 +799,6 @@ msgreacts > button {
 }
 msgreacts > button:hover {
 	opacity: 0.9;
-	outline: 1px solid gray;
 }
 
 msgreacts > button * {
