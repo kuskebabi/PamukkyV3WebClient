@@ -1,0 +1,108 @@
+{
+    "please_wait": "Vă rugăm să așteptați...",
+    "name": "Nume",
+    "info": "Informații",
+    "description": "Descriere",
+    "public": "Public",
+    "bio": "Biografie",
+    "navigation_close": "Închideți",
+    "navigation_back": "Înapoi",
+    "popupmenu_hint": "Meniu",
+    "mute": "Opriți notificările",
+    "unmute": "Activați notificările",
+    "copy_selected_text": "Copiați textul selectat",
+    "user_online": "Conectat",
+    "refresh": "Reîmprospătați",
+
+    "dialog_dock_to_right": "Anexați la dreapta",
+
+    "welcome_to_pamukky": "Bun venit la Pamukky!",
+
+    "server_input_tip": "Introduceți adresa URL a serverului pentru a începe",
+    "server_input_hint": "Introduceți adresa URL sau adresa IP...",
+    "server_input_submit_button": "Conectați-vă",
+    "server_input_error": "Conexiunea a eșuat.",
+    
+    "login_tip": "Autentificați-vă pe acest server Pamukky",
+    "login_email_hint": "E-mail",
+    "login_password_hint": "Parolă",
+    "login_login_button": "Autentificare",
+    "login_signup_button": "Înregistrare",
+    "login_changeserver_button": "Conectați-vă la alt server...",
+    "password_repeat": "Repetați parola",
+
+    "upload_hint": "Faceți clic aici pentru a încărca",
+    "group_members": "Membri",
+    "view_profile_of_username": "Vizualizați profilul lui [NAME]",
+    "change_role_of_member": "Schimbați rolul acestui membru",
+    "kick_member_from_group": "Excludeți",
+    "kick_member_from_group_confirm": "Sigur doriți să excludeți acest membru din grup?",
+    "ban_member_from_group": "Interziceți",
+    "ban_member_from_group_confirm": "Sigur doriți să interziceți acest membru din grup?",
+    "banned_members": "Membri interziși",
+    "unban_member": "Anulați interdicția",
+    "unban_member_from_group_confirm": "Sigur doriți să anulați interdicția pentru acest utilizator?",
+    "edit_roles_group": "Editați rolurile",
+    "save_group": "Salvați grupul",
+    "leave_group": "Părăsiți",
+    "leave_group_confirm": "Sigur doriți să părăsiți acest grup?",
+    "join_group": "Alăturați-vă grupului",
+
+    "edit_profile": "Editați profilul",
+    "save_profile": "Salvați profilul",
+
+    "change_password": "Schimbați parola",
+    "old_password": "Parola veche",
+    "new_password": "Parola nouă",
+    "changepassword_nomatch": "Parola nouă și repetarea nu corespund!",
+    "changepassword_done": "Parola a fost schimbată!",
+
+    "logout": "Deconectare",
+    "logout_confirm": "Sigur doriți să vă deconectați?",
+
+    "addchat_fab_tip": "Faceți clic pe butonul \"+\" pentru a adăuga o conversație nouă.",
+
+    "add_chat": "Adăugați conversație",
+    "add_user_chat": "Adăugați conversație cu utilizator",
+    "create_group": "Creați grup",
+    "new_group_sample_name": "Grup nou!",
+    "new_group_sample_description": "Acesta este noul meu grup!",
+
+    "chat_load_error": "Nu s-a putut deschide conversația.",
+    "chat_load_error_info": "Vă rugăm să informați proprietarul serverului dacă această situație nu este normală.",
+
+    "group_members_count": "[COUNT] membri",
+    "pinned_messages": "Mesaje fixate",
+
+    "add_attachment": "Adăugați atașament",
+    "send_message": "Trimiteți",
+    "nobody_typing": "Nimeni nu scrie",
+    "list_typing": "[LIST] scrie...",
+
+    "chat_mute_client": "Opriți notificările (Acest client)",
+    "chat_unmute_client": "Activați notificările (Acest client)",
+    "chat_mute_account": "Opriți notificările (Acest cont)",
+    "chat_unmute_account": "Activați notificările (Acest cont)",
+
+    "reactions_list": "Reacții",
+
+    "more_reactions": "Mai multe reacții",
+    "goto_message": "Mergeți la mesaj",
+    "reply_to_message": "Răspundeți",
+    "forward_message": "Redirecționați mesajul...",
+    "select_message": "Selectați...",
+    "save_message": "Salvați mesajul",
+    "pin_message": "Fixați mesajul",
+    "unpin_message": "Anulați fixarea mesajului",
+    "delete_message": "Ștergeți mesajul",
+    "delete_message_confirm": "Sigur doriți să ștergeți acest mesaj?",
+
+    "forwarded_from_username": "Redirecționat de la [NAME]",
+    "message_pinned_hint": "Fixat",
+
+    "username_pinned_a_message": "[NAME] a fixat un mesaj.",
+    "username_unpinned_a_message": "[NAME] a anulat fixarea unui mesaj.",
+    "username_edited_group": "[NAME] a editat acest grup.",
+    "username_joined_group": "[NAME] s-a alăturat.",
+    "username_left_group": "[NAME] a părăsit grupul..."
+}
