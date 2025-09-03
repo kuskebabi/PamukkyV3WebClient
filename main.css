@@ -699,7 +699,7 @@ msgcont.hint {
 }
 
 msgcont > .selectid {
-	border: 1px solid white;
+	border: 1px solid CanvasText;
 	width: 24px;
 	height: 24px;
 	border-radius: 12px;
