@@ -14,6 +14,7 @@
     "user_online": "Conectat",
     "refresh": "Reîmprospătați",
     "user_last_seen_date": "Ultima dată conectat [DATE]",
+    "error": "Eroare",
 
     "dialog_dock_to_right": "Anexați la dreapta",
 
@@ -31,6 +32,7 @@
     "login_signup_button": "Înregistrare",
     "login_changeserver_button": "Conectați-vă la alt server...",
     "password_repeat": "Repetați parola",
+    "server_tos": "Termeni de utilizare a serverului",
 
     "upload_hint": "Faceți clic aici pentru a încărca",
     "group_members": "Membri",
@@ -61,6 +63,7 @@
     "logout": "Deconectare",
     "logout_confirm": "Sigur doriți să vă deconectați?",
 
+    "chat_no_messages_tip": "Niciun mesaj. Trimiteți unul pentru a începe conversația.",
     "addchat_fab_tip": "Faceți clic pe butonul \"+\" pentru a adăuga o conversație nouă.",
 
     "add_chat": "Adăugați conversație",

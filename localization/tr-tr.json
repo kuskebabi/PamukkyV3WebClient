@@ -14,6 +14,7 @@
     "user_online": "Çevrimiçi",
     "refresh": "Yenile",
     "user_last_seen_date": "Son görülme [DATE]",
+    "error": "Hata",
 
     "dialog_dock_to_right": "Sağa sabitle",
 
@@ -32,6 +33,7 @@
     "login_signup_button": "Kayıt ol",
     "login_changeserver_button": "Başka sunucuya bağlan...",
     "password_repeat": "Şifre tekrar",
+    "server_tos": "Sunucu kullanım koşulları",
 
 
     "upload_hint": "Karşıya yüklemek için tıklayın",
@@ -63,6 +65,7 @@
     "logout": "Çıkış yap",
     "logout_confirm": "Gerçekten çıkış yapmak istiyor musunuz?",
 
+    "chat_no_messages_tip": "Mesaj yok. Konuşmayı başlatmak için bir mesaj gönderin.",
     "addchat_fab_tip": "Sohbet eklemek için \"+\" tuşuna basın",
 
     "add_chat": "Sohbet ekle",

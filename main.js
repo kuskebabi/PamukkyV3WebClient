@@ -359,6 +359,11 @@ function openLoginArea() {
 	registerButton.innerText = getString("login_signup_button");
 	registerButton.style.width = "100%";
 	logincnt.appendChild(registerButton);
+	let serverTOSButton = document.createElement("button")
+	serverTOSButton.innerText = getString("server_tos");
+	serverTOSButton.style.width = "100%";
+	logincnt.appendChild(serverTOSButton);
+	document.body.appendChild(logincnt);
 	let backToConnectButton = document.createElement("button")
 	backToConnectButton.innerText = getString("login_changeserver_button");
 	backToConnectButton.style.width = "100%";
@@ -366,6 +371,7 @@ function openLoginArea() {
 	document.body.appendChild(logincnt);
 	addRipple(loginbutton,"rgba(255,200,0,0.6)");
 	addRipple(registerButton,"rgba(255,200,0,0.6)");
+	addRipple(serverTOSButton,"rgba(255,200,0,0.6)");
 	addRipple(backToConnectButton,"rgba(255,200,0,0.6)");
 	
 	loginbutton.addEventListener("click",function() {
@@ -413,6 +419,21 @@ function openLoginArea() {
 		}).catch(() => {
 			loginbutton.disabled = false;
 			registerButton.disabled = false;
+		})
+	})
+
+	serverTOSButton.addEventListener("click",function() {
+		
+		fetch(currentServer + "tos").then((res) => {
+			if (res.ok) {
+				res.text().then((text) => {
+					alert(text);
+				})
+			}else {
+				alert(getString("error"));
+			}
+		}).catch(() => {
+			alert(getString("error"));
 		})
 	})
 	
@@ -558,10 +579,10 @@ function openMainArea() {
 
 					})
 				}else {
-					diag.inner.innerText = "Error";
+					diag.inner.innerText = getString("error");
 				}
 			}).catch(function() {
-				diag.inner.innerText = "Error";
+				diag.inner.innerText = getString("error");
 			});
 		}else {
 			fetch(currentServer + "getgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
@@ -991,10 +1012,10 @@ function openMainArea() {
 						}
 					})
 				}else {
-					diag.inner.innerText = "Error";
+					diag.inner.innerText = getString("error");
 				}
 			}).catch(function() {
-				diag.inner.innerText = "Error";
+				diag.inner.innerText = getString("error");
 			});
 		}
 	}
@@ -1593,7 +1614,7 @@ function openMainArea() {
 						});
 					}
 				}else {
-					lastmsgcontent.innerText = "No Messages. Send one to start conversation.";
+					lastmsgcontent.innerText = getString("chat_no_messages_tip");
 					lmt.style.display = "none";
 				}
 			}
