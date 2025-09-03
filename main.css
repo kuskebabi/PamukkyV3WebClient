@@ -25,6 +25,7 @@ body,html {
 	--transparent-hover: rgba(0,0,0,0.2);
 	--pop-box-shandow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 	--container-background: rgb(240,240,240);
+	--component-background: rgba(100,100,100,0.2);
 }
 
 flex {
@@ -58,14 +59,14 @@ a:hover {
 select {
 	border:none;
 	cursor:pointer;
-	background: rgba(0,0,0,0.1);
+	background: var(--component-background);
 	padding:4px;
 	border-radius:8px;
 }
 
 select:hover {
 	outline:1px solid gray;
-	background: rgba(0,0,0,0.2);
+	background: var(--transparent-hover);
 }
 
 body {
@@ -163,7 +164,7 @@ input, textarea {
 	border-radius:8px;
 	outline:none;
 	font: inherit;
-	background-color: rgba(20,20,20,0.2);
+	background-color: var(--component-background);
 }
 
 input:focus, textarea:focus {
@@ -177,7 +178,7 @@ button {
 	border-radius:8px;
 	cursor:pointer;
 	margin:2px;
-	background-color: rgba(20,20,20,0.1);
+	background-color: var(--component-background);
 	transition: background-color 200ms;
 }
 button:not(:disabled):hover {
@@ -986,6 +987,7 @@ msgreacts > button.rcted {
 		--main-bg: rgb(40,40,40);
 		--transparent-hover: rgba(255,255,255,0.2);
 		--container-background: rgb(30,30,30);
+		--component-background: rgba(120,120,120,0.2);
 	}
 	filed > div > label, a {
 		color:white;

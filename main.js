@@ -306,7 +306,7 @@ function openConnectArea(err) {
 					console.log(text); //debug, usually just "Pong"
 					currentServer = serverInput.value;
 					localStorage.setItem("server", serverInput.value); // Save the server url to localStorage.
-					openLoginArea();
+					openServerTOSArea();
 				})
 			}else {
 				connectButton.disabled = false;
@@ -317,6 +317,75 @@ function openConnectArea(err) {
 			errorLabel.classList.remove("infolabel");
 			errorLabel.innerText = getString("server_input_error");
 		})
+	})
+}
+
+function openServerTOSArea() {
+	document.title = "Pamukky";
+	document.body.innerHTML = "";
+	let toscnt = document.createElement("centeredPopup");
+	toscnt.style.overflow = "auto";
+	let title = document.createElement("h1");
+	title.innerText = getString("server_tos");
+	toscnt.appendChild(title);
+	let tosContents = document.createElement("pre");
+	tosContents.innerText = currentServer + "tos";
+	toscnt.appendChild(tosContents);
+
+	fetch(currentServer + "tos").then((res) => {
+		if (res.ok) {
+			res.text().then((text) => {
+				tosContents.innerText = text;
+			})
+		}else {
+			tosContents.innerText = getString("error");
+		}
+	}).catch(() => {
+		tosContents.innerText = getString("error");
+	})
+
+	let agreeCheckboxCont = document.createElement("flex");
+
+	let agreeCheckbox = document.createElement("input");
+	agreeCheckbox.type = "checkbox";
+	agreeCheckbox.id = "agree_checkbox";
+	agreeCheckboxCont.appendChild(agreeCheckbox);
+
+	let agreeCheckboxLabel = document.createElement("label");
+	agreeCheckboxLabel.setAttribute("for", "agree_checkbox");
+	agreeCheckboxLabel.innerText = getString("terms_agree");
+	agreeCheckboxCont.appendChild(agreeCheckboxLabel);
+
+	toscnt.appendChild(agreeCheckboxCont);
+
+	let buttonCont = document.createElement("flex");
+
+	let cancelButton = document.createElement("button")
+	cancelButton.innerText = getString("cancel");
+	cancelButton.style.width = "100%";
+	addRipple(cancelButton,"rgba(255,200,0,0.6)");
+	buttonCont.appendChild(cancelButton);
+	toscnt.appendChild(buttonCont);
+
+	let acceptButton = document.createElement("button")
+	acceptButton.disabled = true;
+	acceptButton.innerText = getString("continue");
+	acceptButton.style.width = "100%";
+	addRipple(acceptButton,"rgba(255,200,0,0.6)");
+	buttonCont.appendChild(acceptButton);
+	toscnt.appendChild(buttonCont);
+
+	document.body.appendChild(toscnt);
+
+	agreeCheckbox.addEventListener("input", function() {
+		acceptButton.disabled = !agreeCheckbox.checked;
+	})
+	
+	cancelButton.addEventListener("click",function() {
+		openConnectArea();
+	})
+	acceptButton.addEventListener("click",function() {
+		openLoginArea();
 	})
 }
 
@@ -423,18 +492,7 @@ function openLoginArea() {
 	})
 
 	serverTOSButton.addEventListener("click",function() {
-		
-		fetch(currentServer + "tos").then((res) => {
-			if (res.ok) {
-				res.text().then((text) => {
-					alert(text);
-				})
-			}else {
-				alert(getString("error"));
-			}
-		}).catch(() => {
-			alert(getString("error"));
-		})
+		openServerTOSArea();
 	})
 	
 	backToConnectButton.addEventListener("click",function() {

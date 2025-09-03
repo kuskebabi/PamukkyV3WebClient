@@ -15,6 +15,8 @@
     "refresh": "Yenile",
     "user_last_seen_date": "Son görülme [DATE]",
     "error": "Hata",
+    "cancel": "İptal",
+    "continue": "Devam et",
 
     "dialog_dock_to_right": "Sağa sabitle",
 
@@ -33,7 +35,9 @@
     "login_signup_button": "Kayıt ol",
     "login_changeserver_button": "Başka sunucuya bağlan...",
     "password_repeat": "Şifre tekrar",
+
     "server_tos": "Sunucu kullanım koşulları",
+    "terms_agree": "Bu koşulları okudum ve kabul ediyorum",
 
 
     "upload_hint": "Karşıya yüklemek için tıklayın",
