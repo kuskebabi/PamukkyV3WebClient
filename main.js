@@ -329,6 +329,7 @@ function openServerTOSArea() {
 	title.innerText = getString("server_tos");
 	toscnt.appendChild(title);
 	let tosContents = document.createElement("pre");
+	tosContents.style.wordWrap = "break-word";
 	tosContents.style.whiteSpace = "pre-wrap";
 	tosContents.innerText = currentServer + "tos";
 	toscnt.appendChild(tosContents);
