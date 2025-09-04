@@ -521,7 +521,9 @@ function openMainArea() {
 		updateAudioBar();
 	}
 
-	Notification.requestPermission();
+	try {
+		Notification.requestPermission();
+	}catch {}
 
 	document.body.innerHTML = "";
 	let maincont = document.createElement("main");
@@ -530,6 +532,7 @@ function openMainArea() {
 	let rightArea = document.createElement("rightarea");
 
 	function formatOnlineStatus(text) {
+		if (text == undefined) return "";
 		if (text == "Online") {
 			return getString("user_online");
 		}else {
@@ -607,13 +610,11 @@ function openMainArea() {
 						pfpimge.classList.remove("loading");
 						pfpimge.src = getpfp(infod.picture);
 
-						fetch(currentServer + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': id}),method: 'POST'}).then((res) => {
-							if (res.ok) {
-								res.text().then((text) => {
-									infotxt.classList.remove("loading");
-									infotxt.innerText = formatOnlineStatus(text);
-								})
-							}
+						infotxt.classList.remove("loading");
+						infotxt.innerText = formatOnlineStatus(infod.onlineStatus);
+
+						addOnlineHook(id, function(online) {
+							infotxt.innerText = formatOnlineStatus(online);
 						});
 						
 						let namerow = document.createElement("tr");
@@ -1453,6 +1454,9 @@ function openMainArea() {
 								let val = json[key];
 								if (val.hasOwnProperty("online") && val["online"] != null) {
 									updateOnlineHook(uid, val["online"]);
+								}
+								if (val.hasOwnProperty("profileUpdate") && val["profileUpdate"] != null) {
+									cachedinfo[uid] = val["profileUpdate"];
 								}
 								break;
 							case "chatslist":
