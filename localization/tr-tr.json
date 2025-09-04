@@ -90,6 +90,8 @@
     "nobody_typing": "Hiçkimse yazmıyor",
     "list_typing": "[LIST] yazıyor...",
 
+    "chat_scroll_to_bottom_fab_hint": "Aşağıya in",
+
     "chat_mute_client": "Sesi kapat (Bu istemci)",
     "chat_unmute_client": "Sesi aç (Bu istemci)",
     "chat_mute_account": "Sesi kapat (Bu hesap)",

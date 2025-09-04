@@ -2298,14 +2298,32 @@ function openMainArea() {
 		titlebar.appendChild(optionsbtn);
 		mainChatArea.appendChild(titlebar);
 
+		let messagesCont = document.createElement("div");
+		messagesCont.classList.add("messagescont");
 
+		let messageslistCont = document.createElement("div");
+		messageslistCont.classList.add("messagescont");
 		let messageslist = createDynamicList("messageslist","msgcont");
 		messageslist.setDirection(-1);
-		/*messageslist.element.addEventListener("scroll", function() {
-			messageslist.updateItem();
-		});*/
+
+		let scrollFab = document.createElement("button");
+		scrollFab.classList.add("fab", "secondary");
+		scrollFab.title = getString("chat_scroll_to_bottom_fab_hint");
+		scrollFab.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>';
+		scrollFab.style.display = "none";
+		messageslistCont.appendChild(scrollFab);
+
+		scrollFab.addEventListener("click", function() {
+			showmessage(lastmessageid, false);
+		});
+
+		messageslist.setScrollHook(function(top, lastscrollpos) {
+			scrollFab.style.display = (top < messageslist.element.scrollHeight - messageslist.element.offsetHeight - 10) ? "" : "none";
+		});
+
 		let pinnedmessageslist = createDynamicList("messageslist","msgcont");
 		pinnedmessageslist.element.style.display = "none";
+		pinnedmessageslist.element.classList.add("pinned");
 
 		let pinnedbar = document.createElement("pinbar");
 		pinnedbar.style.display = "none";
@@ -2331,18 +2349,12 @@ function openMainArea() {
 
 
 		pinsbtn.addEventListener("click",function() {
-			if (messageslist.element.style.display == "") {
+			if (pinnedmessageslist.element.style.display == "none") {
 				pinnedmessageslist.element.style.display = "";
-				messageslist.element.style.display = "none";
 				mgb.style.display = "none";
 			}else {
 				pinnedmessageslist.element.style.display = "none";
-				messageslist.element.style.display = "";
-				if (crole.AllowSending == true) {
-					mgb.style.display = "";
-				}else {
-					mgb.style.display = "none";
-				}
+				mgb.style.display = "";
 			}
 		});
 
@@ -2379,9 +2391,10 @@ function openMainArea() {
 				}
 			}
 		}
-		
-		mainChatArea.appendChild(pinnedmessageslist.element);
-		mainChatArea.appendChild(messageslist.element);
+		messageslistCont.appendChild(messageslist.element);
+		messagesCont.appendChild(messageslistCont);
+		messagesCont.appendChild(pinnedmessageslist.element);
+		mainChatArea.appendChild(messagesCont);
 
 		
 		let mgb = document.createElement("msgbar");
@@ -2576,9 +2589,13 @@ function openMainArea() {
 		let timemsgid = 0;
 		let messagescount = 0;
 		let addLoadOlderMessages = true;
+		let lastmessageid = "";
 		function addmsg(msg,id,order = 1) {
 			if (messageslist.getItemData(id)) return;
 			if (msg.type != "time") {
+				if (order == 1) {
+					lastmessageid = id;
+				}
 				let dt = new Date(msg.sendTime);
 				let list = messageslist.getList();
 				let keys = Object.keys(list);
@@ -2821,24 +2838,16 @@ function openMainArea() {
 			})
 		}
 
-		function showmessage(id) {
+		function showmessage(id, hint = true) {
 			function show() {
-				let cont = messageslist.getElement(id);
-				if (cont) {
-					function scroll() {
-						let top = Math.min(Math.max(cont.offsetTop - 250,0), messageslist.element.scrollHeight - messageslist.element.offsetHeight);
-						messageslist.element.scrollTop += (top - messageslist.element.scrollTop) / 8;
-						if (Math.abs(messageslist.element.scrollTop - Math.round(top)) > 10) {
-							requestAnimationFrame(function() {scroll();})
-						}else {
-							cont.classList.add("hint");
-							setTimeout(function() {
-								cont.classList.remove("hint");
-							},1000)
-						}
+				messageslist.scrollToItem(id, function(list, id, cont) {
+					if (hint) {
+						cont.classList.add("hint");
+						setTimeout(function() {
+							cont.classList.remove("hint");
+						},1000);
 					}
-					requestAnimationFrame(function() {scroll();});
-				}
+				});
 			}
 			if (messageslist.getItemData(id)) {
 				show();
@@ -3923,7 +3932,14 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 	// Keyboard item selection support
 	let kbdConf = addKeyboardListSelectionSupport(listelement);
 
-	listelement.addEventListener("scroll",function() {
+	function scrollhook(newpos, oldpos) {}
+
+	function setscrollhook(fn) {
+		scrollhook = fn;
+	}
+
+	function onScroll() {
+		scrollhook(listelement.scrollTop, lastscrollpos);
 		if (listelement.scrollTop > lastscrollpos) {
 			scrolldirection = 1;
 		}else if (listelement.scrollTop < lastscrollpos) {
@@ -3937,7 +3953,9 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		}else {
 			pos = 0;
 		}
-	});
+	}
+
+	listelement.addEventListener("scroll", onScroll);
 
 	function resize() {
 		if (lastheight != 0) {
@@ -3975,6 +3993,15 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		let loaded = false;
 		list[key] = item;
 		viewobserver.observe(element);
+
+		let oldsize = 0;
+		function elemresize() {
+			if (scrolldirection == -1  || pos == 1) { //FIXME: Doesn't scroll to bottom properly on first open because this smh isn't -1.
+				let diff = element.offsetHeight - oldsize;
+				listelement.scrollTop += diff;
+			}
+		}
+		
 		function onintersection(entries, opts){
 			entries.forEach(function (entry) {
 				let visible = entry.isIntersecting;
@@ -3987,8 +4014,10 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 						item.updater(item.data, element, key);
 						if (scrolldirection == -1  || pos == 1) { //FIXME: Doesn't scroll to bottom properly on first open because this smh isn't -1.
 							requestAnimationFrame(function() { 
-								let diff = element.offsetHeight - item.size;
+								oldsize = element.offsetHeight;
+								let diff = oldsize - item.size;
 								listelement.scrollTop += diff;
+								new ResizeObserver(elemresize).observe(element);
 							})
 						}
 					}
@@ -4061,6 +4090,23 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		return list;
 	}
 
+	function scrolltoitem(id, fn) {
+		let cont = getelement(id);
+		if (cont) {
+			function scroll() {
+				let top = Math.min(Math.max(cont.offsetTop - 250,0), listelement.scrollHeight - listelement.offsetHeight);
+				listelement.scrollTop += (top - listelement.scrollTop) / 8;
+				onScroll();
+				if (Math.abs(listelement.scrollTop - Math.round(top)) > 10) {
+					requestAnimationFrame(scroll);
+				}else {
+					fn(list, id, cont);
+				}
+			}
+			requestAnimationFrame(scroll);
+		}
+	}
+
 	return {
 		element: listelement,
 		addItem: additem,
@@ -4070,7 +4116,9 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		clearItems: clearitems,
 		setDirection: setdirection,
 		getElement: getelement,
-		getList: getlist
+		getList: getlist,
+		scrollToItem: scrolltoitem,
+		setScrollHook: setscrollhook
 	}
 }
 

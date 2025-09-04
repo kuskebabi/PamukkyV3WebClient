@@ -90,6 +90,8 @@
     "nobody_typing": "Nobody is typing",
     "list_typing": "[LIST] typing...",
 
+    "chat_scroll_to_bottom_fab_hint": "Scroll to bottom",
+
     "chat_mute_client": "Mute (This client)",
     "chat_unmute_client": "Unmute (This client)",
     "chat_mute_account": "Mute (This account)",

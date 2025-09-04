@@ -87,6 +87,8 @@
     "nobody_typing": "Nimeni nu scrie",
     "list_typing": "[LIST] scrie...",
 
+    "chat_scroll_to_bottom_fab_hint": "Derulați până la sfârșit",
+
     "chat_mute_client": "Opriți notificările (Acest client)",
     "chat_unmute_client": "Activați notificările (Acest client)",
     "chat_mute_account": "Opriți notificările (Acest cont)",
