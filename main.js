@@ -179,6 +179,19 @@ let reactionemojis = ["👍","👎","😃","😂","👏","😭","💛","🤔","�
 let cachedinfo = {};
 let idcallbacks = {};
 
+let allhooks = [];
+
+function addHook(hooks) {
+	allhooks.forEach(function (hook) {
+		let index = hooks.indexOf(hook);
+		if (index > -1) hooks.splice(index, 1);
+	})
+	hooks.forEach(function (hook) {
+		allhooks.push(hook);
+	})
+	fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": hooks}), method: "POST"});
+}
+
 function getInfo(id, callback) {
 	if (cachedinfo.hasOwnProperty(id)) { // Return the cached
 		callback(cachedinfo[id]);
@@ -189,9 +202,14 @@ function getInfo(id, callback) {
 			idcallbacks[id] = [callback]; //create the array
 			fetch(currentServer + "getinfo", {body: JSON.stringify({'token': logininfo.token, 'id': id}),method: 'POST'}).then((res) => {
 				if (res.ok) {
-					res.text().then((text) => {
+					res.json().then((info) => {
 						//Yay! now we attempt to parse it then callback all of them
-						let info = JSON.parse(text);
+						// Add updater hook
+						if (info.hasOwnProperty("isPublic")) { //group
+							addHook(["group:" + id]);
+						}else {
+							addHook(["user:" + id]);
+						}
 						cachedinfo[id] = info;
 						idcallbacks[id].forEach((callback) => {
 							callback(info);
@@ -228,7 +246,7 @@ let useronlinestatus = {};
 function createOnlineHook(userid) {
 	if (!onlinehooks.hasOwnProperty(userid)) {
 		onlinehooks[userid] = [];
-		fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["user:" + userid]}), method: "POST"});
+		addHook(["user:" + userid]);
 		fetch(currentServer + "getonline", {body: JSON.stringify({'token': logininfo.token, 'uid': userid}),method: 'POST'}).then((res) => {
 			if (res.ok) {
 				res.text().then((text) => {
@@ -844,7 +862,7 @@ function openMainArea() {
 									roleselect.value = user.role;
 									roleselect.addEventListener("change",function() {
 										//alert("wait..")
-										fetch(currentServer + "edituser", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID, 'role': roleselect.value }),method: 'POST'}).then((res) => {
+										fetch(currentServer + "editmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID, 'role': roleselect.value }),method: 'POST'}).then((res) => {
 											if (res.ok) {
 												res.text().then((text) => {
 
@@ -1451,12 +1469,19 @@ function openMainArea() {
 								break;
 							case "user":
 								let uid = key.substring(key.indexOf(":") + 1);
-								let val = json[key];
-								if (val.hasOwnProperty("online") && val["online"] != null) {
-									updateOnlineHook(uid, val["online"]);
+								let uval = json[key];
+								if (uval.hasOwnProperty("online") && uval["online"] != null) {
+									updateOnlineHook(uid, uval["online"]);
 								}
-								if (val.hasOwnProperty("profileUpdate") && val["profileUpdate"] != null) {
-									cachedinfo[uid] = val["profileUpdate"];
+								if (uval.hasOwnProperty("profileUpdate") && uval["profileUpdate"] != null) {
+									cachedinfo[uid] = uval["profileUpdate"];
+								}
+								break;
+							case "group":
+								let gid = key.substring(key.indexOf(":") + 1);
+								let gval = json[key];
+								if (gval.hasOwnProperty("edit") && gval["edit"] != null) {
+									cachedinfo[gid] = gval["edit"];
 								}
 								break;
 							case "chatslist":
@@ -2204,7 +2229,7 @@ function openMainArea() {
 		})
 		mutedchats = JSON.parse(localStorage.getItem("mutedchats") ?? "[]");
 		notificationCheck();
-		fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["chatslist"]}), method: "POST"});
+		addHook(["chatslist"]);
 	})
 
 
@@ -2558,7 +2583,7 @@ function openMainArea() {
 							if (crole.AdminOrder == -1) {
 								mgbd.innerHTML = "";
 								let joinbtn = document.createElement("button");
-								joinbtn.innerText = getString(join_group);
+								joinbtn.innerText = getString("join_group");
 								joinbtn.style.width = "100%";
 								joinbtn.style.height = "100%";
 								joinbtn.style.borderRadius = "0px";
@@ -3604,8 +3629,8 @@ function openMainArea() {
 				e.preventDefault();
 			}
 		});
-
-		fetch(currentServer + "addhook", {body: JSON.stringify({'token': logininfo.token, "ids": ["chat:" + chatid]}), method: "POST"});
+		
+		addHook(["chat:" + chatid]);
 		fetch(currentServer + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'prefix': "#0-#48"}),method: 'POST'}).then((res) => {
 			if (res.ok) {
 				fetch(currentServer + "getpinnedmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
