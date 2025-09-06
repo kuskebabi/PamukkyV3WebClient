@@ -554,9 +554,27 @@ function openMainArea() {
 		if (text == "Online") {
 			return getString("user_online");
 		}else {
-			let dt = new Date(text);
-			return getString("user_last_seen_date").replace("[DATE]", dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + ", " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0'));
+			return getString("user_last_seen_date").replace("[DATE]", formatDate(new Date(text)));
 		}
+	}
+
+	function formatDate(date) {
+		let nowdate = new Date();
+		let dtt = new Date(date);
+
+		if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
+			return getTimeString(date);
+		}else {
+			return getDayString(date) + " " + getTimeString(date);
+		}
+	}
+
+	function getDayString(date) {
+		return date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate();
+	}
+
+	function getTimeString(date) {
+		return date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0');
 	}
 
 	function formatSystemMessage(message,callback) {
@@ -1682,14 +1700,8 @@ function openMainArea() {
 				let msg = Object.values(data)[0];
 				if (msg) {
 					let dt = new Date(msg.sendTime);
-					let dtt = new Date(msg.sendTime);
-					let nowdate = new Date();
-					//try {
-					if (dtt.setHours(0,0,0,0) == nowdate.setHours(0,0,0,0)) {
-						lmt.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-					}else {
-						lmt.innerText = dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear() + " " + dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-					}
+					lmt.innerText = formatDate(dt);
+
 					lastmsgcontent.innerText = "User: " + msg.content.split("\n")[0];
 					if (msg.senderUID == "0") {
 						formatSystemMessage(msg.content, function(text) {
@@ -2346,8 +2358,8 @@ function openMainArea() {
 			showmessage(lastmessageid, false);
 		});
 
-		messageslist.setScrollHook(function(top, lastscrollpos) {
-			scrollFab.style.display = (top < messageslist.element.scrollHeight - messageslist.element.offsetHeight - 10) ? "" : "none";
+		messageslist.setScrollHook(function(top, lastscrollpos, pos) {
+			scrollFab.style.display = pos != 1 ? "" : "none";
 		});
 
 		let pinnedmessageslist = createDynamicList("messageslist","msgcont");
@@ -2638,7 +2650,7 @@ function openMainArea() {
 				if (dt.setHours(0,0,0,0) != lastmsgtime.setHours(0,0,0,0)) {
 					addmsg({
 						senderUID: "0",
-						content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
+						content: getDayString(dt),
 						sendTime: dt,
 						loadOlder: addLoadOlderMessages,
 						type: "time"
@@ -2721,37 +2733,36 @@ function openMainArea() {
 				if (reactions) {
 					Object.keys(reactions).forEach(function(ir) {
 						let react = reactions[ir];
-						let reacc = document.createElement("button");
-						reacc.style.cursor = "pointer";
-						reacc.addEventListener("click",function() {
+						let reactMainButton = document.createElement("button");
+						reactMainButton.style.cursor = "pointer";
+						reactMainButton.addEventListener("click",function() {
 							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageid': id, 'reaction': ir}),method: 'POST'}).then((res) => {
 								
 							})
 						})
-						let reace = document.createElement("label");
-						reace.innerText = ir;
-						let cnter = document.createElement("label");
-						cnter.innerText = "0";
-						reacc.appendChild(reace);
-						reacc.appendChild(cnter);
-						msgreactions.appendChild(reacc);
+						let reactEmojiLabel = document.createElement("label");
+						reactEmojiLabel.innerText = ir;
+						let reactEmojiCountLabel = document.createElement("label");
+						reactEmojiCountLabel.innerText = "0";
+						reactMainButton.appendChild(reactEmojiLabel);
+						reactMainButton.appendChild(reactEmojiCountLabel);
+						msgreactions.appendChild(reactMainButton);
 
 						let rkk = Object.keys(react);
-						let doescontaincurr = false;
-						Object.keys(react).forEach(function(aa) {
-							let a = react[aa];
+						let doesContainCurrentUser = false;
+						Object.values(react).forEach(function(a) {
 							if (a.senderUID == logininfo.uid) {
-								doescontaincurr = true;
+								doesContainCurrentUser = true;
 							}
 						})
 
-						if (doescontaincurr) {
-							reacc.classList.add("rcted")
+						if (doesContainCurrentUser) {
+							reactMainButton.classList.add("rcted")
 						}
 
-						cnter.innerText = rkk.length;
+						reactEmojiCountLabel.innerText = rkk.length;
 
-						reacc.addEventListener("contextmenu", function(event) {
+						reactMainButton.addEventListener("contextmenu", function(event) {
 							let diag = opendialog();
 							diag.title.innerText = getString("reactions_list") + ": " + ir;
 							diag.inner.style.overflow = "hidden";
@@ -2797,6 +2808,15 @@ function openMainArea() {
 									userpfp.title = getString("view_profile_of_username").replace("[NAME]", uii.name);
 								});
 								urow.appendChild(uname);
+								let uacts = document.createElement("div");
+								uacts.style.display = "flex";
+								uacts.style.alignItems = "center";
+								uacts.style.flexShrink = "0";
+								let sendTime = document.createElement("label");
+								sendTime.style.fontSize = "small";
+								sendTime.innerText = formatDate(new Date(item.sendTime));
+								uacts.appendChild(sendTime);
+								urow.appendChild(uacts);
 							});
 
 							reactionslist.setList(Object.values(react));
@@ -2848,7 +2868,7 @@ function openMainArea() {
 									if (idx == mkeys.length - 1) {
 										addmsg({
 											senderUID: "0",
-											content: dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear(),
+											content: getDayString(dt),
 											sendTime: dt,
 											loadOlder: true,
 											type: "time"
@@ -3251,7 +3271,7 @@ function openMainArea() {
 			}else {
 				msgcontent.innerHTML = linkify(msg.content);
 			}
-			msgtimelbl.innerText = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+			msgtimelbl.innerText = getTimeString(dt);
 
 			if (msg.forwardedFromUID != undefined) {
 				let il = document.createElement("div");
@@ -3956,6 +3976,9 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 	let lastscrollpos = 0;
 	let lastheight = 0;
 
+	let setPos = true;
+	let poscooldown = undefined;
+
 	let listelement = document.createElement(elemtype);
 	listelement.style.overflow = "auto";
 	// Keyboard item selection support
@@ -3968,20 +3991,25 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 	}
 
 	function onScroll() {
-		scrollhook(listelement.scrollTop, lastscrollpos);
-		if (listelement.scrollTop > lastscrollpos) {
-			scrolldirection = 1;
-		}else if (listelement.scrollTop < lastscrollpos) {
-			scrolldirection = -1;
-		}//else it's horizontal scroll
-		lastscrollpos = listelement.scrollTop;
-		if (listelement.scrollTop == 0) {
-			pos = -1;
-		}else if (Math.abs(listelement.scrollHeight - listelement.clientHeight - listelement.scrollTop) <= 1) {
-			pos = 1;
-		}else {
-			pos = 0;
+		if (setPos) {
+			if (listelement.scrollTop > lastscrollpos) {
+				scrolldirection = 1;
+			}else if (listelement.scrollTop < lastscrollpos) {
+				scrolldirection = -1;
+			}//else it's horizontal scroll
+			
+			if (listelement.scrollTop == 0) {
+				pos = -1;
+			}else if (listelement.scrollTop < listelement.scrollHeight - listelement.offsetHeight - 28) {
+				pos = 0;
+			}else {
+				pos = 1;
+			}
 		}
+
+		scrollhook(listelement.scrollTop, lastscrollpos, pos);
+
+		lastscrollpos = listelement.scrollTop;
 	}
 
 	listelement.addEventListener("scroll", onScroll);
@@ -4002,15 +4030,28 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		if (list[key]) {
 			return;
 		}
+
+		if (poscooldown) {
+			clearTimeout(poscooldown);
+		}
+
+		if (pos == 1) {
+			setPos = false;
+
+			poscooldown = setTimeout(function() {
+				setPos = true;
+			}, 100)
+		}
+
 		let element = document.createElement(innertype);
 		element.tabIndex = "0";
 		element.style.height = item.size + "px"; //Assumed size, will be removed when element loads.
 		if (order == 1) {
 			listelement.appendChild(element)
-			if (direction == -1) {
-				if (pos == 1) {
-					listelement.scrollTop += item.size; 
-				}
+			if (pos == 1) {
+				listelement.scrollTop = listelement.scrollHeight;
+			}else if (scrolldirection == -1) {
+				listelement.scrollTop += item.size;
 			}
 		}
 		if (order == -1) {
@@ -4023,13 +4064,16 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		list[key] = item;
 		viewobserver.observe(element);
 
-		let oldsize = 0;
+		let oldsize = item.size;
 		function elemresize() {
-			if (scrolldirection == -1  || pos == 1) { //FIXME: Doesn't scroll to bottom properly on first open because this smh isn't -1.
+			if (pos == 1) {
+				listelement.scrollTop = listelement.scrollHeight;
+			}else if (scrolldirection == -1) {
 				let diff = element.offsetHeight - oldsize;
 				listelement.scrollTop += diff;
 			}
 		}
+		new ResizeObserver(elemresize).observe(element);
 		
 		function onintersection(entries, opts){
 			entries.forEach(function (entry) {
@@ -4041,14 +4085,6 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 						item.generator(item.data, element, key);
 						loaded = true;
 						item.updater(item.data, element, key);
-						if (scrolldirection == -1  || pos == 1) { //FIXME: Doesn't scroll to bottom properly on first open because this smh isn't -1.
-							requestAnimationFrame(function() { 
-								oldsize = element.offsetHeight;
-								let diff = oldsize - item.size;
-								listelement.scrollTop += diff;
-								new ResizeObserver(elemresize).observe(element);
-							})
-						}
 					}
 				}
 			})
