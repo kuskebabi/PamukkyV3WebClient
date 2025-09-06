@@ -4050,8 +4050,6 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 			listelement.appendChild(element)
 			if (pos == 1) {
 				listelement.scrollTop = listelement.scrollHeight;
-			}else if (scrolldirection == -1) {
-				listelement.scrollTop += item.size;
 			}
 		}
 		if (order == -1) {
