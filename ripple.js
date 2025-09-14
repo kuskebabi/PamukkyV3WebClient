@@ -1,4 +1,4 @@
-function addRipple(element,color) {
+function addRipple(element, color = "var(--ripple-color)") {
 	element.addEventListener("pointerdown", rippleStart);
 	element.style.position = "relative";
 	element.style.overflow = "hidden";
@@ -20,15 +20,11 @@ function addRipple(element,color) {
 		ripple.style.pointerEvents = "none";
 		ripple.style.transition = "transform " + (diameter / 8) + "s,opacity 0.7s";
 		requestAnimationFrame(_ => {
-			ripple.style.opacity = "1";
+			ripple.style.opacity = "0.6";
 			ripple.style.transform = "scale(" + radius + ")";
 		});
 		ripple.style.borderRadius = "50%";
-		if (color == "") {
-			ripple.style.background = "rgba(0,0,0,0.7)";
-		}else {
-			ripple.style.background = color;
-		}
+		ripple.style.background = color;
 		ripple.style.width = diameter + "px";
 		ripple.style.height = diameter + "px";
 		ripple.style.pointerEvents = "none";
