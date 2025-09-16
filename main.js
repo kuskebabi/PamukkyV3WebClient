@@ -953,7 +953,7 @@ function openMainArea() {
 												res.text().then((text) => {
 													users = JSON.parse(text);
 													let ukeys = Object.keys(users);
-													let cuser = users[logininfo.uid];
+													let cuser = users[logininfo.userID];
 													if (cuser) {
 														crole = roles[cuser.role];
 													}
@@ -1585,7 +1585,7 @@ function openMainArea() {
 		let type;
 		if (chatid.includes("-")) {
 			let spl = chatid.split("-");
-			if (spl[0] != logininfo.uid) {
+			if (spl[0] != logininfo.userID) {
 				infoid = spl[0];
 			}else {
 				infoid = spl[1];
@@ -1726,10 +1726,10 @@ function openMainArea() {
 				}else {
 					lastmsgcontent.innerText = getString("chat_no_messages_tip");
 					lmt.style.display = "none";
+					lastmsgcontent.classList.remove("loading");
 				}
 			}
 			lmt.classList.remove("loading");
-			lastmsgcontent.classList.remove("loading");
 		})}).catch(function(error) {console.error(error);});
 
 		getInfo(item.type == "user" ? item.user : item.group, function(info) {
@@ -2021,6 +2021,17 @@ function openMainArea() {
 			diag.inner.style.flexDirection = "column";
 			diag.inner.style.alignItems = "center";
 			let cpasstable = document.createElement("table");
+
+			let emailp = document.createElement("tr");
+			let eprt = document.createElement("td");
+			eprt.innerText = getString("email");
+			emailp.appendChild(eprt);
+			let ev = document.createElement("td");
+			let einp = document.createElement("input");
+			einp.type = "email";
+			ev.appendChild(einp);
+			emailp.appendChild(ev);
+
 			let opr = document.createElement("tr");
 			let pprt = document.createElement("td");
 			pprt.innerText = getString("old_password");
@@ -2051,7 +2062,7 @@ function openMainArea() {
 			nprc.appendChild(npcinp);
 			npc.appendChild(nprc);
 			
-			
+			cpasstable.appendChild(emailp);
 			cpasstable.appendChild(opr);
 			cpasstable.appendChild(npr);
 			cpasstable.appendChild(npc);
@@ -2064,7 +2075,7 @@ function openMainArea() {
 					alert(getString("changepassword_nomatch"));
 					return;
 				}
-				fetch(currentServer + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
+				fetch(currentServer + "changepassword", {body: JSON.stringify({'token': logininfo.token, 'email': einp.value, 'oldpassword': oprinp.value, 'password': nprinp.value  }),method: 'POST'}).then((res) => {
 					res.text().then((text) => {
 						
 						info = JSON.parse(text);
@@ -2238,7 +2249,7 @@ function openMainArea() {
 		}
 		loadchats();
 		getUpdates();
-		getInfo(logininfo.uid, (info) => {
+		getInfo(logininfo.userID, (info) => {
 			namelbl.innerText = info.name;
 			pfpimg.src = getpfp(info.picture);
 			currentuser = info;
@@ -2674,7 +2685,7 @@ function openMainArea() {
 			}
 
 			messageslist.addItem(id,{
-				size: (msg.senderUID == logininfo.uid) ? 61 : (msg.senderUID == 0) ? 34 : 68,
+				size: (msg.senderUID == logininfo.userID) ? 61 : (msg.senderUID == 0) ? 34 : 68,
 				data: msg,
 				generator: function(data, element, id) {
 					createmsg(data,id,element);
@@ -2688,7 +2699,7 @@ function openMainArea() {
 
 		function addpinnedmsg(key, msg) {
 			pinnedmessageslist.addItem(key,{
-				size: (msg.senderUID == logininfo.uid) ? 61 : (msg.senderUID == 0) ? 34 : 68,
+				size: (msg.senderUID == logininfo.userID) ? 61 : (msg.senderUID == 0) ? 34 : 68,
 				data: msg,
 				generator: function(data, element, id) {
 					createmsg(data, key, element, {pinnedmessageslist: true})
@@ -2760,7 +2771,7 @@ function openMainArea() {
 						let rkk = Object.keys(react);
 						let doesContainCurrentUser = false;
 						Object.values(react).forEach(function(a) {
-							if (a.senderUID == logininfo.uid) {
+							if (a.senderUID == logininfo.userID) {
 								doesContainCurrentUser = true;
 							}
 						})
@@ -3007,7 +3018,7 @@ function openMainArea() {
 						if (msg.reactions) {
 							if (msg.reactions[itm]) {
 								Object.values(msg.reactions[itm]).forEach(function(s) {
-									if (s.senderUID == logininfo.uid) {
+									if (s.senderUID == logininfo.userID) {
 										reactionbtn.classList.add("reacted");
 										reacted = true;
 									}
@@ -3188,7 +3199,7 @@ function openMainArea() {
 				if (selectedMessages.length > 0) {
 					deletebutton.disabled = false;
 				}else {
-					deletebutton.disabled = !(crole.AllowMessageDeleting || msg.senderUID == logininfo.uid);
+					deletebutton.disabled = !(crole.AllowMessageDeleting || msg.senderUID == logininfo.userID);
 				}
 			}
 
@@ -3425,7 +3436,7 @@ function openMainArea() {
 			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
 
 
-			if (msg.senderUID == logininfo.uid) {
+			if (msg.senderUID == logininfo.userID) {
 				msgm.classList.add("sender");
 				msgc.appendChild(document.createElement("ma"));
 				msgsender.appendChild(document.createElement("ma"));
@@ -3556,7 +3567,7 @@ function openMainArea() {
 			let replymessageid = replymsgid;
 			let msgid = "send" + Math.round(Math.random() * 100000);
 			addmsg({
-				senderUID:logininfo.uid,
+				senderUID:logininfo.userID,
 				content: content,
 				sendTime: new Date(),
 				status: "sending"
@@ -3639,7 +3650,7 @@ function openMainArea() {
 				fetch(currentServer + "gettyping", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid}),method: 'POST'}).then((res) => {
 					if (res.ok) {
 						res.json().then((val) => {
-							let index = val.indexOf(logininfo.uid);
+							let index = val.indexOf(logininfo.userID);
 							if (index >= 0) {
 								val.splice(index,1);
 							}
@@ -3708,7 +3719,7 @@ function openMainArea() {
 				let val = json[i];
 				if (i == "TYPING") { // Backwards compatibility
 					// Here the value is a array with all users that are typing.
-					let index = val.indexOf(logininfo.uid);
+					let index = val.indexOf(logininfo.userID);
 					if (index >= 0) {
 						val.splice(index,1);
 					}
@@ -3717,7 +3728,7 @@ function openMainArea() {
 				}else if (i.startsWith("TYPING|")) {
 					// Here the value is true/false and event name is "TYPING|[User ID]"
 					let user = i.split("|")[1];
-					if (user != logininfo.uid) {
+					if (user != logininfo.userID) {
 						if (val == true) {
 							typingUsers.push(user);
 						}else {
