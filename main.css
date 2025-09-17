@@ -75,17 +75,20 @@ body {
 }
 
 .cb {
-	width: 30px;
-	height:30px;
+	width: 32px;
+	height:32px;
 	border-radius: 100%;
 	background: transparent;
 	cursor: pointer;
 	margin: 2px;
+	padding: 4px;
 	flex-shrink:0;
 }
 
-.cb:hover {
-	background:var(--transparent-hover);
+.cb.small {
+	width: 24px;
+	height:24px;
+	padding: 2px;
 }
 
 centeredPopup {
@@ -519,6 +522,7 @@ pinbar > .replycont {
 	text-align: inherit;
 	font-size: inherit;
 	background:transparent;
+	max-height: 40vh;
 }
 
 .replycont:hover {
@@ -600,6 +604,22 @@ msgbar {
 	flex-direction:column;
 	flex-shrink:0;
 	background-color: var(--main-bg);
+	max-height: 100%;
+	transition: max-height 0.2s;
+}
+
+msgbar > * {
+	transition: opacity 0.2s, transform 0.2s;
+}
+
+msgbar.collapsed {
+	max-height: 0%;
+}
+
+msgbar.hidden > *, msgbar.collapsed > * {
+	pointer-events: none;
+	opacity: 0;
+	transform: translateY(100%);
 }
 
 msgbar > div {
@@ -639,7 +659,7 @@ msgbar > div > textarea {
 }
 
 .chatitem.active {
-	background: rgba(255,170,0,0.4);
+	background: rgba(255,170,0,0.4) !important;
 	border-bottom: 1px solid transparent;
 }
 

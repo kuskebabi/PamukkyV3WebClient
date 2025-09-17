@@ -1156,11 +1156,8 @@ function openMainArea() {
 
 		let closebtn = document.createElement("button");
 		addRipple(closebtn);
+		closebtn.classList.add("cb", "small");
 		closebtn.title = getString("navigation_close");
-		closebtn.style.flexShrink = "0";
-		closebtn.style.width = "25px";
-		closebtn.style.height = "25px";
-		closebtn.style.padding = "0";
 		closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
 		closebtn.addEventListener("click",function(e) {
 			if (closed) return;
@@ -1190,11 +1187,8 @@ function openMainArea() {
 		
 		let dockbtn = document.createElement("button");
 		addRipple(dockbtn);
+		dockbtn.classList.add("cb", "small");
 		dockbtn.title = getString("dialog_dock_to_right");
-		dockbtn.style.flexShrink = "0";
-		dockbtn.style.width = "25px";
-		dockbtn.style.height = "25px";
-		dockbtn.style.padding = "0";
 		dockbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-168h72v168h528v-528H216v168h-72v-168q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm216-144-51-51 105-105H144v-72h342L381-621l51-51 192 192-192 192Z"/></svg>';
 		dockbtn.addEventListener("click",function(e) {
 			if (isatdock == true) {
@@ -2287,7 +2281,7 @@ function openMainArea() {
 		addRipple(backbtn);
 		backbtn.title = getString("navigation_back");
 		backbtn.classList.add("cb")
-		backbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M384-96 0-480l384-384 68 68-316 316 316 316-68 68Z"/></svg>';
+		backbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M640-80 240-480l400-400 71 71-329 329 329 329-71 71Z"/></svg>';
 		backbtn.style.display = "none";
 		titlebar.appendChild(backbtn)
 		let pfpimg = document.createElement("img");
@@ -2308,7 +2302,7 @@ function openMainArea() {
 		addRipple(infobtn);
 		infobtn.title = getString("info");
 		infobtn.classList.add("cb")
-		infobtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M444-288h72v-240h-72v240Zm35.789-312Q495-600 505.5-610.289q10.5-10.29 10.5-25.5Q516-651 505.711-661.5q-10.29-10.5-25.5-10.5Q465-672 454.5-661.711q-10.5 10.29-10.5 25.5Q444-621 454.289-610.5q10.29 10.5 25.5 10.5Zm.487 504Q401-96 331-126q-70-30-122.5-82.5T126-330.958q-30-69.959-30-149.5Q96-560 126-629.5t82.5-122Q261-804 330.958-834q69.959-30 149.5-30Q560-864 629.5-834t122 82.5Q804-699 834-629.276q30 69.725 30 149Q864-401 834-331q-30 70-82.5 122.5T629.276-126q-69.725 30-149 30ZM480-168q130 0 221-91t91-221q0-130-91-221t-221-91q-130 0-221 91t-91 221q0 130 91 221t221 91Zm0-312Z"/></svg>';
+		infobtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>';
 		infobtn.addEventListener("click",function() {
 			viewInfo(ugid,isuserchat ? "user" : "group")
 		})
@@ -2318,7 +2312,7 @@ function openMainArea() {
 		addRipple(optionsbtn);
 		optionsbtn.title = getString("popupmenu_hint");
 		optionsbtn.classList.add("cb")
-		optionsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M479.79-192Q450-192 429-213.21t-21-51Q408-294 429.21-315t51-21Q510-336 531-314.79t21 51Q552-234 530.79-213t-51 21Zm0-216Q450-408 429-429.21t-21-51Q408-510 429.21-531t51-21Q510-552 531-530.79t21 51Q552-450 530.79-429t-51 21Zm0-216Q450-624 429-645.21t-21-51Q408-726 429.21-747t51-21Q510-768 531-746.79t21 51Q552-666 530.79-645t-51 21Z"/></svg>';
+		optionsbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z"/></svg>';
 		optionsbtn.addEventListener("click",function(e) {
 			showMenu([{
 				content: getString("mute"),
@@ -2413,10 +2407,10 @@ function openMainArea() {
 		pinsbtn.addEventListener("click",function() {
 			if (pinnedmessageslist.element.style.display == "none") {
 				pinnedmessageslist.element.style.display = "";
-				mgb.style.display = "none";
+				messageBar.classList.add("collapsed");
 			}else {
 				pinnedmessageslist.element.style.display = "none";
-				mgb.style.display = "";
+				messageBar.classList.remove("collapsed");
 			}
 		});
 
@@ -2427,9 +2421,6 @@ function openMainArea() {
 		function updatepinnedbar() {
 			let k = Object.keys(pinnedmessages);
 			if (k.length > 0) {
-				if (pinnedbar.style.display == "none") { //FIXME
-					messageslist.element.scrollTop += 56;
-				}
 				pinnedbar.style.display = "";
 				let msg = pinnedmessages[k[k.length - 1]];
 				if (msg.senderUID == "0") {
@@ -2459,30 +2450,33 @@ function openMainArea() {
 		mainChatArea.appendChild(messagesCont);
 
 		
-		let mgb = document.createElement("msgbar");
-		let rc = document.createElement("button");
-		rc.classList.add("replycont");
-		addRipple(rc);
-		rc.addEventListener("click",function() {
-			rc.style.display = "none";
+		let messageBar = document.createElement("msgbar");
+		let currentReplyContainer = document.createElement("button");
+		currentReplyContainer.classList.add("replycont");
+		currentReplyContainer.style.display = "none";
+		addRipple(currentReplyContainer);
+		currentReplyContainer.addEventListener("click",function() {
+			currentReplyContainer.style.display = "none";
+			let id = replymsgid;
 			replymsgid = undefined;
+			updateMessage(id);
 		})
-		let replysname = document.createElement("b");
+		let currentReplyUsername = document.createElement("b");
 		
-		rc.appendChild(replysname);
-		let replycnt = document.createElement("label");
+		currentReplyContainer.appendChild(currentReplyUsername);
+		let currentReplyContent = document.createElement("label");
 		
-		rc.appendChild(replycnt);
-		mgb.appendChild(rc);
+		currentReplyContainer.appendChild(currentReplyContent);
+		messageBar.appendChild(currentReplyContainer);
 		
-		function uploadfile(file) {
+		function addAttachment(file) {
 			let reader = new FileReader();
 			reader.onload = function (e) { 
 				ufl = true;
-				let att = document.createElement("uploaditm");
-				let ui = document.createElement("div");
-				let rb = document.createElement("button")
-				rb.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
+				let itemElement = document.createElement("uploaditm");
+				let imageArea = document.createElement("div");
+				let rembtn = document.createElement("button")
+				rembtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
 				let img = document.createElement("img");
 				img.style.background = "white";
 				let imgs = new Image();
@@ -2497,22 +2491,22 @@ function openMainArea() {
 				imgs.onload = function() {
 					img.src = imgs.src;
 				}
-				ui.appendChild(img)
-				att.appendChild(ui);
-				att.appendChild(rb);
-				attachmentsContainer.appendChild(att);
+				imageArea.appendChild(img)
+				itemElement.appendChild(imageArea);
+				itemElement.appendChild(rembtn);
+				attachmentsContainer.appendChild(itemElement);
 
 				fileslist.push(file);
 
 				onMessageInput();
 
-				rb.addEventListener("click",function() {
+				rembtn.addEventListener("click",function() {
 					const index = fileslist.indexOf(file);
 					if (index > -1) {
 						fileslist.splice(index, 1);
 						onMessageInput();
 					}
-					attachmentsContainer.removeChild(att);
+					itemElement.remove();
 				})
 			};
 
@@ -2520,25 +2514,18 @@ function openMainArea() {
 		}
 		
 		let attachmentsContainer = document.createElement("attachmentscont");
-		mgb.appendChild(attachmentsContainer);
+		messageBar.appendChild(attachmentsContainer);
 		f.onchange = function() {
 			if (f.files) {
-				Array.prototype.forEach.call(f.files,function(i) {
-					uploadfile(i);
-				})
+				Array.prototype.forEach.call(f.files, addAttachment)
 			}
-			
 		}
-		
-		rc.style.display = "none";
 		
 		mainChatArea.addEventListener('dragover', (e) => {
 			e.preventDefault()
 		});
 		mainChatArea.addEventListener('drop', (e) => {
-			Array.prototype.forEach.call(e.dataTransfer.files,function(i) {
-				uploadfile(i);
-			});
+			Array.prototype.forEach.call(e.dataTransfer.files, addAttachment);
 			e.preventDefault()
 		});
 		
@@ -2552,7 +2539,7 @@ function openMainArea() {
 			}
 			
 			Array.prototype.forEach.call(e.clipboardData.files,function(i) {
-				uploadfile(i);
+				addAttachment(i);
 			});
 		});
 		
@@ -2588,15 +2575,15 @@ function openMainArea() {
 		sendbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>';
 		mgbd.appendChild(sendbtn)
 		
-		mgb.appendChild(mgbd);
+		messageBar.appendChild(mgbd);
 
 		let typinglabel = document.createElement("label");
 		typinglabel.classList.add("typinglabel");
 		typinglabel.innerText = getString("nobody_typing");
 		typinglabel.style.opacity = "0";
-		mgb.appendChild(typinglabel);
+		messageBar.appendChild(typinglabel);
 
-		mainChatArea.appendChild(mgb)
+		mainChatArea.appendChild(messageBar)
 		
 		let chatpage;
 		let selectedMessages = [];
@@ -2719,6 +2706,9 @@ function openMainArea() {
 					selectid.innerText = "";
 				}
 			}
+
+			element.classList.toggle("hint", replymsgid == id)
+
 			/*let senderStuff = element.getElementsByClassName("sender");
 			let listdata = messageslist.getList();
 			if (listdata) {
@@ -2910,7 +2900,7 @@ function openMainArea() {
 		function showmessage(id, hint = true) {
 			function show() {
 				messageslist.scrollToItem(id, function(list, id, cont) {
-					if (hint) {
+					if (hint && replymsgid != id) {
 						cont.classList.add("hint");
 						setTimeout(function() {
 							cont.classList.remove("hint");
@@ -2948,28 +2938,33 @@ function openMainArea() {
 				}
 				messageslist.element.classList.toggle("selection", selectedMessages.length > 0);
 				pinnedmessageslist.element.classList.toggle("selection", selectedMessages.length > 0);
+				messageBar.classList.toggle("hidden", selectedMessages.length > 0);
 				selectedMessages.forEach(function(msgid) {
 					updateMessage(msgid);
 				})
 			}
 			function reply() {
 				replymsgid = id;
-				rc.style.display = "";
+				currentReplyContainer.style.display = "";
 				if (msg.senderUID == "0") {
-					replycnt.innerText = "Pamuk is here!";
+					currentReplyContent.innerText = "Pamuk is here!";
 					formatSystemMessage(msg.content, function(text) {
-						replycnt.innerText = text;
+						currentReplyContent.innerText = text;
 					})
 				}else {
-					replycnt.innerText = msg.content.length > 0 ? msg.content : "Message";
+					currentReplyContent.innerText = msg.content.length > 0 ? msg.content : "Message";
 				}
 				getInfo(msg.senderUID,(user) => {
-					replysname.innerText = user.name;
+					currentReplyUsername.innerText = user.name;
 				})
+
 				if (pinnedmessageslist.element.style.display == "") {
 					pinsbtn.click();
 				}
+
 				msginput.focus();
+
+				updateMessage(id);
 			}
 
 			msgc.addEventListener("keydown",function(e) {
@@ -3619,10 +3614,11 @@ function openMainArea() {
 			fileslist = [];
 			attachmentsContainer.innerHTML = "";
 			msginput.value = "";
-			rc.style.display = "none";
+			currentReplyContainer.style.display = "none";
 			replymsgid = undefined;
 			sendbtn.disabled = true;
 			msginput.focus();
+			updateMessage(replymessageid);
 		});
 		
 		msginput.addEventListener("keydown",function(e) {
@@ -3688,7 +3684,7 @@ function openMainArea() {
 				messageslist.element.style.alignItems = "center";
 				messageslist.element.style.justifyContent = "center";
 				messageslist.element.appendChild(errorcont);
-				mgb.remove();
+				messageBar.remove();
 				kill();
 			}
 		})
@@ -4000,7 +3996,7 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		if (lastheight != 0) {
 			if (direction == -1) {
 				let diff = lastheight - listelement.offsetHeight;
-				listelement.scrollTop += Math.max(diff, 0);
+				listelement.scrollTop += diff;
 			}
 		}
 		lastheight = listelement.offsetHeight;
