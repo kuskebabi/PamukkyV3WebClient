@@ -2475,6 +2475,7 @@ function openMainArea() {
 				ufl = true;
 				let itemElement = document.createElement("uploaditm");
 				let imageArea = document.createElement("div");
+				imageArea.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"><path d="M186.67-813.33V-536.67v-2.66V-146.67v-666.66 190.66-190.66Zm92.66 400h161q11.67-19 26.17-35.67 14.5-16.67 31.83-31h-219v66.67Zm0 166.66h123q-2.33-16.66-2-33.33.34-16.67 2.67-33.33H279.33v66.66ZM186.67-80q-27 0-46.84-19.83Q120-119.67 120-146.67v-666.66q0-27 19.83-46.84Q159.67-880 186.67-880H534l226 226v134q-15.67-6.67-32.33-10.67-16.67-4-34.34-6v-86H500.67v-190.66h-314v666.66h249q11 19 24.5 35.67t29.5 31h-303Zm476.66-392.67q81.34 0 138.67 57.33 57.33 57.33 57.33 138.67 0 81.34-57.33 138.67-57.33 57.33-138.67 57.33-81.34 0-138.67-57.33-57.33-57.33-57.33-138.67 0-81.34 57.33-138.67 57.33-57.33 138.67-57.33Zm.74 318.67q11.6 0 19.43-7.91 7.83-7.9 7.83-19.5 0-11.59-7.9-19.42-7.91-7.84-19.5-7.84-11.6 0-19.43 7.91-7.83 7.9-7.83 19.5 0 11.59 7.9 19.43 7.91 7.83 19.5 7.83Zm-19.4-80h38.66v-10.63q0-11.7 6.34-21.2 6.33-9.5 14.81-17.77 14.85-12.4 23.85-24.4 9-12 9-32 0-30.81-20.53-49.41Q696.27-408 663.85-408q-24.85 0-45.02 14.17-20.16 14.16-28.16 38.82L625.33-340q2.34-13.33 13.17-22.67 10.83-9.33 25.8-9.33 16.03 0 25.2 8 9.17 8 9.17 24 0 11-6.67 19.17-6.67 8.16-14.67 16.16-7.33 6.67-14.5 13.34-7.16 6.66-12.16 14.66-3.67 6.67-4.84 12.87-1.16 6.2-1.16 14.47V-234Z"/></svg>';
 				let rembtn = document.createElement("button")
 				rembtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
 				let img = document.createElement("img");
@@ -2490,8 +2491,12 @@ function openMainArea() {
 				img.classList.add("msgimg");
 				imgs.onload = function() {
 					img.src = imgs.src;
+					img.addEventListener("click", function() {
+						imageView(imgs.src);
+					});
+					imageArea.innerHTML = "";
+					imageArea.appendChild(img);
 				}
-				imageArea.appendChild(img)
 				itemElement.appendChild(imageArea);
 				itemElement.appendChild(rembtn);
 				attachmentsContainer.appendChild(itemElement);
@@ -2646,8 +2651,7 @@ function openMainArea() {
 				}
 				let dt = new Date(msg.sendTime);
 				let list = messageslist.getList();
-				let keys = Object.keys(list);
-				let lastmsg = list[keys[keys.length - 1]];
+				let lastmsg = list[order == 1 ? list.length - 1 : 0];
 				let lastmsgtime;
 				if (lastmsg) {
 					lastmsgtime = new Date(lastmsg.data.sendTime);
@@ -2674,7 +2678,7 @@ function openMainArea() {
 			messageslist.addItem(id,{
 				size: (msg.senderUID == logininfo.userID) ? 61 : (msg.senderUID == 0) ? 34 : 68,
 				data: msg,
-				generator: function(data, element, id) {
+				generator: function(data, element, id, list) {
 					createmsg(data,id,element);
 					if (data.loadOlder) {
 						getoldermessages("#" + messagescount + "-#" + (messagescount + 48), undefined, id);
@@ -2688,14 +2692,14 @@ function openMainArea() {
 			pinnedmessageslist.addItem(key,{
 				size: (msg.senderUID == logininfo.userID) ? 61 : (msg.senderUID == 0) ? 34 : 68,
 				data: msg,
-				generator: function(data, element, id) {
+				generator: function(data, element, id, list) {
 					createmsg(data, key, element, {pinnedmessageslist: true})
 				},
 				updater: chatmsgupdater
 			});
 		}
 
-		function chatmsgupdater(data,element,id) {
+		function chatmsgupdater(data, element, id, list) {
 			let selectid = element.querySelector(".selectid");
 			if (selectid) {
 				if (selectedMessages.includes(id)) {
@@ -2709,33 +2713,59 @@ function openMainArea() {
 
 			element.classList.toggle("hint", replymsgid == id)
 
-			/*let senderStuff = element.getElementsByClassName("sender");
-			let listdata = messageslist.getList();
+			let listdata = list.getList();
 			if (listdata) {
-				let keys = Object.keys(listdata);
-				let thisMessageIndex = keys.indexOf(id);
+				let thisMessageIndex = list.getListElementIndex(id);
 				let isLastMessageBySender = true;
-				if (thisMessageIndex > -1 && thisMessageIndex + 1 < listdata.length - 1) {
-					let nextMessage = listdata[keys[thisMessageIndex + 1]];
+				let isFirstMessageBySender = false;
+				if (thisMessageIndex > -1 && thisMessageIndex + 1 < listdata.length) {
+					let nextMessage = listdata[thisMessageIndex + 1];
+					if (nextMessage)
 					if (nextMessage.data.senderUID == data.senderUID) isLastMessageBySender = false;
 				}
-				Array.prototype.forEach.call(senderStuff, function(i) {
-					if (isLastMessageBySender) {
-						i.classList.remove("hidden");
-						if (i.tagName.toLowerCase() == "img") {
-							if (chatslist.element.scrollTop + chatslist.element.offsetHeight - (element.offsetTop + element.offsetHeight) < 0) {
-								i.style.outline = "1px solid orange";
-								i.style.top = ((chatslist.element.scrollHeight - (chatslist.element.scrollTop + chatslist.element.offsetHeight)) - (element.offsetParent.offsetHeight - element.offsetParent.scrollTop - element.offsetTop - element.offsetHeight)) + "px";
-							}else {
-								i.style.outline = "";
-								i.style.bottom = "16px";
-							}
-						}
+				if (thisMessageIndex > -1 && thisMessageIndex - 1 >= 0) {
+					let prevMessage = listdata[thisMessageIndex - 1];
+					if (prevMessage)
+					if (prevMessage.data.senderUID != data.senderUID) isFirstMessageBySender = true;
+				}
+
+				let sendername = element.querySelector("msgsender");
+				if (sendername) {
+					if (isFirstMessageBySender) {
+						sendername.classList.remove("hidden");
 					}else {
-						i.classList.add("hidden");
+						sendername.classList.add("hidden");
 					}
-				});
-			}*/
+				}
+
+				let pfpimg = element.querySelector("img.sender");
+				if (pfpimg) {
+					if (isLastMessageBySender) {
+						pfpimg.classList.remove("hidden");
+						/*if (list.element.scrollTop + list.element.offsetHeight < element.offsetTop + element.offsetHeight) {
+							let maxpos = 16;
+							for (let index = thisMessageIndex + 1; index >= 0; index--) {
+								let item = listdata[index];
+								if (item) {
+									if (item.data.senderUID != data.senderUID) {
+										let elem = item.element;
+										maxpos = element.offsetTop + element.offsetHeight - elem.offsetTop - elem.offsetHeight - pfpimg.offsetHeight - 16;
+										break;
+									}
+								}
+							}
+							
+							let pos = element.offsetTop + element.offsetHeight + 16 - (list.element.scrollTop + list.element.offsetHeight);
+							if (maxpos < pos) pos = maxpos;
+							pfpimg.style.bottom = pos + "px";
+						}else {
+							pfpimg.style.bottom = "";
+						}*/
+					}else {
+						pfpimg.classList.add("hidden");
+					}
+				}
+			}
 			let msgreactions = element.querySelector("msgreacts");
 			if (msgreactions) {
 				msgreactions.innerHTML = "";
@@ -3335,19 +3365,17 @@ function openMainArea() {
 							imageView(i.url.replace(/%SERVER%/g,currentServer));
 						}
 					}
-					img.style.width = img.style.height = Math.max(240 / msg.gImages.length,64) + "px";
+					img.style.width = img.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length),64) + "px";
 					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
 					img.title = filename;
 					msgbubble.appendChild(img);
 				})
 				msg.gVideos.forEach(function(i) {
 					let vid = document.createElement("video");
-					//vid.muted = true;
-					//vid.autoplay = true;
 					vid.controls = true;
 					vid.src = i.url.replace(/%SERVER%/g,currentServer);
-					//vid.style.aspectRatio = "16/9";
-					vid.style.width = "100%";
+					vid.classList.add("msgimg");
+					vid.style.width = vid.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length),64) + "px";
 					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
 					vid.title = filename;
 					msgbubble.appendChild(vid);
@@ -3368,8 +3396,6 @@ function openMainArea() {
 					let filename = i.name;
 					fd.appendChild(fileico)
 					let il = document.createElement("div");
-					il.style.display = "flex";
-					il.style.flexDirection = "column";
 					let namel = document.createElement("label");
 					namel.innerText = filename;
 					il.appendChild(namel);
@@ -3398,8 +3424,6 @@ function openMainArea() {
 					let filename = i.name;
 					fd.appendChild(fileico)
 					let il = document.createElement("div");
-					il.style.display = "flex";
-					il.style.flexDirection = "column";
 					let namel = document.createElement("label");
 					namel.innerText = filename;
 					il.appendChild(namel);
@@ -3742,9 +3766,15 @@ function openMainArea() {
 							chatpage[key] = val;
 							addmsg(val,key);
 						}
-					}
-					if (val.event == "DELETED") {
+					}else if (val.event == "DELETED") {
+						let index = messageslist.getListElementIndex(key);
 						messageslist.removeItem(key);
+
+						// update previous and next items so pfp/name showing/hiding applies properly
+						let list = messageslist.getList();
+						if (list[index - 1]) messageslist.updateItem(list[index - 1].key);
+						if (list[index]) messageslist.updateItem(list[index].key);
+
 						let selectedMessagesIndex = selectedMessages.indexOf(key);
 						if (selectedMessagesIndex != -1) {
 							selectedMessages.splice(selectedMessagesIndex, 1);
@@ -3754,8 +3784,7 @@ function openMainArea() {
 							pinnedmessageslist.removeItem(key);
 							updatepinnedbar();
 						}
-					}
-					if (val.event == "REACTIONS") { //Legacy
+					}else if (val.event == "REACTIONS") { //Legacy
 						let data = messageslist.getItemData(key);
 						if (data) {
 							data.reactions = val.rect;
@@ -3767,8 +3796,7 @@ function openMainArea() {
 							pdata.reactions = val.rect;
 							pinnedmessageslist.updateItem(key, pdata);
 						}
-					}
-					if (val.event == "REACTED") {
+					}else if (val.event == "REACTED") {
 						let data = messageslist.getItemData(key);
 						let emoji = val.reaction;
 						if (data) {
@@ -3787,8 +3815,7 @@ function openMainArea() {
 							pdata.reactions = data.reactions;
 							pinnedmessageslist.updateItem(key, pdata);
 						}
-					}
-					if (val.event == "UNREACTED") {
+					}else if (val.event == "UNREACTED") {
 						let data = messageslist.getItemData(key);
 						let emoji = val.reaction;
 						if (data) {
@@ -3804,8 +3831,7 @@ function openMainArea() {
 							pdata.reactions = data.reactions;
 							pinnedmessageslist.updateItem(key, pdata);
 						}
-					}
-					if (val.event == "PINNED") {
+					}else if (val.event == "PINNED") {
 						let data = messageslist.getItemData(key);
 						if (data) {
 							data.isPinned = true;
@@ -3814,8 +3840,7 @@ function openMainArea() {
 						pinnedmessages[key] = val;
 						updatepinnedbar();
 						addpinnedmsg(key,val);
-					}
-					if (val.event == "UNPINNED") {
+					}else if (val.event == "UNPINNED") {
 						let data = messageslist.getItemData(key);
 						if (data) {
 							data.isPinned = false;
@@ -3946,8 +3971,10 @@ function addKeyboardListSelectionSupport(element, options = {}) {
 }
 
 function createDynamicList(elemtype = "div", innertype = "div") {
-	let list = {};
-	
+	let listObject = {};
+
+	let list = [];
+
 	let direction = 1;
 	let pos = -1;
 	let scrolldirection = 1;
@@ -3996,7 +4023,7 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		if (lastheight != 0) {
 			if (direction == -1) {
 				let diff = lastheight - listelement.offsetHeight;
-				listelement.scrollTop += diff;
+				listelement.scrollTop += Math.max(diff, 0);
 			}
 		}
 		lastheight = listelement.offsetHeight;
@@ -4004,10 +4031,27 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 
 	new ResizeObserver(resize).observe(listelement)
 
+	function getListElementIndex(key) {
+		for (let index = 0; index < list.length; index++) {
+			let element = list[index];
+			if (element)
+			if (element.key == key) return index;
+		}
+	}
+	function getListElement(key) {
+		for (let index = 0; index < list.length; index++) {
+			let element = list[index];
+			if (element)
+			if (element.key == key) return element;
+		}
+	}
+
 	function additem(key, item, order = 1) {
-		if (list[key]) {
+		if (getListElement(key)) {
 			return;
 		}
+
+		item.key = key;
 
 		if (poscooldown) {
 			clearTimeout(poscooldown);
@@ -4033,11 +4077,13 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		if (order == -1) {
 			listelement.prepend(element);
 			listelement.scrollTop += item.size; //FIXME
+			list.unshift(item);
+		}else {
+			list.push(item);
 		}
 		item.element = element;
 		let viewobserver = new IntersectionObserver(onintersection, {root: null, threshold: 0})
 		let loaded = false;
-		list[key] = item;
 		viewobserver.observe(element);
 
 		let oldsize = item.size;
@@ -4058,9 +4104,9 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 					if (loaded == false) {
 						viewobserver.unobserve(element);
 						element.style.height = "";
-						item.generator(item.data, element, key);
+						item.generator(item.data, element, key, listObject);
 						loaded = true;
-						item.updater(item.data, element, key);
+						item.updater(item.data, element, key, listObject);
 					}
 				}
 			})
@@ -4070,39 +4116,42 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 
 	function updateitem(key = null, data = null) {
 		if (key != null) {
-			if (list[key]) {
+			let item = getListElement(key);
+			if (item) {
 				if (data != null) {
-					list[key].data = data;
+					item.data = data;
 				}
-				list[key].updater(list[key].data, list[key].element, key);
+				item.updater(item.data, item.element, key, listObject);
 			}
 		}else {
-			Object.keys(list).forEach(function(k) {
-				let i = list[k];
-				i.updater(i.data, i.element, k);
+			list.forEach(function(i) {
+				i.updater(i.data, i.element, i.key, listObject);
 			});
 		}
 	}
 
 	function getitemdata(key) {
-		if (list[key]) {
-			return list[key].data;
+		let item = getListElement(key);
+		if (item) {
+			return item.data;
 		}
 	}
 
 	function removeitem(key) {
-		if (list[key]) {
-			let item = list[key];
+		let item = getListElement(key);
+		if (item) {
 			item.element.remove();
-			delete list[key];
+			let index = list.indexOf(item);
+			if (index >= 0) {
+				list.splice(index, 1);
+			}
 		}
 	}
 
 	function clearitems() {
-		Object.keys(list).forEach(function(key) {
-			let item = list[key];
+		list.forEach(function(item) {
 			item.element.remove();
-			delete list[key];
+			delete list[getListElementIndex(key)];
 		})
 	}
 
@@ -4121,9 +4170,9 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 	}
 
 	function getelement(key) {
-		if (list[key]) {
-			let item = list[key];
-			return item.element
+		let item = getListElement(key);
+		if (item) {
+			return item.element;
 		}
 	}
 
@@ -4148,7 +4197,7 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		}
 	}
 
-	return {
+	listObject = {
 		element: listelement,
 		addItem: additem,
 		removeItem: removeitem,
@@ -4159,8 +4208,12 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		getElement: getelement,
 		getList: getlist,
 		scrollToItem: scrolltoitem,
-		setScrollHook: setscrollhook
-	}
+		setScrollHook: setscrollhook,
+		getListElement: getListElement,
+		getListElementIndex: getListElementIndex
+	};
+
+	return listObject;
 }
 
 function createLazyList(elemtype = "div",innertype = "div") {
