@@ -312,7 +312,7 @@ function openConnectArea(err) {
 	addRipple(connectButton);
 	
 	if (err) {
-		errorLabel.innerText = getString("server_input_error");
+		errorLabel.innerText = getString("server_connection_error");
 	}
 	
 	connectButton.addEventListener("click",function() {
@@ -336,7 +336,7 @@ function openConnectArea(err) {
 			connectButton.disabled = false;
 			errorLabel.classList.add("errorlabel");
 			errorLabel.classList.remove("infolabel");
-			errorLabel.innerText = getString("server_input_error");
+			errorLabel.innerText = getString("server_connection_error");
 		})
 	})
 }
@@ -487,6 +487,7 @@ function openLoginArea() {
 		}).catch(() => {
 			loginbutton.disabled = false;
 			registerButton.disabled = false;
+			errorLabel.innerText = getString("server_connection_error");
 		})
 	})
 	
@@ -882,14 +883,11 @@ function openMainArea() {
 									})
 									roleselect.value = user.role;
 									roleselect.addEventListener("change",function() {
-										//alert("wait..")
 										fetch(currentServer + "editmember", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'userid': user.userID, 'role': roleselect.value }),method: 'POST'}).then((res) => {
-											if (res.ok) {
+											if (!res.ok) {
 												res.text().then((text) => {
-
+													alert(text);
 												})
-											}else {
-
 											}
 										})
 									});
@@ -2869,6 +2867,7 @@ function openMainArea() {
 				// No need to check for these if there wasn't reaction container. Because these wouldn't exist too.
 				let msgpinned = element.querySelector(".msgpinned");
 				if (msgpinned) msgpinned.style.display = data.isPinned ? "" : "none";
+
 				let msgstatus = element.querySelector(".msgstatus");
 				if (msgstatus) {
 					if (data.status == "sending") {
@@ -2876,7 +2875,15 @@ function openMainArea() {
 					}else {
 						msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
 					}
-				};
+
+					if (data.readBy && typeof data.readBy == "object" && data.readBy.length > 0 && !(data.readBy.length == 1 && data.readBy[0].userID == logininfo.userID && data.senderUID == logininfo.userID)) {
+						msgstatus.disabled = false;
+						msgstatus.title = getString("message_read_by_count").replace("[COUNT]", data.readBy.length - 1);
+					}else {
+						msgstatus.disabled = true;
+						msgstatus.title = "";
+					}
+				};	
 			}
 		}
 
@@ -2943,6 +2950,15 @@ function openMainArea() {
 			}else {
 				getoldermessages("#" + messagescount + "-" + id, show);
 			}
+		}
+
+		let newReadMessages = [];
+		let readSendTimeout = null;
+
+		function sendReadMessages() {
+			readSendTimeout = null;
+			fetch(currentServer + "readmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': newReadMessages}),method: 'POST'});
+			newReadMessages.length = 0;
 		}
 
 		function updateMessage(id) {
@@ -3447,7 +3463,71 @@ function openMainArea() {
 				msgm.appendChild(msgtime);
 			}
 
-			let msgstatus = null;
+			let msgstatus = document.createElement("button");
+			msgstatus.classList.add("msgstatus", "cb", "small");
+			msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
+			msgstatus.addEventListener("click", function() {
+				let diag = opendialog();
+				diag.title.innerText = getString("message_read_by_count").replace("[COUNT]", msg.readBy.length);
+				diag.inner.style.overflow = "hidden";
+				diag.inner.style.display = "flex";
+				diag.inner.style.flexDirection = "column";
+				
+				let readlist = createLazyList("div","div");
+				readlist.element.classList.add("clist");
+				readlist.setGetSize(function(list,index) {
+					return 56;
+				});
+				readlist.setItemGenerator(function(list,index,urow) {
+					let item = list[index];
+					if (item == undefined) return;
+					urow.style.display = "flex";
+					urow.style.width = "100%";
+					urow.style.height = "56px";
+					urow.style.padding = "8px";
+					let uname = document.createElement("div");
+					uname.style.display = "flex";
+					uname.style.alignItems = "center";
+					uname.style.width = "100%";
+					let userpfp = document.createElement("img");
+					userpfp.classList.add("circleimg");
+					userpfp.classList.add("loading");
+					userpfp.loading = "lazy";
+					userpfp.style.cursor = "pointer";
+					userpfp.addEventListener("click",function() {
+						viewInfo(item.userID, "user");
+					});
+					let usernamelbl = document.createElement("label");
+					usernamelbl.classList.add("loading");
+					usernamelbl.innerText = "loading..."
+					usernamelbl.style.marginLeft = "8px";
+					usernamelbl.style.marginRight = "8px";
+					uname.appendChild(userpfp);
+					uname.appendChild(usernamelbl);
+					getInfo(item.userID, function(uii) {
+						userpfp.src = getpfp(uii.picture);
+						usernamelbl.innerText = uii.name;
+						userpfp.classList.remove("loading");
+						usernamelbl.classList.remove("loading");
+						userpfp.title = getString("view_profile_of_username").replace("[NAME]", uii.name);
+					});
+					urow.appendChild(uname);
+					let uacts = document.createElement("div");
+					uacts.style.display = "flex";
+					uacts.style.alignItems = "center";
+					uacts.style.flexShrink = "0";
+					let readTime = document.createElement("label");
+					readTime.style.fontSize = "small";
+					readTime.innerText = formatDate(new Date(item.readTime));
+					uacts.appendChild(readTime);
+					urow.appendChild(uacts);
+				});
+
+				readlist.setList(msg.readBy);
+
+				diag.inner.appendChild(readlist.element);		
+			})
+
 			let msgpinned = document.createElement("div");
 			msgpinned.classList.add("msgpinned");
 			msgpinned.title = getString("message_pinned_hint");
@@ -3462,10 +3542,6 @@ function openMainArea() {
 				msgsender.appendChild(msgsendertxt)
 				msgtime.appendChild(document.createElement("ma"));
 				msgtime.appendChild(msgtimelbl);
-				msgstatus = document.createElement("div");
-				msgstatus.classList.add("msgstatus");
-				msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
-				msgtime.appendChild(msgstatus);
 				msgc.appendChild(msgm);
 				msgc.appendChild(msgpfp);
 			}else {
@@ -3487,7 +3563,9 @@ function openMainArea() {
 					msgtime.appendChild(document.createElement("ma"));
 				}
 			}
+
 			msgtime.appendChild(msgpinned);
+			msgtime.appendChild(msgstatus);
 
 			let replydragstart = null;
 			let dragy = null;
@@ -3559,6 +3637,22 @@ function openMainArea() {
 				cancelled = true;
 				draglocked = false;
 			})
+			
+			if (msg.readBy && typeof msg.readBy == "object") {
+				let add = true;
+				for (let index = 0; index < msg.readBy.length; index++) {
+					let user = msg.readBy[index];
+					if (user.userID == logininfo.userID) {
+						add = false;
+						break;
+					}
+				}
+
+				if (add) {
+					newReadMessages.push(id);
+					if (readSendTimeout == null) readSendTimeout = setTimeout(sendReadMessages, 1000);
+				}
+			}
 			//return {message: msgc, status:msgstatus,msgreactions: msgreactions,reactions: rdata, pinned:msgpinned};;
 		}
 		
@@ -3783,6 +3877,21 @@ function openMainArea() {
 							delete pinnedmessages[key];
 							pinnedmessageslist.removeItem(key);
 							updatepinnedbar();
+						}
+					}else if (val.event == "READ") {
+						let data = messageslist.getItemData(key);
+						if (data) {
+							data.readBy.push({
+								userID: val.userID,
+								readTime: val.readTime
+							});
+							messageslist.updateItem(key, data);
+						}
+						// But message MIGHT be loaded in pinned messages area too.
+						let pdata = pinnedmessageslist.getItemData(key);
+						if (pdata) {
+							pdata.readBy = data.readBy;
+							pinnedmessageslist.updateItem(key, pdata);
 						}
 					}else if (val.event == "REACTIONS") { //Legacy
 						let data = messageslist.getItemData(key);

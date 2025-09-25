@@ -26,7 +26,7 @@
     "server_input_tip": "Introduceți adresa URL a serverului pentru a începe",
     "server_input_hint": "Introduceți adresa URL sau adresa IP...",
     "server_input_submit_button": "Conectați-vă",
-    "server_input_error": "Conexiunea a eșuat.",
+    "server_connection_error": "Conexiunea a eșuat.",
     
     "login_tip": "Autentificați-vă pe acest server Pamukky",
     "login_email_hint": "E-mail",
@@ -110,6 +110,7 @@
 
     "forwarded_from_username": "Redirecționat de la [NAME]",
     "message_pinned_hint": "Fixat",
+    "message_read_by_count": "Citit de [COUNT] persoane",
 
     "username_pinned_a_message": "[NAME] a fixat un mesaj.",
     "username_unpinned_a_message": "[NAME] a anulat fixarea unui mesaj.",

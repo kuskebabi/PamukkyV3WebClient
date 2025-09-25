@@ -63,6 +63,7 @@ select {
 	background: var(--component-background);
 	padding:4px;
 	border-radius:8px;
+	transition: background-color 200ms;
 }
 
 select:hover {

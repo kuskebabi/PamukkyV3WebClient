@@ -27,7 +27,7 @@
     "server_input_tip": "Enter server URL to begin",
     "server_input_hint": "Enter URL or IP address...",
     "server_input_submit_button": "Connect",
-    "server_input_error": "Connection failed.",
+    "server_connection_error": "Connection failed.",
     
     "login_tip": "Login to this Pamukky server",
     "login_email_hint": "E-Mail",
@@ -113,6 +113,7 @@
 
     "forwarded_from_username": "Forwarded from [NAME]",
     "message_pinned_hint": "Pinned",
+    "message_read_by_count": "Read by [COUNT] people",
 
     "username_pinned_a_message": "[NAME] pinned a message.",
     "username_unpinned_a_message": "[NAME] unpinned a message.",
