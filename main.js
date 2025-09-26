@@ -1579,6 +1579,10 @@ function openMainArea() {
 	updateAudioBar();
 
 	let chatslist = createLazyList();
+	chatslist.element.addEventListener("scroll", function() {
+		leftTitleBar.classList.toggle("shandow", chatslist.element.scrollTop > 0);
+	});
+
 	let currentchatid = 0;
 	function openchat(chatid) {
 		let infoid = "0";
@@ -2381,6 +2385,13 @@ function openMainArea() {
 
 		messageslist.setScrollHook(function(top, lastscrollpos, pos) {
 			scrollFab.style.display = pos != 1 ? "" : "none";
+			messageBar.classList.toggle("shandow", pos != 1);
+			if (pinnedbar.style.display == "none") {
+				titlebar.classList.toggle("shandow", pos != -1);
+			}else {
+				pinnedbar.classList.toggle("shandow", pos != -1);
+				titlebar.classList.remove("shandow");
+			}
 		});
 
 		let pinnedmessageslist = createDynamicList("messageslist","msgcont");
