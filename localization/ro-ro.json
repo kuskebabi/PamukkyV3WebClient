@@ -80,7 +80,10 @@
     "chat_load_error": "Nu s-a putut deschide conversația.",
     "chat_load_error_info": "Vă rugăm să informați proprietarul serverului dacă această situație nu este normală.",
 
-    "group_members_count": "[COUNT] membri",
+    "group_members_count": {
+        "_NORMAL": "[COUNT] membri",
+        "1": "1 membru" 
+    },
     "pinned_messages": "Mesaje fixate",
 
     "add_attachment": "Adăugați atașament",
@@ -110,7 +113,11 @@
 
     "forwarded_from_username": "Redirecționat de la [NAME]",
     "message_pinned_hint": "Fixat",
-    "message_read_by_count": "Citit de [COUNT] persoane",
+    "message_read_by_count": {
+        "_NORMAL": "Citit de [COUNT] persoane",
+        "1": "Citit de o persoană",
+        "0": "Nimeni nu a citit acest mesaj"
+    },
 
     "username_pinned_a_message": "[NAME] a fixat un mesaj.",
     "username_unpinned_a_message": "[NAME] a anulat fixarea unui mesaj.",

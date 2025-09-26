@@ -153,9 +153,17 @@ function getLocalization() {
 	})
 }
 
-function getString(stringid) {
+function getString(stringid, replacetag = "", val = "") {
 	if (localization[stringid]) {
-		return localization[stringid];
+		let tag = "[" + replacetag.toUpperCase() + "]";
+		if (typeof localization[stringid] == "object") {
+			if (localization[stringid].hasOwnProperty(val.toString())) {
+				return localization[stringid][val.toString()];
+			}else {
+				return localization[stringid]["_NORMAL"].replace(tag, val);
+			}
+		}
+		return localization[stringid].replace(tag, val);
 	}
 	return stringid;
 }
@@ -2631,7 +2639,7 @@ function openMainArea() {
 				if (res.ok) {
 					res.text().then((text) => {
 						infotxt.classList.remove("loading");
-						infotxt.innerText = getString("group_members_count").replace("[COUNT]", text);
+						infotxt.innerText = getString("group_members_count", "count", text);
 					})
 				}
 			});
@@ -2878,7 +2886,7 @@ function openMainArea() {
 
 					if (data.readBy && typeof data.readBy == "object" && data.readBy.length > 0 && !(data.readBy.length == 1 && data.readBy[0].userID == logininfo.userID && data.senderUID == logininfo.userID)) {
 						msgstatus.disabled = false;
-						msgstatus.title = getString("message_read_by_count").replace("[COUNT]", data.readBy.length - 1);
+						msgstatus.title = getString("message_read_by_count", "count", data.readBy.length - 1);
 					}else {
 						msgstatus.disabled = true;
 						msgstatus.title = "";
@@ -3468,7 +3476,7 @@ function openMainArea() {
 			msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
 			msgstatus.addEventListener("click", function() {
 				let diag = opendialog();
-				diag.title.innerText = getString("message_read_by_count").replace("[COUNT]", msg.readBy.length);
+				diag.title.innerText = getString("message_read_by_count", "count", msg.readBy.length);
 				diag.inner.style.overflow = "hidden";
 				diag.inner.style.display = "flex";
 				diag.inner.style.flexDirection = "column";

@@ -113,7 +113,10 @@
 
     "forwarded_from_username": "[NAME] tarafından iletildi",
     "message_pinned_hint": "Sabitlenmiş",
-    "message_read_by_count": "[COUNT] kişi tarafından okundu",
+    "message_read_by_count": {
+        "_NORMAL": "[COUNT] kişi tarafından okundu",
+        "0": "Hiçkimse bu mesajı okumadı"
+    },
 
     "username_pinned_a_message": "[NAME] bir mesajı sabitledi.",
     "username_unpinned_a_message": "[NAME] bir mesajın sabitini kaldırdı.",

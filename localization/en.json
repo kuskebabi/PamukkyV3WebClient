@@ -83,7 +83,10 @@
     "chat_load_error": "Couldn't open chat.",
     "chat_load_error_info": "Please tell this issue to server's owner if this is not normal.",
 
-    "group_members_count": "[COUNT] members",
+    "group_members_count": {
+        "_NORMAL": "[COUNT] members",
+        "1": "1 member" 
+    },
     "pinned_messages": "Pinned messages",
 
     "add_attachment": "Add attachment",
@@ -113,7 +116,11 @@
 
     "forwarded_from_username": "Forwarded from [NAME]",
     "message_pinned_hint": "Pinned",
-    "message_read_by_count": "Read by [COUNT] people",
+    "message_read_by_count": {
+        "_NORMAL": "Read by [COUNT] people",
+        "1": "Read by 1 person",
+        "0": "Nobody read this message" 
+    },
 
     "username_pinned_a_message": "[NAME] pinned a message.",
     "username_unpinned_a_message": "[NAME] unpinned a message.",
