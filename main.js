@@ -622,6 +622,69 @@ function openMainArea() {
 		}
 	}
 
+	function uploadFile(file, callbacks) {
+		if (typeof callbacks != "object") return;
+		if (!callbacks.hasOwnProperty("done")) return;
+
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == XMLHttpRequest.DONE) {
+				let json = JSON.parse(xhr.responseText);
+				if (xhr.status == 200) {
+					if (callbacks.preDone) callbacks.preDone(json);
+					if (file.type == "image/png" || file.type == "image/bmp" || file.type == "image/jpeg" || file.type == "image/gif") {
+						// Create thumbnail and send it if file is a image
+						let reader = new FileReader();
+						reader.onload = function (e) { 
+							let imgs = new Image();
+							imgs.src = reader.result;
+							imgs.onload = function() {
+								const canvas = document.createElement("canvas");
+								let ratio = imgs.height / imgs.width;
+								canvas.width = 256;
+								canvas.height = Math.min(256 * ratio, 680);
+								const ctx = canvas.getContext("2d");
+								ctx.drawImage(imgs, 0, 0, canvas.width, canvas.height);
+
+								canvas.toBlob((blob) => {
+									const thumb = new File([ blob ], "thumb.jpg");
+									
+									fetch(currentServer + "upload", {headers: {'token': logininfo.token, "type": "thumb", "id": json.id},method: 'POST',body: thumb}).then(function(response) { response.json().then(function(data) {
+										if (data.status == "done") {
+											callbacks.done(json);
+										}
+									})}).catch(function(error) {console.error(error);});
+								}, "image/jpeg", 0.7);
+							}
+						};
+
+						reader.readAsDataURL(file);
+					}else {
+						callbacks.done(json);
+					}
+				} else {
+					console.log(json);
+				}
+			}
+		};
+
+		if (callbacks.onProgress) xhr.upload.onprogress = function(event) {
+			if (event.lengthComputable) {
+				callbacks.onProgress((event.loaded / event.total) * 100);
+			}
+		}
+
+		if (callbacks.onError) xhr.upload.onerror = function() {
+			callbacks.onError();
+		}
+
+		xhr.open("POST", currentServer + "upload", true);
+		xhr.setRequestHeader("token", logininfo.token);
+		xhr.setRequestHeader("filename", encodeURI(file.name));
+		
+		xhr.send(file);
+	}
+
 	function viewInfo(id,type) {
 		let diag = opendialog();
 		diag.title.innerText = getString("info");
@@ -1065,26 +1128,13 @@ function openMainArea() {
 						savebtn.innerText = getString("save_group");
 						savebtn.addEventListener("click",function() {
 							if (ufl) {
-								fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-									ufl = false;
-									if (data.status == "success") {
-										fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'ispublic': pubinp.checked }),method: 'POST'}).then((res) => {
-											if (res.ok) {
-
-											}else {
-												
-											}
-										})
-									}
-								})}).catch(function(error) {console.error(error);});
-							}else {
-								fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles, 'ispublic': pubinp.checked }),method: 'POST'}).then((res) => {
-									if (res.ok) {
-
-									}else {
-										
+								uploadFile(file, {
+									done: function(data) {
+										fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value, 'roles': roles, 'ispublic': pubinp.checked }),method: 'POST'}).then((res) => {})
 									}
 								})
+							}else {
+								fetch(currentServer + "editgroup", {body: JSON.stringify({'token': logininfo.token, 'groupid': id, 'name': nameinp.value, 'picture': infod.picture, 'info': desinp.value, 'roles': roles, 'ispublic': pubinp.checked }),method: 'POST'}).then((res) => {})
 							}
 						})
 
@@ -1921,14 +1971,14 @@ function openMainArea() {
 			createbtn.innerText = getString("create_group");
 			createbtn.addEventListener("click",function() {
 				if (ufl) {
-					fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-						if (data.status == "success") {
+					uploadFile(file, {
+						done: function(data) {
 							fetch(currentServer + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': data.url, 'info': desinp.value }),method: 'POST'}).then((res) => {
 								diag.closebtn.click();
 								diaga.closebtn.click();
 							})
 						}
-					})}).catch(function(error) {console.error(error);});
+					});
 				}else {
 					fetch(currentServer + "creategroup", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': "", 'info': desinp.value }),method: 'POST'}).then((res) => {
 						diag.closebtn.click();
@@ -2100,8 +2150,8 @@ function openMainArea() {
 		savebtn.innerText = getString("save_profile");
 		savebtn.addEventListener("click",function() {
 			if (ufl) {
-				fetch(currentServer + "upload", {headers: {'token': logininfo.token},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-					if (data.status == "success") {
+				uploadFile(file, {
+					done: function(data) {
 						ufl = false;
 						currentuser.picture = data.url;
 						fetch(currentServer + "editprofile", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture, 'bio': desinp.value }),method: 'POST'}).then((res) => {
@@ -2113,7 +2163,7 @@ function openMainArea() {
 							}
 						})
 					}
-				})}).catch(function(error) {console.error(error);});
+				});
 			}else {
 				fetch(currentServer + "editprofile", {body: JSON.stringify({'token': logininfo.token, 'name': nameinp.value, 'picture': currentuser.picture, 'bio': desinp.value  }),method: 'POST'}).then((res) => {
 					if (res.ok) {
@@ -2495,24 +2545,16 @@ function openMainArea() {
 				imageArea.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"><path d="M186.67-813.33V-536.67v-2.66V-146.67v-666.66 190.66-190.66Zm92.66 400h161q11.67-19 26.17-35.67 14.5-16.67 31.83-31h-219v66.67Zm0 166.66h123q-2.33-16.66-2-33.33.34-16.67 2.67-33.33H279.33v66.66ZM186.67-80q-27 0-46.84-19.83Q120-119.67 120-146.67v-666.66q0-27 19.83-46.84Q159.67-880 186.67-880H534l226 226v134q-15.67-6.67-32.33-10.67-16.67-4-34.34-6v-86H500.67v-190.66h-314v666.66h249q11 19 24.5 35.67t29.5 31h-303Zm476.66-392.67q81.34 0 138.67 57.33 57.33 57.33 57.33 138.67 0 81.34-57.33 138.67-57.33 57.33-138.67 57.33-81.34 0-138.67-57.33-57.33-57.33-57.33-138.67 0-81.34 57.33-138.67 57.33-57.33 138.67-57.33Zm.74 318.67q11.6 0 19.43-7.91 7.83-7.9 7.83-19.5 0-11.59-7.9-19.42-7.91-7.84-19.5-7.84-11.6 0-19.43 7.91-7.83 7.9-7.83 19.5 0 11.59 7.9 19.43 7.91 7.83 19.5 7.83Zm-19.4-80h38.66v-10.63q0-11.7 6.34-21.2 6.33-9.5 14.81-17.77 14.85-12.4 23.85-24.4 9-12 9-32 0-30.81-20.53-49.41Q696.27-408 663.85-408q-24.85 0-45.02 14.17-20.16 14.16-28.16 38.82L625.33-340q2.34-13.33 13.17-22.67 10.83-9.33 25.8-9.33 16.03 0 25.2 8 9.17 8 9.17 24 0 11-6.67 19.17-6.67 8.16-14.67 16.16-7.33 6.67-14.5 13.34-7.16 6.66-12.16 14.66-3.67 6.67-4.84 12.87-1.16 6.2-1.16 14.47V-234Z"/></svg>';
 				let rembtn = document.createElement("button")
 				rembtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
-				let img = document.createElement("img");
-				img.style.background = "white";
 				let imgs = new Image();
 				imgs.src = reader.result;
-				/*if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-					// dark mode
-					img.src = "file_dark.svg";
-				}else {
-					img.src = "file.svg";
-				}*/
-				img.classList.add("msgimg");
+				imgs.style.background = "white";
+				imgs.classList.add("msgimg");
 				imgs.onload = function() {
-					img.src = imgs.src;
-					img.addEventListener("click", function() {
+					imgs.addEventListener("click", function() {
 						imageView(imgs.src);
 					});
 					imageArea.innerHTML = "";
-					imageArea.appendChild(img);
+					imageArea.appendChild(imgs);
 				}
 				itemElement.appendChild(imageArea);
 				itemElement.appendChild(rembtn);
@@ -3712,12 +3754,12 @@ function openMainArea() {
 			function upload() {
 				if (fll.length > 0) {
 					let file = fll.shift();
-					fetch(currentServer + "upload", {headers: {'token': logininfo.token,"filename": encodeURI(file.name)},method: 'POST',body: file}).then(function(response) { response.json().then(function(data) {
-						if (data.status == "success") {
+					uploadFile(file, {
+						done: function(data) {
 							files.push(data.url);
 							upload();
 						}
-					})}).catch(function(error) {console.error(error);});
+					})
 				}else {
 					send();
 				}
