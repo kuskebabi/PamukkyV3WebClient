@@ -220,7 +220,7 @@ titlebar {
 	position: relative;
 }
 
-titlebar.shandow::after, pinbar.shandow::after, msgbar.shandow::after {
+titlebar.shandow::after, pinbar.shandow::after, .mediabar.shandow::after, msgbar.shandow::after {
 	content: "";
 	position: absolute;
 	width: 100%;
@@ -446,6 +446,7 @@ button.fab:hover:active {
 	font-size: small;
 	display: flex;
 	align-items: center;
+	position: relative;
 }
 
 .mediabar > button {
@@ -938,7 +939,7 @@ msgreacts > button.rcted {
 	flex-shrink: 0;
 }
 
-.filed > div:last-child {
+.filed > .info {
 	display: flex;
 	flex-direction: column;
 }

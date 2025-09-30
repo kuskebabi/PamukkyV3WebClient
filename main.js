@@ -542,10 +542,12 @@ function openMainArea() {
 	function playAudio(path, chatid = null) {
 		if (playedAudio != null) {
 			playedAudio.pause();
-			playedAudio = null
+			playedAudio = null;
 		}
 		playedAudio = new Audio(path);
 		playedAudio.play();
+		playedAudio.addEventListener("ended", updateAudioBar);
+
 		playedAudioPath = path;
 		playedAudioChat = chatid;
 		updateAudioBar();
@@ -1630,7 +1632,12 @@ function openMainArea() {
 
 	let chatslist = createLazyList();
 	chatslist.element.addEventListener("scroll", function() {
-		leftTitleBar.classList.toggle("shandow", chatslist.element.scrollTop > 0);
+		if (audioBar.style.display == "none") {
+			leftTitleBar.classList.toggle("shandow", chatslist.element.scrollTop > 0);
+		}else {
+			audioBar.classList.toggle("shandow", chatslist.element.scrollTop > 0);
+			leftTitleBar.classList.remove("shandow");
+		}
 	});
 
 	let currentchatid = 0;
@@ -3473,6 +3480,7 @@ function openMainArea() {
 					let filename = i.name;
 					fd.appendChild(fileico)
 					let il = document.createElement("div");
+					il.classList.add("info");
 					let namel = document.createElement("label");
 					namel.innerText = filename;
 					il.appendChild(namel);
@@ -3501,6 +3509,7 @@ function openMainArea() {
 					let filename = i.name;
 					fd.appendChild(fileico)
 					let il = document.createElement("div");
+					il.classList.add("info");
 					let namel = document.createElement("label");
 					namel.innerText = filename;
 					il.appendChild(namel);
@@ -3755,8 +3764,10 @@ function openMainArea() {
 				if (fll.length > 0) {
 					let file = fll.shift();
 					uploadFile(file, {
-						done: function(data) {
+						preDone: function(data) {
 							files.push(data.url);
+						},
+						done: function(data) {
 							upload();
 						}
 					})
