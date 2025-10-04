@@ -33,7 +33,7 @@ function linkify(inputText) {
 function imageView(url) {
 	let w = 0;
 	let h = 0;
-	let sd = 1;
+	let zoom = 1;
 	
 	var bg = document.createElement("div");
 	bg.classList.add("bgcover");
@@ -49,14 +49,14 @@ function imageView(url) {
 	bg.addEventListener("wheel",function(e) {
 		if (e.ctrlKey) {
 			if (e.deltaY < 0) {
-				sd += 0.1;
+				zoom += 0.1;
 			}else {
-				sd -= 0.1;
-				if (sd < 0.1) {
-					sd = 0.1;
+				zoom -= 0.1;
+				if (zoom < 0.1) {
+					zoom = 0.1;
 				}
 			}
-			zoom();
+			applyPos();
 			e.preventDefault();
 		}
 	})
@@ -83,26 +83,47 @@ function imageView(url) {
 		bg.click();
 	});
 
+	let loader = document.createElement("div");
+	loader.classList.add("loader");
+	loader.style.position = "fixed";
+	loader.style.left = loader.style.top = "calc(50% - 20px)";
+	bg.appendChild(loader);
+
 	var img = document.createElement("img")
 	img.style.background = "white"
 	img.src = url;
+	img.style.display = "none";
 	img.onload = function() {
-		w = img.width;
-		h = img.height;
-		zoom();
+		img.style.display = "";
+		loader.remove();
+
+		w = img.naturalWidth;
+		h = img.naturalHeight;
+		
+		let size = w;
+		let docsize = window.innerWidth;
+		if (h > w) {
+			docsize = window.innerHeight;
+			size = h;
+		}
+
+		zoom = Math.min(1, docsize / size);
+		console.log(zoom, docsize / size, docsize, size)
+		applyPos();
 	};
+
 	bg.appendChild(img)
 	document.body.appendChild(bg)
 	
-	function zoom() {
-		img.style.width = w * sd + "px";
-		img.style.height = h * sd + "px";
-		if (w * sd > window.innerWidth) {
+	function applyPos() {
+		img.style.width = w * zoom + "px";
+		img.style.height = h * zoom + "px";
+		if (w * zoom > window.innerWidth) {
 			bg.style.justifyContent = "";
 		}else {
 			bg.style.justifyContent = "center";
 		}
-		if (h * sd > window.innerHeight) {
+		if (h * zoom > window.innerHeight) {
 			bg.style.alignItems = "";
 		}else {
 			bg.style.alignItems = "center";
@@ -830,11 +851,17 @@ function openMainArea() {
 											diaga.inner.style.flexDirection = "column";
 											diaga.inner.style.alignItems = "center";
 
+											let loader = document.createElement("div");
+											loader.classList.add("loader");
+											diaga.inner.appendChild(loader);
+
 											fetch(currentServer + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 												if (res.ok) {
 													res.text().then((text) => {
 														roles = JSON.parse(text);
 														rokeys = Object.keys(roles);
+
+														loader.remove();
 
 														rokeys.forEach(function(a) {
 															let x = a;
@@ -898,11 +925,18 @@ function openMainArea() {
 						membersbtn.addEventListener("click",function() {
 							let users = {};
 							let rokeys = {};
+
 							let diag = opendialog();
 							diag.inner.style.overflow = "hidden";
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
 							diag.title.innerText = getString("group_members");
+
+							let loader = document.createElement("div");
+							loader.classList.add("loader");
+							loader.style.alignSelf = "center";
+							diag.inner.appendChild(loader);
+
 							let userstable = createLazyList("div","div");
 							userstable.setItemGenerator(function(ukeys,e,urow) {
 								let user = users[ukeys[e]];
@@ -1028,6 +1062,7 @@ function openMainArea() {
 													if (cuser) {
 														crole = roles[cuser.role];
 													}
+													loader.remove();
 													userstable.setList(ukeys);
 												});
 											}
@@ -1048,6 +1083,12 @@ function openMainArea() {
 							diag.inner.style.display = "flex";
 							diag.inner.style.flexDirection = "column";
 							diag.title.innerText = getString("banned_members");
+
+							let loader = document.createElement("div");
+							loader.classList.add("loader");
+							loader.style.alignSelf = "center";
+							diag.inner.appendChild(loader);
+
 							let userstable = createLazyList("div","div");
 							userstable.element.style.height = "100%";
 							userstable.setItemGenerator(function(ukeys,e,urow) {
@@ -1119,6 +1160,7 @@ function openMainArea() {
 									res.text().then((text) => {
 										let users = JSON.parse(text);
 										userstable.setList(users);
+										loader.remove();
 									});
 								}
 							});
@@ -1202,11 +1244,15 @@ function openMainArea() {
 		dialoginside.tabIndex = "0";
 		dialoginside.style.display = "flex";
 		dialoginside.style.flexDirection = "column";
-		let tflex = document.createElement("div");
-		tflex.style.display = "flex";
-		tflex.style.alignItems = "center";
-		tflex.style.flexShrink = "0";
-		let titlelbl = document.createElement("h4");
+		dialoginside.style.padding = "8px 0 0 0";
+		dialoginside.style.background = "var(--main-bg)";
+		let title = document.createElement("div");
+		title.style.display = "flex";
+		title.style.alignItems = "center";
+		title.style.flexShrink = "0";
+		title.style.padding = "0px 16px 4px 16px";
+
+		let titlelbl = document.createElement("label");
 		titlelbl.innerText = "Dialog";
 		titlelbl.style.marginRight = "auto";
 		
@@ -1268,14 +1314,35 @@ function openMainArea() {
 			isatdock = !isatdock;
 		})
 		
-		tflex.appendChild(titlelbl);
-		if (document.body.clientWidth > 1200) {tflex.appendChild(dockbtn)};
-		tflex.appendChild(closebtn);
-		dialoginside.appendChild(tflex);
+		title.appendChild(titlelbl);
+		if (document.body.clientWidth > 1200) {title.appendChild(dockbtn)};
+		title.appendChild(closebtn);
+		dialoginside.appendChild(title);
+
+		let starty = 0;
+		let touchy = 0;
+		title.addEventListener("touchstart", function(e) {
+			starty = e.touches[0].clientY;
+		})
+		title.addEventListener("touchmove", function(e) {
+			touchy = e.touches[0].clientY;
+			dialoginside.style.transform = "translateY(" + Math.max(touchy - starty, 0) + "px)";
+		})
+		title.addEventListener("touchend", function(e) {
+			if (touchy - starty > 50) {
+				closebtn.click();
+			}else {
+				dialoginside.style.transform = "";
+			}
+		})
+
 		let innercont = document.createElement("div");
+		innercont.style.background = "var(--container-background)";
 		innercont.style.overflow = "auto";
 		innercont.style.minWidth = "100%";
 		innercont.style.flexGrow = "1";
+		innercont.style.borderRadius = "16px";
+		innercont.style.padding = "16px";
 		dialoginside.appendChild(innercont);
 		
 		bgcover.appendChild(dialoginside);
@@ -1900,6 +1967,7 @@ function openMainArea() {
 		
 		let tinput = document.createElement("input");
 		tinput.style.width = "100%";
+		tinput.style.marginBottom = "16px";
 		diag.inner.appendChild(tinput);
 		
 		let bflex = document.createElement("div");
@@ -3334,7 +3402,7 @@ function openMainArea() {
 			let msgbubble = document.createElement("msgbubble");
 			let msgcontent = document.createElement("msgcontent");
 			let msgreactions = document.createElement("msgreacts");
-			let msgtime = document.createElement("msgtime");
+			let msgstate = document.createElement("msgstate");
 			let msgtimelbl = document.createElement("label");
 			let msgsender = document.createElement("msgsender");
 			let msgsendertxt = document.createElement("label");
@@ -3436,7 +3504,7 @@ function openMainArea() {
 					imgs.src = i.url.replace(/%SERVER%/g,currentServer) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
 					let img = document.createElement("img");
 					img.style.background = "white";
-					img.classList.add("msgimg");
+					img.classList.add("msgimg", "loading");
 					img.onclick = function() {
 						let a = document.createElement("a");
 						a.href = i.url.replace(/%SERVER%/g,currentServer);
@@ -3445,12 +3513,14 @@ function openMainArea() {
 					}
 					imgs.onload = function() {
 						img.src = imgs.src;
+						img.classList.remove("loading");
 						img.onclick = function() {
 							imageView(i.url.replace(/%SERVER%/g,currentServer));
 						}
 					}
 					img.style.width = img.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length),64) + "px";
-					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
+					let index = i.url.lastIndexOf("=") + 1; 
+					let filename = i.url.substr(index);
 					img.title = filename;
 					msgbubble.appendChild(img);
 				})
@@ -3460,8 +3530,7 @@ function openMainArea() {
 					vid.src = i.url.replace(/%SERVER%/g,currentServer);
 					vid.classList.add("msgimg");
 					vid.style.width = vid.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length),64) + "px";
-					let index = i.url.lastIndexOf("=") + 1; let filename = i.url.substr(index);
-					vid.title = filename;
+					let index = i.url.lastIndexOf("=") + 1;
 					msgbubble.appendChild(vid);
 				})
 				// -----
@@ -3530,7 +3599,7 @@ function openMainArea() {
 			msgbubble.appendChild(msgreactions);
 
 			if (msg.type != "time") {
-				msgm.appendChild(msgtime);
+				msgm.appendChild(msgstate);
 			}
 
 			let msgstatus = document.createElement("button");
@@ -3610,8 +3679,8 @@ function openMainArea() {
 				msgc.appendChild(document.createElement("ma"));
 				msgsender.appendChild(document.createElement("ma"));
 				msgsender.appendChild(msgsendertxt)
-				msgtime.appendChild(document.createElement("ma"));
-				msgtime.appendChild(msgtimelbl);
+				msgstate.appendChild(document.createElement("ma"));
+				msgstate.appendChild(msgtimelbl);
 				msgc.appendChild(msgm);
 				msgc.appendChild(msgpfp);
 			}else {
@@ -3620,8 +3689,8 @@ function openMainArea() {
 					msgc.appendChild(msgm);
 					msgc.appendChild(document.createElement("ma"));
 					if (msg.type != "time") {
-						msgtime.appendChild(msgtimelbl);
-						msgtime.appendChild(document.createElement("ma"));
+						msgstate.appendChild(msgtimelbl);
+						msgstate.appendChild(document.createElement("ma"));
 					}
 				}else {
 					msgc.appendChild(msgpfp);
@@ -3629,13 +3698,13 @@ function openMainArea() {
 					msgc.appendChild(document.createElement("ma"));
 					msgsender.appendChild(msgsendertxt)
 					msgsender.appendChild(document.createElement("ma"));
-					msgtime.appendChild(msgtimelbl);
-					msgtime.appendChild(document.createElement("ma"));
+					msgstate.appendChild(msgtimelbl);
+					msgstate.appendChild(document.createElement("ma"));
 				}
 			}
 
-			msgtime.appendChild(msgpinned);
-			msgtime.appendChild(msgstatus);
+			msgstate.appendChild(msgpinned);
+			msgstate.appendChild(msgstatus);
 
 			let replydragstart = null;
 			let dragy = null;
@@ -3916,7 +3985,7 @@ function openMainArea() {
 					let user = i.split("|")[1];
 					if (user != logininfo.userID) {
 						if (val == true) {
-							typingUsers.push(user);
+							if (!typingUsers.includes(user)) typingUsers.push(user);
 						}else {
 							let ind = typingUsers.indexOf(user);
 							if (ind != -1) {
@@ -4365,7 +4434,8 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		let cont = getelement(id);
 		if (cont) {
 			function scroll() {
-				let top = Math.min(Math.max(cont.offsetTop - 250,0), listelement.scrollHeight - listelement.offsetHeight);
+				let offset = listelement.offsetHeight / 8;
+				let top = Math.min(Math.max(cont.offsetTop - offset,0), listelement.scrollHeight - listelement.offsetHeight);
 				listelement.scrollTop += (top - listelement.scrollTop) / 8;
 				onScroll();
 				if (Math.abs(listelement.scrollTop - Math.round(top)) > 10) {

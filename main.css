@@ -98,8 +98,8 @@ centeredPopup {
 	max-width: 100%;
 	max-height: 100%;
 	background-color: var(--container-background);
-	border-radius: 8px;
-	padding:8px;
+	border-radius: 16px;
+	padding: 8px;
 	animation-name: dialogappear;
 	animation-duration: 0.5s;
 	box-shadow: var(--pop-box-shandow);
@@ -397,6 +397,15 @@ button.fab:hover:active {
 
 .emojilist > button:not(:hover) {
 	background: transparent;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 4px solid orange;
+  width: 40px;
+  height: 40px;
+  animation: spin 0.8s linear infinite;
 }
 
 .loading {
@@ -871,11 +880,12 @@ msgmain > msgsender > label {
 	font-weight: bold;
 }
 
-msgmain > msgtime > label {
+msgmain > msgstate > label {
 	font-size: 10px;
+	padding: 4px;
 }
 
-msgmain > msgtime {
+msgmain > msgstate {
 	display:flex;
 }
 
@@ -1033,6 +1043,11 @@ msgreacts > button.rcted {
 @keyframes slideright {
 	from {transform:translateX(-100%);opacity:0;}
   	to {transform:translateX(0);opacity:1;}
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 
