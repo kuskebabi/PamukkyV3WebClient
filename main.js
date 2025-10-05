@@ -3959,7 +3959,7 @@ function openMainArea() {
 					getInfo(i,function(u) {
 						usernameslist.push(u.name);
 						if (typingUsers.length == usernameslist.length) {
-							typinglabel.innerText = getString("list_typing").replace("[LIST]", usernameslist.join(","));
+							typinglabel.innerText = getString("list_typing").replace("[LIST]", usernameslist.join(", "));
 							typinglabel.style.opacity = "";
 						}
 					})
