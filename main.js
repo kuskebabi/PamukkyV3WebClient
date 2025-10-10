@@ -108,7 +108,6 @@ function imageView(url) {
 		}
 
 		zoom = Math.min(1, docsize / size);
-		console.log(zoom, docsize / size, docsize, size)
 		applyPos();
 	};
 
@@ -503,7 +502,7 @@ function openLoginArea() {
 			if (res.ok) {
 				res.text().then((text) => {
 					logininfo = JSON.parse(text);
-					localStorage.setItem("logininfo", text);
+					localStorage.setItem("token", logininfo.token);
 					openMainArea();
 				})
 			}else {
@@ -528,7 +527,7 @@ function openLoginArea() {
 			if (res.ok) {
 				res.text().then((text) => {
 					logininfo = JSON.parse(text);
-					localStorage.setItem("logininfo", text);
+					localStorage.setItem("token", logininfo.token);
 					openMainArea();
 				})
 			}else {
@@ -644,6 +643,49 @@ function openMainArea() {
 			callback("Some action was done here.");
 		}
 	}
+
+	function getMessageType(msg) {
+		if (msg["gFiles"] && msg["gFiles"].length > 0) {
+			if (msg["gFiles"].length > 1) return "message_attachment_file_multi";
+			return "message_attachment_file";
+		}
+		if (msg["gVideos"] && msg["gVideos"].length > 0) {
+			if (msg["gVideos"].length > 1) return "message_attachment_video_multi";
+			return "message_attachment_video";
+		}
+		if (msg["gAudio"] && msg["gAudio"].length > 0) {
+			if (msg["gAudio"].length > 1) return "message_attachment_audio_multi";
+			return "message_attachment_audio";
+		}
+		if (msg["gImages"] && msg["gImages"].length > 0) {
+			if (msg["gImages"].length > 1) return "message_attachment_image_multi";
+			return "message_attachment_image";
+		}
+		
+		return "normal";
+	}
+
+	function getMessageString(msg) {
+		let type = getMessageType(msg);
+		let icon = {
+			"message_attachment_file": "📎",
+			"message_attachment_file_multi": "📎",
+			"message_attachment_video": "🎞️",
+			"message_attachment_video_multi": "🎞️",
+			"message_attachment_audio": "🎧",
+			"message_attachment_audio_multi": "🎧",
+			"message_attachment_image": "🖼️",
+			"message_attachment_image_multi": "🖼️",
+			"normal": ""
+		}[type];
+		
+		// "(icon) Content"
+		if (msg.hasOwnProperty("content") && msg["content"].length > 0) return icon + " " + msg["content"].split("\n")[0];
+
+		// 🖼️ Image
+		return icon + " " + getString(type);
+	}
+
 
 	function uploadFile(file, callbacks) {
 		if (typeof callbacks != "object") return;
@@ -1323,18 +1365,25 @@ function openMainArea() {
 		let touchy = 0;
 		title.addEventListener("touchstart", function(e) {
 			starty = e.touches[0].clientY;
-		})
+		});
+
 		title.addEventListener("touchmove", function(e) {
 			touchy = e.touches[0].clientY;
 			dialoginside.style.transform = "translateY(" + Math.max(touchy - starty, 0) + "px)";
-		})
+		});
+
+		title.addEventListener("touchcancel", function(e) {
+			dialoginside.style.transform = "";
+		});
+
 		title.addEventListener("touchend", function(e) {
-			if (touchy - starty > 50) {
+			if (touchy - starty > 100) {
 				closebtn.click();
 			}else {
 				dialoginside.style.transform = "";
 			}
-		})
+		});
+
 
 		let innercont = document.createElement("div");
 		innercont.style.background = "var(--container-background)";
@@ -1499,7 +1548,7 @@ function openMainArea() {
 			})
 		})
 
-		searchInput.focus();
+		if (!isTouch) searchInput.focus();
 	}
 
 	let emojiCache;
@@ -1847,7 +1896,7 @@ function openMainArea() {
 						});
 					}else {
 						getInfo(msg.senderUID, function(sender) {
-							lastmsgcontent.innerText = sender.name + ": " + msg.content.split("\n")[0];
+							lastmsgcontent.innerText = sender.name + ": " + getMessageString(msg);
 							lastmsgcontent.classList.remove("loading");
 						});
 					}
@@ -1968,6 +2017,7 @@ function openMainArea() {
 		let tinput = document.createElement("input");
 		tinput.style.width = "100%";
 		tinput.style.marginBottom = "16px";
+		tinput.placeholder = getString("enter_email_or_id_hint");
 		diag.inner.appendChild(tinput);
 		
 		let bflex = document.createElement("div");
@@ -2258,10 +2308,13 @@ function openMainArea() {
 		lout.addEventListener("click",function() {
 			if (!confirm(getString("logout_confirm"))) return;
 			fetch(currentServer + "logout", {body: JSON.stringify({'token': logininfo.token}),method: 'POST'}).then((res) => {
-				if (res.ok) {
-					localStorage.setItem("logininfo", null);
-					location.reload();
-				}
+				// Ignore errors, the token would be invalid then.
+				localStorage.removeItem("token");
+				location.reload();
+			}).catch(function() {
+				// Ignore errors, we can't connect to server anyway
+				localStorage.removeItem("token");
+				location.reload();
 			});
 		})
 		diag.inner.appendChild(lout);
@@ -2571,7 +2624,7 @@ function openMainArea() {
 						pincontent.innerText = text;
 					})
 				}else {
-					pincontent.innerText = msg.content;
+					pincontent.innerText = getMessageString(msg);
 				}
 				pinsender.classList.add("loading");
 				pinsender.innerText = "loading...";
@@ -3134,7 +3187,7 @@ function openMainArea() {
 						currentReplyContent.innerText = text;
 					})
 				}else {
-					currentReplyContent.innerText = msg.content.length > 0 ? msg.content : "Message";
+					currentReplyContent.innerText = getMessageString(msg);
 				}
 				getInfo(msg.senderUID,(user) => {
 					currentReplyUsername.innerText = user.name;
@@ -3381,7 +3434,7 @@ function openMainArea() {
 			}
 
 			msgc.addEventListener("contextmenu",function(event) {
-				if (event.pointerType == "touch" && selectedMessages.length == 0) return;
+				if ((event.pointerType == "touch" || isTouch) && selectedMessages.length == 0) return;
 				let tagname = event.target.tagName.toString();
 				if (tagname.toLowerCase() == "video") return;
 				if (tagname.toLowerCase() == "img") return;
@@ -3468,7 +3521,7 @@ function openMainArea() {
 						replycnt.innerText = text;
 					})
 				}else {
-					replycnt.innerText = msg.replyMessageContent.length > 0 ? msg.replyMessageContent : "Message";
+					replycnt.innerText = getMessageString(msg);
 				}
 				rc.appendChild(replycnt);
 				msgbubble.appendChild(rc);
@@ -3799,10 +3852,10 @@ function openMainArea() {
 		let sendtyping = true;
 
 		function onMessageInput() {
-			if (msginput.value.trim().length == 0 && fileslist.length < 1) {
-				sendbtn.disabled = true;
-			}else {
+			if (msginput.value.trim().length > 0 || fileslist.length > 0) {
 				sendbtn.disabled = false;
+			}else {
+				sendbtn.disabled = true;
 			}
 
 			if (sendtyping) {
@@ -4129,17 +4182,22 @@ if (currentServer == "") {
 		openConnectArea();
 	}else {
 		currentServer = localStorage.getItem("server");
-		fetch(currentServer + "ping").then(function() {
-			if (localStorage.getItem("logininfo") == null) {
+		if (localStorage.getItem("token") == null) {
 				openLoginArea();
-			}else {
-				logininfo = JSON.parse(localStorage.getItem("logininfo"));
-				openMainArea();
-			}
-			
-		}).catch(function() {
-			openConnectArea(true);
-		})
+		}else {
+			fetch(currentServer + "getsessioninfo", {body: JSON.stringify({'token': localStorage.getItem("token")}),method: 'POST'}).then(function(res) {
+				if (res.ok) {
+					res.json().then(function (info) {
+						logininfo = info;
+						openMainArea();
+					})
+				}else {
+					openLoginArea();
+				}
+			}).catch(function() {
+				openConnectArea(true);
+			});
+		}
 	}
 }else {
 	fetch(currentServer + "ping").then(function() {
@@ -4194,7 +4252,7 @@ function addKeyboardListSelectionSupport(element, options = {}) {
 				if (startIndex < 0) {
 					index = element.children.length + startIndex;
 				}else {
-					index = startIndex;
+					index = startIndex - 1;
 				}
 			}
 			if (e.key == prevItemKey) {

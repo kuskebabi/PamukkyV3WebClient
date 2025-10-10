@@ -74,6 +74,7 @@
     "addchat_fab_tip": "Click on the \"+\" button to add a new chat.",
 
     "add_chat": "Add chat",
+    "enter_email_or_id_hint": "Enter E-Mail or ID",
     "add_user_chat": "Add user chat",
     "create_group": "Create group",
     "new_group_sample_name": "New group!",
@@ -93,6 +94,15 @@
     "send_message": "Send",
     "nobody_typing": "Nobody is typing",
     "list_typing": "[LIST] typing...",
+
+    "message_attachment_file": "File",
+    "message_attachment_file_multi": "Files",
+    "message_attachment_video": "Video",
+    "message_attachment_video_multi": "Videos",
+    "message_attachment_audio": "Audio",
+    "message_attachment_audio_multi": "Audio",
+    "message_attachment_image": "Image",
+    "message_attachment_image_multi": "Images",
 
     "chat_scroll_to_bottom_fab_hint": "Scroll to bottom",
 

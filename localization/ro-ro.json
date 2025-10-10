@@ -72,6 +72,7 @@
     "addchat_fab_tip": "Faceți clic pe butonul \"+\" pentru a adăuga o conversație nouă.",
 
     "add_chat": "Adăugați conversație",
+    "enter_email_or_id_hint": "Introduceți e-mail sau ID",
     "add_user_chat": "Adăugați conversație cu utilizator",
     "create_group": "Creați grup",
     "new_group_sample_name": "Grup nou!",
@@ -90,6 +91,15 @@
     "send_message": "Trimiteți",
     "nobody_typing": "Nimeni nu scrie",
     "list_typing": "[LIST] scrie...",
+
+    "message_attachment_file": "Fișier",
+    "message_attachment_file_multi": "Fișiere",
+    "message_attachment_video": "Videoclip",
+    "message_attachment_video_multi": "Videoclipuri",
+    "message_attachment_audio": "Audio",
+    "message_attachment_audio_multi": "Audio-uri",
+    "message_attachment_image": "Imagine",
+    "message_attachment_image_multi": "Imagini",
 
     "chat_scroll_to_bottom_fab_hint": "Derulați până la sfârșit",
 

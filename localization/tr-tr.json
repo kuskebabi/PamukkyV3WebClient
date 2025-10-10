@@ -74,6 +74,7 @@
     "addchat_fab_tip": "Sohbet eklemek için \"+\" tuşuna basın",
 
     "add_chat": "Sohbet ekle",
+    "enter_email_or_id_hint": "E-Posta yada ID girin",
     "add_user_chat": "Kullanıcı sohbeti ekle",
     "create_group": "Gurup oluştur",
     "new_group_sample_name": "Yeni gurup!",
@@ -90,6 +91,15 @@
     "send_message": "Gönder",
     "nobody_typing": "Hiçkimse yazmıyor",
     "list_typing": "[LIST] yazıyor...",
+
+    "message_attachment_file": "Dosya",
+    "message_attachment_file_multi": "Dosyalar",
+    "message_attachment_video": "Video",
+    "message_attachment_video_multi": "Videolar",
+    "message_attachment_audio": "Ses",
+    "message_attachment_audio_multi": "Sesler",
+    "message_attachment_image": "Resim",
+    "message_attachment_image_multi": "Resimler",
 
     "chat_scroll_to_bottom_fab_hint": "Aşağıya in",
 
