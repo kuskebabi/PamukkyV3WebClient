@@ -359,6 +359,9 @@ function openConnectArea(err) {
 				})
 			}else {
 				connectButton.disabled = false;
+				errorLabel.classList.add("errorlabel");
+				errorLabel.classList.remove("infolabel");
+				errorLabel.innerText = getString("server_connection_error");
 			}
 		}).catch(() => {
 			connectButton.disabled = false;
@@ -366,6 +369,10 @@ function openConnectArea(err) {
 			errorLabel.classList.remove("infolabel");
 			errorLabel.innerText = getString("server_connection_error");
 		})
+	});
+
+	serverInput.addEventListener("keydown", function(event) {
+		if (event.key == "Enter") connectButton.click();
 	})
 }
 
