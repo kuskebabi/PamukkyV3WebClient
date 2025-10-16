@@ -133,6 +133,55 @@ function imageView(url) {
 	return bg;
 }
 
+function videoView(url) {
+	var bg = document.createElement("div");
+	bg.classList.add("bgcover");
+	bg.style.display = "flex";
+	bg.style.alignItems = "center";
+	
+	bg.style.overflow = "auto";
+	bg.onclick = function(e) {
+		if (e.target == bg) {
+			bg.remove()
+		}
+	}
+	bg.tabIndex = "0";
+	
+	
+	bg.addEventListener("keydown",function(e) {
+		if (e.key == "Escape") {
+			bg.click();
+		}
+	})
+
+    let closebtn = document.createElement("button");
+	closebtn.classList.add("transparentbtn");
+	closebtn.style.position = "fixed";
+	closebtn.style.top = "0px";
+	closebtn.style.right = "0px";
+	closebtn.style.width = "48px";
+	closebtn.style.height = "48px";
+	closebtn.style.zIndex = "1";
+	closebtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" style="fill: white;"><path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z"/></svg>';
+	closebtn.title = getString("navigation_close");
+	bg.appendChild(closebtn);
+	closebtn.addEventListener("click",function() {
+		bg.click();
+	});
+
+	var video = document.createElement("video")
+	video.style.position = "fixed";
+	video.style.left = video.style.top = "0px";
+	video.style.width = video.style.height = "100%";
+	video.controls = true;
+	video.src = url;
+
+	bg.appendChild(video)
+	document.body.appendChild(bg)
+	bg.focus();
+	return bg;
+}
+
 let localization = {};
 
 function getLocalization() {
@@ -701,22 +750,29 @@ function openMainArea() {
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState == XMLHttpRequest.DONE) {
-				let json = JSON.parse(xhr.responseText);
 				if (xhr.status == 200) {
+					let json = JSON.parse(xhr.responseText);
 					if (callbacks.preDone) callbacks.preDone(json);
-					if (file.type == "image/png" || file.type == "image/bmp" || file.type == "image/jpeg" || file.type == "image/gif") {
+					let isImage = file.type == "image/png" || 
+						file.type == "image/bmp" || 
+						file.type == "image/jpeg" ||
+						file.type == "image/gif";
+					let isVideo = file.type == "video/mpeg" ||
+						file.type == "video/mp4" ||
+						file.type == "video/ogv";
+					
+					if (isImage || isVideo) {
 						// Create thumbnail and send it if file is a image
 						let reader = new FileReader();
 						reader.onload = function (e) { 
-							let imgs = new Image();
-							imgs.src = reader.result;
-							imgs.onload = function() {
+							let previewElem;
+							let loadedevent = function() {
 								const canvas = document.createElement("canvas");
-								let ratio = imgs.height / imgs.width;
+								let ratio = (previewElem.videoHeight ?? previewElem.height) / (previewElem.videoWidth ?? previewElem.width);
 								canvas.width = 256;
 								canvas.height = Math.min(256 * ratio, 680);
 								const ctx = canvas.getContext("2d");
-								ctx.drawImage(imgs, 0, 0, canvas.width, canvas.height);
+								ctx.drawImage(previewElem, 0, 0, canvas.width, canvas.height);
 
 								canvas.toBlob((blob) => {
 									const thumb = new File([ blob ], "thumb.jpg");
@@ -727,6 +783,16 @@ function openMainArea() {
 										}
 									})}).catch(function(error) {console.error(error);});
 								}, "image/jpeg", 0.7);
+							};
+
+							if (isImage) {
+								previewElem = new Image();
+								previewElem.src = reader.result;
+								previewElem.onload = loadedevent;
+							}else if (isVideo) {
+								previewElem = document.createElement("video");
+								previewElem.src = reader.result;
+								previewElem.onloadeddata = loadedevent;
 							}
 						};
 
@@ -735,7 +801,7 @@ function openMainArea() {
 						callbacks.done(json);
 					}
 				} else {
-					console.log(json);
+					if (callbacks.onError) callbacks.onError(xhr.responseText);
 				}
 			}
 		};
@@ -3557,41 +3623,70 @@ function openMainArea() {
 				if (msg.gVideos == undefined) msg.gVideos = [];
 				if (msg.gAudio == undefined) msg.gAudio = [];
 				if (msg.gFiles == undefined) msg.gFiles = [];
-
+				
+				let gridcont = null;
 				//Grid
-				msg.gImages.forEach(function(i) {
-					let imgs = new Image();
-					imgs.src = i.url.replace(/%SERVER%/g,currentServer) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
-					let img = document.createElement("img");
-					img.style.background = "white";
-					img.classList.add("msgimg", "loading");
-					img.onclick = function() {
-						let a = document.createElement("a");
-						a.href = i.url.replace(/%SERVER%/g,currentServer);
-						a.target = "_blank";
-						a.click();
+				function createMediaElement(i, type) {
+					if (gridcont == null) {
+						gridcont = document.createElement("div");
+						gridcont.classList.add("msgmediacont");
+						msgbubble.appendChild(gridcont);
 					}
-					imgs.onload = function() {
-						img.src = imgs.src;
-						img.classList.remove("loading");
-						img.onclick = function() {
-							imageView(i.url.replace(/%SERVER%/g,currentServer));
+					let cont = document.createElement("div");
+					cont.classList.add("msgmedia");
+
+					let iconcont = document.createElement("div");
+
+					if (i.hasThumbnail) {
+						let imgs = new Image();
+						imgs.src = i.url.replace(/%SERVER%/g,currentServer) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
+						let img = document.createElement("img");
+						img.style.background = "white";
+						img.classList.add("loading");
+						imgs.onload = function() {
+							img.src = imgs.src;
+							img.classList.remove("loading");
+						}
+						cont.appendChild(img);
+
+						if (type == "video") {
+							iconcont.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"><path d="M320-263v-438q0-15 10-24.17 10-9.16 23.33-9.16 4.34 0 8.84 1.16 4.5 1.17 8.83 3.5L715.67-510q7.66 5.33 11.5 12.33 3.83 7 3.83 15.67t-3.83 15.67q-3.84 7-11.5 12.33L371-234.33q-4.33 2.33-8.83 3.5-4.5 1.16-8.84 1.16-13.33 0-23.33-9.16Q320-248 320-263Z"/></svg>';
+							iconcont.classList.add("icon");
+						}
+					}else {
+						if (type == "image") {
+							iconcont.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px"><path d="M180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm86-157h429q9 0 13-8t-1-16L590-457q-5-6-12-6t-12 6L446-302l-81-111q-5-6-12-6t-12 6l-86 112q-6 8-2 16t13 8Z"/></svg>';
+						}else {
+							iconcont.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px"><path d="M655-521q11-7 11-19t-11-19L459-685q-11-8-23-1.5T424-666v252q0 14 12 20.5t23-1.5l196-126ZM260-200q-24 0-42-18t-18-42v-560q0-24 18-42t42-18h560q24 0 42 18t18 42v560q0 24-18 42t-42 18H260ZM140-80q-24 0-42-18t-18-42v-590q0-13 8.5-21.5T110-760q13 0 21.5 8.5T140-730v590h590q13 0 21.5 8.5T760-110q0 13-8.5 21.5T730-80H140Z"/></svg>';
 						}
 					}
-					img.style.width = img.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length),64) + "px";
+
+					
+					
+					cont.appendChild(iconcont);
+
+					cont.style.width = cont.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length), 100) + "px";
 					let index = i.url.lastIndexOf("=") + 1; 
 					let filename = i.url.substr(index);
-					img.title = filename;
-					msgbubble.appendChild(img);
+					cont.title = filename;
+
+					let info = document.createElement("div");
+					info.classList.add("info");
+					info.innerText = humanFileSize(i.size);
+					cont.appendChild(info);
+					gridcont.appendChild(cont);
+
+					if (type == "video") {
+						cont.onclick = function() {videoView(i.url.replace(/%SERVER%/g, currentServer))};
+					}else if (type == "image") {
+						cont.onclick = function() {imageView(i.url.replace(/%SERVER%/g, currentServer))};
+					}
+				}
+				msg.gImages.forEach(function(i) {
+					createMediaElement(i, "image")
 				})
 				msg.gVideos.forEach(function(i) {
-					let vid = document.createElement("video");
-					vid.controls = true;
-					vid.src = i.url.replace(/%SERVER%/g,currentServer);
-					vid.classList.add("msgimg");
-					vid.style.width = vid.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length),64) + "px";
-					let index = i.url.lastIndexOf("=") + 1;
-					msgbubble.appendChild(vid);
+					createMediaElement(i, "video")
 				})
 				// -----
 				if (msg.gImages.length + msg.gVideos.length > 0) msgbubble.appendChild(document.createElement("br"));
@@ -3635,16 +3730,19 @@ function openMainArea() {
 					addRipple(fd, "rgba(255,255,255,0.6)");
 					let fileico = document.createElement("div");
 					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M760-200H320q-33 0-56.5-23.5T240-280v-560q0-33 23.5-56.5T320-920h247q16 0 30.5 6t25.5 17l194 194q11 11 17 25.5t6 30.5v367q0 33-23.5 56.5T760-200Zm0-440L560-840v140q0 25 17.5 42.5T620-640h140ZM160-40q-33 0-56.5-23.5T80-120v-520q0-17 11.5-28.5T120-680q17 0 28.5 11.5T160-640v520h400q17 0 28.5 11.5T600-80q0 17-11.5 28.5T560-40H160Z"/></svg>';
-					let filename = i.name;
+					let filename = i.name ?? getString("message_attachment_file");
 					fd.appendChild(fileico)
 					let il = document.createElement("div");
 					il.classList.add("info");
 					let namel = document.createElement("label");
 					namel.innerText = filename;
 					il.appendChild(namel);
-					let sizel = document.createElement("label");
-					sizel.innerText = humanFileSize(i.size);
-					il.appendChild(sizel);
+					if (i.size) {
+						let sizel = document.createElement("label");
+						sizel.innerText = humanFileSize(i.size);
+						il.appendChild(sizel);
+					}
+					
 					fd.appendChild(il);
 
 					fd.addEventListener("click",function() {
@@ -3898,6 +3996,9 @@ function openMainArea() {
 						},
 						done: function(data) {
 							upload();
+						},
+						onError: function(error) {
+							messageslist.removeItem(msgid);
 						}
 					})
 				}else {

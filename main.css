@@ -578,20 +578,56 @@ attachmentscont > uploaditm {
 	min-height: min-content;
 }
 
-.msgimg {
-	width:64px;
-	height:64px;
-	margin:2px;
-	border-radius:8px;
-	transition: box-shadow 200ms;
+.msgmediacont {
+	display: grid;
+	grid-template-columns: auto auto auto auto;
 }
-img.msgimg {
+.msgmedia {
+	width: 100px;
+	height: 100px;
+	margin: 2px;
+	border-radius: 8px;
+	transition: box-shadow 200ms;
+	position: relative;
+	overflow: hidden;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.msgmedia > img {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	background-color: white;
+}
+.msgmedia > .icon {
+	position: absolute;
+	top: calc(50% - 24px);
+	left: calc(50% - 24px);
+	width: 48px;
+	height: 48px;
+	border-radius: 24px;
+	background-color: var(--container-background);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.msgmedia > .info {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	padding: 8px;
+	background-color: var(--container-background);
+	border-radius: 8px 0 0 0;
+}
+msgmedia {
 	cursor:pointer;
 }
-.msgimg:not(:fullscreen) {
-	object-fit: cover;
-}
-.msgimg:hover {
+.msgmedia:hover {
 	box-shadow: var(--pop-box-shandow);
 }
 
@@ -603,6 +639,7 @@ uploaditm {
 	overflow:hidden;
 	border-radius: 8px;
 	background: rgba(0,0,0,0.1);
+	flex-shrink: 0;
 }
 
 uploaditm svg {
@@ -1101,7 +1138,18 @@ msgreacts > button.rcted {
 	centeredPopup.closing {
 		animation-name: slidedown;
 	}
+	.msgmediacont {
+		grid-template-columns: auto auto auto;
+	}
 }
+
+@media only screen and (max-width: 420px) {
+	.msgmediacont {
+		grid-template-columns: auto auto;
+	}
+}
+
+
 
 @media (prefers-color-scheme: dark) {
 	html,body {
