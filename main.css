@@ -105,10 +105,14 @@ centeredPopup {
 	box-shadow: var(--pop-box-shandow);
 }
 
-centeredPopup.closing {
+centeredPopup.closing:not(.slideclosing) {
 	transform:scale(0.8);
 	opacity:0;
 	animation-name: dialogdisappear;
+}
+
+centeredPopup.slideclosing {
+	animation-name: slidedown;
 }
 
 centeredPopup.docked {
@@ -958,7 +962,7 @@ msgreacts > button.rcted {
 	animation-duration: 0.5s;
 }*/
 
-.filed {
+.messageattachment {
 	display:flex;
 	align-items:center;
 	border-radius:5px;
@@ -970,11 +974,11 @@ msgreacts > button.rcted {
 	width: 100%;
 }
 
-.filed:hover {
+.messageattachment:hover {
 	background: var(--transparent-hover);
 }
 
-.filed > div:first-child {
+.messageattachment > div:first-child {
 	background-color: orange;
 	border-radius: 100%;
 	width: 40px;
@@ -986,17 +990,17 @@ msgreacts > button.rcted {
 	flex-shrink: 0;
 }
 
-.filed > .info {
+.messageattachment > .info {
 	display: flex;
 	flex-direction: column;
 }
 
-.filed > div > label {
+.messageattachment > div > label {
 	cursor:pointer;
 	overflow-wrap:anywhere;
 }
 
-.filed > div > label:first-child {
+.messageattachment > div > label:first-child {
 	font-weight:bold;
 }
 
@@ -1068,13 +1072,13 @@ msgreacts > button.rcted {
 }
 
 @keyframes slideup {
-  	from {transform:translateY(100%);opacity:0;}
+  	from {transform:translateY(100vh);opacity:0;}
 	to {transform:translateY(0);opacity:1;}
 }
 
 @keyframes slidedown {
-	from {transform:translateY(0);opacity:1;}
-  	to {transform:translateY(100%);opacity:0;}
+	from {opacity:1;}
+  	to {transform:translateY(100vh);opacity:0;}
 }
 
 @keyframes slideright {

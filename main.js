@@ -1451,6 +1451,7 @@ function openMainArea() {
 
 		title.addEventListener("touchend", function(e) {
 			if (touchy - starty > 100) {
+				dialoginside.classList.add("slideclosing");
 				closebtn.click();
 			}else {
 				dialoginside.style.transform = "";
@@ -3508,9 +3509,6 @@ function openMainArea() {
 
 			msgc.addEventListener("contextmenu",function(event) {
 				if ((event.pointerType == "touch" || isTouch) && selectedMessages.length == 0) return;
-				let tagname = event.target.tagName.toString();
-				if (tagname.toLowerCase() == "video") return;
-				if (tagname.toLowerCase() == "img") return;
 				let parent = event.target;
 				while (parent) {
 					tagname = parent.tagName.toString();
@@ -3558,24 +3556,28 @@ function openMainArea() {
 			msgtimelbl.innerText = getTimeString(dt);
 
 			if (msg.forwardedFromUID != undefined) {
-				let il = document.createElement("div");
-				il.style.fontSize = "12px";
-				il.innerText = getString("forwarded_from_username").replace("[NAME]", "???");
-				il.style.cursor = "pointer";
-				il.addEventListener("click",function() {
+				let forwardInfo = document.createElement("div");
+				forwardInfo.classList.add("interactive");
+				forwardInfo.style.fontSize = "12px";
+				forwardInfo.style.cursor = "pointer";
+				forwardInfo.innerText = getString("forwarded_from_username").replace("[NAME]", "???");
+
+				forwardInfo.addEventListener("click",function() {
 					viewInfo(msg.forwardedFromUID, "user")
 				})
+
 				getInfo(msg.forwardedFromUID,function(user) {
-					il.innerText = getString("forwarded_from_username").replace("[NAME]", user.name);
+					forwardInfo.innerText = getString("forwarded_from_username").replace("[NAME]", user.name);
 				})
-				msgbubble.appendChild(il);
+
+				msgbubble.appendChild(forwardInfo);
 			}
 
 			if (msg.replyMessageContent != undefined) {
-				let rc = document.createElement("button");
-				rc.classList.add("replycont");
-				addRipple(rc);
-				rc.addEventListener("click",function() {
+				let repliedtocont = document.createElement("button");
+				repliedtocont.classList.add("replycont");
+				addRipple(repliedtocont);
+				repliedtocont.addEventListener("click",function() {
 					showmessage(msg.replyMessageID);
 				})
 				let replysname = document.createElement("b");
@@ -3586,7 +3588,7 @@ function openMainArea() {
 					replysname.classList.remove("loading");
 				})
 
-				rc.appendChild(replysname);
+				repliedtocont.appendChild(replysname);
 				let replycnt = document.createElement("label");
 				if (msg.replyMessageSenderUID == "0") {
 					replycnt.innerText = "Pamuk is here!";
@@ -3596,8 +3598,8 @@ function openMainArea() {
 				}else {
 					replycnt.innerText = getMessageString(msg);
 				}
-				rc.appendChild(replycnt);
-				msgbubble.appendChild(rc);
+				repliedtocont.appendChild(replycnt);
+				msgbubble.appendChild(repliedtocont);
 			}
 
 
@@ -3633,7 +3635,7 @@ function openMainArea() {
 						msgbubble.appendChild(gridcont);
 					}
 					let cont = document.createElement("div");
-					cont.classList.add("msgmedia");
+					cont.classList.add("msgmedia", "interactive");
 
 					let iconcont = document.createElement("div");
 
@@ -3666,9 +3668,7 @@ function openMainArea() {
 					cont.appendChild(iconcont);
 
 					cont.style.width = cont.style.height = Math.max(240 / (msg.gImages.length + msg.gVideos.length), 100) + "px";
-					let index = i.url.lastIndexOf("=") + 1; 
-					let filename = i.url.substr(index);
-					cont.title = filename;
+					cont.title = i.name;
 
 					let info = document.createElement("div");
 					info.classList.add("info");
@@ -3688,13 +3688,11 @@ function openMainArea() {
 				msg.gVideos.forEach(function(i) {
 					createMediaElement(i, "video")
 				})
-				// -----
-				if (msg.gImages.length + msg.gVideos.length > 0) msgbubble.appendChild(document.createElement("br"));
 
 				// List
 				msg.gAudio.forEach(function(i) {
 					let fd = document.createElement("button");
-					fd.classList.add("filed");
+					fd.classList.add("messageattachment", "interactive");
 					addRipple(fd, "rgba(255,255,255,0.6)");
 					let path = i.url.replace(/%SERVER%/g,currentServer);
 					fd.setAttribute("data-audiopath", path);
@@ -3726,7 +3724,7 @@ function openMainArea() {
 					a.target = "_blank";
 					a.href = i.url.replace(/%SERVER%/g,currentServer);
 					let fd = document.createElement("button");
-					fd.classList.add("filed");
+					fd.classList.add("messageattachment", "interactive");
 					addRipple(fd, "rgba(255,255,255,0.6)");
 					let fileico = document.createElement("div");
 					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M760-200H320q-33 0-56.5-23.5T240-280v-560q0-33 23.5-56.5T320-920h247q16 0 30.5 6t25.5 17l194 194q11 11 17 25.5t6 30.5v367q0 33-23.5 56.5T760-200Zm0-440L560-840v140q0 25 17.5 42.5T620-640h140ZM160-40q-33 0-56.5-23.5T80-120v-520q0-17 11.5-28.5T120-680q17 0 28.5 11.5T160-640v520h400q17 0 28.5 11.5T600-80q0 17-11.5 28.5T560-40H160Z"/></svg>';
@@ -3737,6 +3735,7 @@ function openMainArea() {
 					let namel = document.createElement("label");
 					namel.innerText = filename;
 					il.appendChild(namel);
+					
 					if (i.size) {
 						let sizel = document.createElement("label");
 						sizel.innerText = humanFileSize(i.size);
@@ -3872,16 +3871,6 @@ function openMainArea() {
 			let draglocked = false;
 			msgc.addEventListener("touchstart", function(event) {
 				if (selectedMessages.length > 0) return;
-				let tagname = event.target.tagName.toString();
-				if (tagname.toLowerCase() == "video") return;
-				if (tagname.toLowerCase() == "img") return;
-				let parent = event.target;
-				while (parent) {
-					tagname = parent.tagName.toString();
-					if (tagname.toLowerCase() == "a") return;
-					if (tagname.toLowerCase() == "button") return;
-					parent = parent.parentElement;
-				}
 				if (msg.type != "time") {
 					replydragstart = event.touches[0].clientX;
 					dragy = event.touches[0].clientY;
@@ -3898,7 +3887,7 @@ function openMainArea() {
 					msgm.style.transform = "";
 					cancelled = true;
 				}else if (!cancelled) {
-					msgm.style.transform = "translateX(" + Math.max(-diff, -50) + "px)";
+					msgm.style.transform = "translateX(" + Math.max(-diff, -100) + "px)";
 					lastdiff = diff;
 
 					if (diff > 10) {
@@ -3915,6 +3904,14 @@ function openMainArea() {
 				if (cancelled) {
 
 				}else if (lastdiff < 5 && (Date.now() - dragtime) < 200) {
+					// Cancel if its a interactive element
+					let tagname = event.target.tagName.toString();
+					let parent = event.target;
+					while (parent) {
+						if (parent.classList.contains("interactive")) return;
+						parent = parent.parentElement;
+					}
+					// Spawn context menu
 					setTimeout(function() {spawnMessageMenu()}, 100);
 					event.preventDefault();
 				}else if (lastdiff >= 50) {
