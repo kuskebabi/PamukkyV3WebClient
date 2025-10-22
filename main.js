@@ -3761,7 +3761,7 @@ function openMainArea() {
 			}
 
 			let msgstatus = document.createElement("button");
-			msgstatus.classList.add("msgstatus", "cb", "small");
+			msgstatus.classList.add("msgstatus", "cb", "small", "interactive");
 			msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
 			msgstatus.addEventListener("click", function() {
 				let diag = opendialog();
@@ -4717,4 +4717,5 @@ function getpfp(url,fallback = "person.svg") {
 		return fallback;
 	}
 }
+
 
