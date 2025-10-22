@@ -3036,6 +3036,7 @@ function openMainArea() {
 						let react = reactions[ir];
 						let reactMainButton = document.createElement("button");
 						reactMainButton.style.cursor = "pointer";
+						reactMainButton.classList.add("interactive");
 						reactMainButton.addEventListener("click",function() {
 							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageid': id, 'reaction': ir}),method: 'POST'}).then((res) => {
 								
@@ -3532,9 +3533,9 @@ function openMainArea() {
 			let msgsendertxt = document.createElement("label");
 			let msgpfp = document.createElement("img");
 			
-			msgsender.classList.add("sender");
+			msgsender.classList.add("sender", "interactive");
 			msgpfp.classList.add("sender");
-			msgpfp.classList.add("loading");
+			msgpfp.classList.add("loading", "interactive");
 			msgsendertxt.innerText = "loading..."
 			msgsendertxt.classList.add("loading");
 			msgcontent.style.overflowWrap = "break-word";
@@ -3575,7 +3576,7 @@ function openMainArea() {
 
 			if (msg.replyMessageContent != undefined) {
 				let repliedtocont = document.createElement("button");
-				repliedtocont.classList.add("replycont");
+				repliedtocont.classList.add("replycont", "interactive");
 				addRipple(repliedtocont);
 				repliedtocont.addEventListener("click",function() {
 					showmessage(msg.replyMessageID);
@@ -4716,3 +4717,4 @@ function getpfp(url,fallback = "person.svg") {
 		return fallback;
 	}
 }
+
