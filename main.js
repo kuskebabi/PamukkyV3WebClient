@@ -3597,7 +3597,10 @@ function openMainArea() {
 						replycnt.innerText = text;
 					})
 				}else {
-					replycnt.innerText = getMessageString(msg);
+					let item = messageslist.getItemData(msg.replyMessageID) ?? pinnedmessageslist.getItemData(msg.replyMessageID);
+					replycnt.innerText = getMessageString(item ?? {
+						content: msg.replyMessageContent
+					});
 				}
 				repliedtocont.appendChild(replycnt);
 				msgbubble.appendChild(repliedtocont);
@@ -4172,6 +4175,12 @@ function openMainArea() {
 						let selectedMessagesIndex = selectedMessages.indexOf(key);
 						if (selectedMessagesIndex != -1) {
 							selectedMessages.splice(selectedMessagesIndex, 1);
+							messageslist.element.classList.toggle("selection", selectedMessages.length > 0);
+							pinnedmessageslist.element.classList.toggle("selection", selectedMessages.length > 0);
+							messageBar.classList.toggle("hidden", selectedMessages.length > 0);
+							selectedMessages.forEach(function(msgid) {
+								updateMessage(msgid);
+							})
 						}
 						if (pinnedmessages[key]) {
 							delete pinnedmessages[key];
