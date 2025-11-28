@@ -18,8 +18,11 @@
     "cancel": "Anulează",
     "continue": "Continuă",
     "email": "E-mail",
+    "action_set": "Setează",
+    "file_too_big_info": "Fișierul este prea mare. Limita pentru încarcarea fișierelor pe acest server este [SIZE] mb.",
 
     "dialog_dock_to_right": "Anexați la dreapta",
+
 
     "welcome_to_pamukky": "Bun venit la Pamukky!",
 
@@ -27,6 +30,7 @@
     "server_input_hint": "Introduceți adresa URL sau adresa IP...",
     "server_input_submit_button": "Conectați-vă",
     "server_connection_error": "Conexiunea a eșuat.",
+    "server_connection_error_version_unsupported": "Acest server nu este compatibil! Acest client se poate conecta doar la [RANGE_CLIENT_CONNECT_SERVER_VERSIONS] dar acest server este [SERVER_VERSION].",
     
     "login_tip": "Autentificați-vă pe acest server Pamukky",
     "login_email_hint": "E-mail",
@@ -55,7 +59,13 @@
     "leave_group": "Părăsiți",
     "leave_group_confirm": "Sigur doriți să părăsiți acest grup?",
     "join_group": "Alăturați-vă grupului",
+    "join_group_error": "Nu s-a putut să intri in grup. Asta s-ar putea să fie deoarece ești interzis, grupul nu exista sau din cauza unei erori de server.",
 
+    "public_tag": "Eticheta publică",
+    "public_tag_none_hint": "Nimic",
+    "set_public_tag_title": "Setează eticheta publică",
+    "set_public_tag_tip": "Introduce o nouă etichetă publică sau lasă gol pentru nimic.\n\nEtichetele trebuie să aibă maximum 20 de caractere și să conțină doar litere, numere și underscore.",
+    
     "edit_profile": "Editați profilul",
     "save_profile": "Salvați profilul",
 
@@ -87,6 +97,7 @@
     },
     "pinned_messages": "Mesaje fixate",
 
+    "message_bar_mode_edit": "Modificare",
     "add_attachment": "Adăugați atașament",
     "send_message": "Trimiteți",
     "nobody_typing": "Nimeni nu scrie",
@@ -111,18 +122,20 @@
     "reactions_list": "Reacții",
 
     "more_reactions": "Mai multe reacții",
-    "goto_message": "Mergeți la mesaj",
-    "reply_to_message": "Răspundeți",
-    "forward_message": "Redirecționați mesajul...",
-    "select_message": "Selectați...",
-    "save_message": "Salvați mesajul",
-    "pin_message": "Fixați mesajul",
-    "unpin_message": "Anulați fixarea mesajului",
-    "delete_message": "Ștergeți mesajul",
-    "delete_message_confirm": "Sigur doriți să ștergeți acest mesaj?",
+    "message_action_goto_message": "Mergeți la mesaj",
+    "message_action_reply_to_message": "Răspundeți",
+    "message_action_edit_message": "Modifică mesajul...",
+    "message_action_forward_message": "Redirecționați mesajul...",
+    "message_action_select_message": "Selectați...",
+    "message_action_save_message": "Salvați mesajul",
+    "message_action_pin_message": "Fixați mesajul",
+    "message_action_unpin_message": "Anulați fixarea mesajului",
+    "message_action_delete_message": "Ștergeți mesajul",
+    "message_action_delete_message_confirm": "Sigur doriți să ștergeți acest mesaj?",
 
     "forwarded_from_username": "Redirecționat de la [NAME]",
     "message_pinned_hint": "Fixat",
+    "message_edited_hint": "Modificat",
     "message_read_by_count": {
         "_NORMAL": "Citit de [COUNT] persoane",
         "1": "Citit de o persoană",

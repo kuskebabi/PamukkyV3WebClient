@@ -241,6 +241,7 @@ function getString(stringid, replacetag = "", val = "") {
 getLocalization();
 
 let currentServer = "";
+let serverInfo = {};
 
 // Add load event listener and add delay so splash is visible
 let loadedCount = 0;
@@ -260,6 +261,90 @@ let cachedinfo = {};
 let idcallbacks = {};
 
 let allhooks = [];
+
+async function getServerInfo(url) {
+	try {
+		let res = await fetch(url + "pamukky");
+		if (res.ok) {
+			let result = await res.json();
+
+			if (await checkServerCompatibility(result)) return result;
+
+			console.log("Server is not supported!");
+			return null;
+		}
+	}catch (e) {
+		console.log("Connection failed: " + e);
+		return null;
+	}
+}
+
+async function checkServerCompatibility(info) {
+	if (info.isPamukky == true) {
+		if (info.pamukkyType == 3) {
+			if (info.version >= 0) {
+				return true;
+			}else {
+				alert(getString("server_connection_error_version_unsupported").replace("[RANGE_CLIENT_CONNECT_SERVER_VERSIONS]", ">=0").replace("[SERVER_VERSION]", result.version))
+			}
+		}
+	}
+
+	return false;
+}
+
+async function checkServer(url) {
+	try {
+		let res = await fetch(url + "pamukky");
+		if (res.ok) {
+			let result = await res.json();
+
+			if (await checkServerCompatibility(result)) return true;
+
+			console.log("Server is not supported!");
+		}
+	}catch (e) {
+		console.log("Connection failled: " + e);
+	}
+
+	return false;
+}
+
+async function findActualServerUrl(url) {
+	if (!url.endsWith("/")) url = url + "/";
+
+	if (url.startsWith("https://") || url.startsWith("http://")) return url;
+
+	// See well-known
+	try {
+		let res = await fetch("https://" + url + ".well-known/pamukky/v3");
+		if (res.ok) {
+			let result = await res.json();
+
+			if (result["pamukkyv3.server"]) {
+				return result["pamukkyv3.server"];
+			}
+		}
+	}catch (e) {
+		console.log("HTTPS connection failed (for well-known): " + e);
+	}
+
+	let https = await checkServer("https://" + url);
+
+	if (https) {
+		return "https://" + url;
+	}
+
+	console.log("HTTPS connection failed, trying http.");
+
+	let http = await checkServer("http://" + url);
+
+	if (http) {
+		return "http://" + url;
+	}
+
+	return null;
+}
 
 function addHook(hooks) {
 	allhooks.forEach(function (hook) {
@@ -392,32 +477,36 @@ function openConnectArea(err) {
 		errorLabel.innerText = getString("server_connection_error");
 	}
 	
-	connectButton.addEventListener("click",function() {
+	connectButton.addEventListener("click",async function() {
 		connectButton.disabled = true;
 		errorLabel.classList.remove("errorlabel");
 		errorLabel.classList.add("infolabel");
 		errorLabel.innerText = getString("please_wait");;
 		
-		fetch(serverInput.value + "ping").then((res) => {
-			if (res.ok) {
-				res.text().then((text) => {
-					console.log(text); //debug, usually just "Pong"
-					currentServer = serverInput.value;
-					localStorage.setItem("server", serverInput.value); // Save the server url to localStorage.
-					openServerTOSArea();
-				})
-			}else {
-				connectButton.disabled = false;
-				errorLabel.classList.add("errorlabel");
-				errorLabel.classList.remove("infolabel");
-				errorLabel.innerText = getString("server_connection_error");
-			}
-		}).catch(() => {
+		let server = await findActualServerUrl(serverInput.value);
+
+		if (server == null) {
 			connectButton.disabled = false;
 			errorLabel.classList.add("errorlabel");
 			errorLabel.classList.remove("infolabel");
 			errorLabel.innerText = getString("server_connection_error");
-		})
+			return;
+		}
+
+		let info = await getServerInfo(server);
+
+		if (info == null) {
+			connectButton.disabled = false;
+			errorLabel.classList.add("errorlabel");
+			errorLabel.classList.remove("infolabel");
+			errorLabel.innerText = getString("server_connection_error");
+			return;
+		}
+
+		currentServer = server;
+		serverInfo = info;
+		localStorage.setItem("server", server); // Save the server url to localStorage.
+		openServerTOSArea();
 	});
 
 	serverInput.addEventListener("keydown", function(event) {
@@ -442,6 +531,7 @@ function openServerTOSArea() {
 	fetch(currentServer + "tos").then((res) => {
 		if (res.ok) {
 			res.text().then((text) => {
+				if (text == "No TOS.") openLoginArea(true);   
 				tosContents.innerText = text;
 			})
 		}else {
@@ -496,7 +586,7 @@ function openServerTOSArea() {
 	})
 }
 
-function openLoginArea() {
+function openLoginArea(notos = false) {
 	document.title = "Pamukky";
 	document.body.innerHTML = "";
 	let logincnt = document.createElement("centeredPopup");
@@ -538,7 +628,7 @@ function openLoginArea() {
 	let serverTOSButton = document.createElement("button")
 	serverTOSButton.innerText = getString("server_tos");
 	serverTOSButton.style.width = "100%";
-	logincnt.appendChild(serverTOSButton);
+	if (!notos) logincnt.appendChild(serverTOSButton);
 	document.body.appendChild(logincnt);
 	let backToConnectButton = document.createElement("button")
 	backToConnectButton.innerText = getString("login_changeserver_button");
@@ -747,6 +837,12 @@ function openMainArea() {
 		if (typeof callbacks != "object") return;
 		if (!callbacks.hasOwnProperty("done")) return;
 
+		if (file.size > 1024*1024*serverInfo.maxFileUploadSize) {
+			if (callbacks.onError) callbacks.onError();
+			alert(getString("file_too_big_info").replace("[SIZE]", serverInfo.maxFileUploadSize));
+			return;
+		}
+
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState == XMLHttpRequest.DONE) {
@@ -783,6 +879,8 @@ function openMainArea() {
 										}
 									})}).catch(function(error) {console.error(error);});
 								}, "image/jpeg", 0.7);
+
+								previewElem.remove();
 							};
 
 							if (isImage) {
@@ -791,8 +889,16 @@ function openMainArea() {
 								previewElem.onload = loadedevent;
 							}else if (isVideo) {
 								previewElem = document.createElement("video");
+								previewElem.playsInline = true;
+								previewElem.muted = true;
+
+								previewElem.onloadeddata = function() {
+									loadedevent();
+									previewElem.pause();
+								};
+
 								previewElem.src = reader.result;
-								previewElem.onloadeddata = loadedevent;
+								previewElem.play();
 							}
 						};
 
@@ -821,6 +927,55 @@ function openMainArea() {
 		xhr.setRequestHeader("filename", encodeURI(file.name));
 		
 		xhr.send(file);
+	}
+
+	function setPublicTagDialog(id, currentvalue, callback) {
+		let spl = (currentvalue ?? "").split("@");
+		let tag = spl[0];
+		let server = spl[1];
+
+		if (server == undefined) {
+			if (id.includes("@")) {
+				server = id.split("@")[1];
+			}else {
+				server = currentServer;
+			}
+		}
+
+		let diag = opendialog();
+		diag.title.innerText = getString("set_public_tag_title");
+		diag.inner.style.display = "flex";
+		diag.inner.style.flexDirection = "column";
+		diag.inner.style.alignItems = "center";
+
+		let tinput = document.createElement("input");
+		tinput.style.width = "100%";
+		tinput.style.marginBottom = "16px";
+		tinput.placeholder = "@";
+		tinput.value = tag;
+		tinput.maxLength = 20;
+		diag.inner.appendChild(tinput);
+
+		let tiplabel = document.createElement("label");
+		tiplabel.innerText = getString("set_public_tag_hint");
+		diag.inner.appendChild(tiplabel);
+
+		let setbtn = document.createElement("button");
+		setbtn.innerText = getString("action_set");
+		diag.inner.appendChild(setbtn);
+
+		setbtn.addEventListener("click", function() {
+			tinput.value = tinput.value.trim();
+			fetch(currentServer + "publictag", {body: JSON.stringify({'token': logininfo.token, 'tag': tinput.value, 'target': id}),method: 'POST'}).then((res) => {
+				if (res.ok) {
+					diag.closebtn.click();
+					callback(tinput.value != "" ? (tinput.value + "@" + server) : undefined);
+				}else {
+					res.text().then((text) => {alert(text)})
+				}
+			});
+			
+		})
 	}
 
 	function viewInfo(id,type) {
@@ -886,7 +1041,18 @@ function openMainArea() {
 
 						infotable.appendChild(namerow);
 						infotable.appendChild(desrow);
-
+						
+						if (infod.publicTag) {
+							let tagrow = document.createElement("tr");
+							let tagttl = document.createElement("td");
+							tagttl.style.fontWeight = "bold";
+							tagttl.innerText = getString("public_tag");
+							tagrow.appendChild(tagttl);
+							let tagval = document.createElement("td");
+							tagval.innerText = infod.publicTag ?? getString("public_tag_none_hint");
+							tagrow.appendChild(tagval);
+							infotable.appendChild(tagrow);
+						}
 					})
 				}else {
 					diag.inner.innerText = getString("error");
@@ -938,6 +1104,15 @@ function openMainArea() {
 						desrow.appendChild(desval);
 						infotable.appendChild(desrow);
 
+						let tagrow = document.createElement("tr");
+						let tagttl = document.createElement("td");
+						tagttl.style.fontWeight = "bold";
+						tagttl.innerText = getString("public_tag");
+						tagrow.appendChild(tagttl);
+						let tagval = document.createElement("td");
+						tagval.innerText = infod.publicTag ?? getString("public_tag_none_hint");
+						tagrow.appendChild(tagval);
+
 						let pubrow = document.createElement("tr");
 						let pubttl = document.createElement("td");
 						pubttl.innerText = getString("public");
@@ -949,6 +1124,7 @@ function openMainArea() {
 						pubval.appendChild(pubinp);
 						pubrow.appendChild(pubval);
 						infotable.appendChild(pubrow);
+						infotable.appendChild(tagrow);
 						
 						let roles = {};
 						let crole = {};
@@ -957,6 +1133,13 @@ function openMainArea() {
 								res.text().then((text) => {
 									crole = JSON.parse(text);
 									if (crole.AllowEditingSettings == true) {
+										tagval.classList.add("transparentbtn");
+										tagval.addEventListener("click", function() {
+											setPublicTagDialog(id, infod.publicTag, function(val) {
+												infod.publicTag = val;
+												tagval.innerText = val ?? getString("public_tag_none_hint");
+											});
+										});
 										let editrolesbtn = document.createElement("button");
 										editrolesbtn.innerText = getString("edit_roles_group");
 										editrolesbtn.addEventListener("click",function() {
@@ -1823,10 +2006,10 @@ function openMainArea() {
 	let chatslist = createLazyList();
 	chatslist.element.addEventListener("scroll", function() {
 		if (audioBar.style.display == "none") {
-			leftTitleBar.classList.toggle("shandow", chatslist.element.scrollTop > 0);
+			leftTitleBar.classList.toggle("shadow", chatslist.element.scrollTop > 0);
 		}else {
-			audioBar.classList.toggle("shandow", chatslist.element.scrollTop > 0);
-			leftTitleBar.classList.remove("shandow");
+			audioBar.classList.toggle("shadow", chatslist.element.scrollTop > 0);
+			leftTitleBar.classList.remove("shadow");
 		}
 	});
 
@@ -2016,6 +2199,7 @@ function openMainArea() {
 			fabhint.classList.add("buttonlabel");
 			fabhint.style.display = "block";
 			fabhint.style.margin = "8px";
+			fabhint.style.marginTop = "48px";
 			fabhint.innerText = getString("addchat_fab_tip");
 			element.addEventListener("click",function() {
 				fab.click();
@@ -2103,9 +2287,7 @@ function openMainArea() {
 		adduserchatbtn.addEventListener("click",function() {
 			fetch(currentServer + "adduserchat", {body: JSON.stringify({'token': logininfo.token,'email': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
-					res.text().then((text) => {
-						diag.closebtn.click();
-					})
+					diag.closebtn.click();
 				}
 			})
 		})
@@ -2209,6 +2391,8 @@ function openMainArea() {
 			fetch(currentServer + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': tinput.value}),method: 'POST'}).then((res) => {
 				if (res.ok) {
 					diag.closebtn.click();
+				}else {
+					alert(getString("join_group_error"));
 				}
 			})
 		})
@@ -2259,10 +2443,26 @@ function openMainArea() {
 		desinp.value = currentuser.bio;
 		desval.appendChild(desinp);
 		desrow.appendChild(desval);
-		
+
+		let tagrow = document.createElement("tr");
+		let tagttl = document.createElement("td");
+		tagttl.style.fontWeight = "bold";
+		tagttl.innerText = getString("public_tag");
+		tagrow.appendChild(tagttl);
+		let tagval = document.createElement("td");
+		tagval.classList.add("transparentbtn");
+		tagval.addEventListener("click", function() {
+			setPublicTagDialog(logininfo.userID, currentuser.publicTag, function(val) {
+				currentuser.publicTag = val;
+				tagval.innerText = val ?? getString("public_tag_none_hint");
+			});
+		})
+		tagval.innerText = currentuser.publicTag ?? getString("public_tag_none_hint");
+		tagrow.appendChild(tagval);
 		
 		infotable.appendChild(namerow);
 		infotable.appendChild(desrow);
+		infotable.appendChild(tagrow);
 		diag.inner.appendChild(infotable);
 		
 		let cpass = document.createElement("button");
@@ -2545,16 +2745,23 @@ function openMainArea() {
 		backbtn.classList.add("cb")
 		backbtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M640-80 240-480l400-400 71 71-329 329 329 329-71 71Z"/></svg>';
 		backbtn.style.display = "none";
-		titlebar.appendChild(backbtn)
+		titlebar.appendChild(backbtn);
+
 		let pfpimg = document.createElement("img");
 		pfpimg.classList.add("circleimg")
 		titlebar.appendChild(pfpimg);
+
 		let titletxt = document.createElement("h4");
 		titletxt.style.marginLeft = "4px";
+		titletxt.style.overflow = "hidden";
+		titletxt.style.whiteSpace = "nowrap";
+		titletxt.style.textOverflow = "ellipsis";
 		titlebar.appendChild(titletxt);
+
 		let infotxt = document.createElement("label");
 		infotxt.style.fontSize = "10px";
 		infotxt.style.margin = "6px";
+		infotxt.style.whiteSpace = "nowrap";
 		infotxt.innerText = "loading";
 		infotxt.classList.add("loading");
 		titlebar.appendChild(infotxt);
@@ -2637,12 +2844,12 @@ function openMainArea() {
 
 		messageslist.setScrollHook(function(top, lastscrollpos, pos) {
 			scrollFab.style.display = pos != 1 ? "" : "none";
-			messageBar.classList.toggle("shandow", pos != 1);
+			messageBar.classList.toggle("shadow", pos != 1);
 			if (pinnedbar.style.display == "none") {
-				titlebar.classList.toggle("shandow", pos != -1);
+				titlebar.classList.toggle("shadow", pos != -1);
 			}else {
-				pinnedbar.classList.toggle("shandow", pos != -1);
-				titlebar.classList.remove("shandow");
+				pinnedbar.classList.toggle("shadow", pos != -1);
+				titlebar.classList.remove("shadow");
 			}
 		});
 
@@ -2739,44 +2946,53 @@ function openMainArea() {
 		messageBar.appendChild(currentReplyContainer);
 		
 		function addAttachment(file) {
-			let reader = new FileReader();
-			reader.onload = function (e) { 
-				ufl = true;
-				let itemElement = document.createElement("uploaditm");
-				let imageArea = document.createElement("div");
-				imageArea.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"><path d="M186.67-813.33V-536.67v-2.66V-146.67v-666.66 190.66-190.66Zm92.66 400h161q11.67-19 26.17-35.67 14.5-16.67 31.83-31h-219v66.67Zm0 166.66h123q-2.33-16.66-2-33.33.34-16.67 2.67-33.33H279.33v66.66ZM186.67-80q-27 0-46.84-19.83Q120-119.67 120-146.67v-666.66q0-27 19.83-46.84Q159.67-880 186.67-880H534l226 226v134q-15.67-6.67-32.33-10.67-16.67-4-34.34-6v-86H500.67v-190.66h-314v666.66h249q11 19 24.5 35.67t29.5 31h-303Zm476.66-392.67q81.34 0 138.67 57.33 57.33 57.33 57.33 138.67 0 81.34-57.33 138.67-57.33 57.33-138.67 57.33-81.34 0-138.67-57.33-57.33-57.33-57.33-138.67 0-81.34 57.33-138.67 57.33-57.33 138.67-57.33Zm.74 318.67q11.6 0 19.43-7.91 7.83-7.9 7.83-19.5 0-11.59-7.9-19.42-7.91-7.84-19.5-7.84-11.6 0-19.43 7.91-7.83 7.9-7.83 19.5 0 11.59 7.9 19.43 7.91 7.83 19.5 7.83Zm-19.4-80h38.66v-10.63q0-11.7 6.34-21.2 6.33-9.5 14.81-17.77 14.85-12.4 23.85-24.4 9-12 9-32 0-30.81-20.53-49.41Q696.27-408 663.85-408q-24.85 0-45.02 14.17-20.16 14.16-28.16 38.82L625.33-340q2.34-13.33 13.17-22.67 10.83-9.33 25.8-9.33 16.03 0 25.2 8 9.17 8 9.17 24 0 11-6.67 19.17-6.67 8.16-14.67 16.16-7.33 6.67-14.5 13.34-7.16 6.66-12.16 14.66-3.67 6.67-4.84 12.87-1.16 6.2-1.16 14.47V-234Z"/></svg>';
-				let rembtn = document.createElement("button")
-				rembtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
-				let imgs = new Image();
-				imgs.src = reader.result;
-				imgs.style.background = "white";
-				imgs.classList.add("msgimg");
-				imgs.onload = function() {
-					imgs.addEventListener("click", function() {
-						imageView(imgs.src);
-					});
-					imageArea.innerHTML = "";
-					imageArea.appendChild(imgs);
+			if (file.size > 1024*1024*serverInfo.maxFileUploadSize) {
+				alert(getString("file_too_big_info").replace("[SIZE]", serverInfo.maxFileUploadSize));
+				return;
+			}
+
+			let itemElement = document.createElement("uploaditm");
+			let imageArea = document.createElement("div");
+			imageArea.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"><path d="M186.67-813.33V-536.67v-2.66V-146.67v-666.66 190.66-190.66Zm92.66 400h161q11.67-19 26.17-35.67 14.5-16.67 31.83-31h-219v66.67Zm0 166.66h123q-2.33-16.66-2-33.33.34-16.67 2.67-33.33H279.33v66.66ZM186.67-80q-27 0-46.84-19.83Q120-119.67 120-146.67v-666.66q0-27 19.83-46.84Q159.67-880 186.67-880H534l226 226v134q-15.67-6.67-32.33-10.67-16.67-4-34.34-6v-86H500.67v-190.66h-314v666.66h249q11 19 24.5 35.67t29.5 31h-303Zm476.66-392.67q81.34 0 138.67 57.33 57.33 57.33 57.33 138.67 0 81.34-57.33 138.67-57.33 57.33-138.67 57.33-81.34 0-138.67-57.33-57.33-57.33-57.33-138.67 0-81.34 57.33-138.67 57.33-57.33 138.67-57.33Zm.74 318.67q11.6 0 19.43-7.91 7.83-7.9 7.83-19.5 0-11.59-7.9-19.42-7.91-7.84-19.5-7.84-11.6 0-19.43 7.91-7.83 7.9-7.83 19.5 0 11.59 7.9 19.43 7.91 7.83 19.5 7.83Zm-19.4-80h38.66v-10.63q0-11.7 6.34-21.2 6.33-9.5 14.81-17.77 14.85-12.4 23.85-24.4 9-12 9-32 0-30.81-20.53-49.41Q696.27-408 663.85-408q-24.85 0-45.02 14.17-20.16 14.16-28.16 38.82L625.33-340q2.34-13.33 13.17-22.67 10.83-9.33 25.8-9.33 16.03 0 25.2 8 9.17 8 9.17 24 0 11-6.67 19.17-6.67 8.16-14.67 16.16-7.33 6.67-14.5 13.34-7.16 6.66-12.16 14.66-3.67 6.67-4.84 12.87-1.16 6.2-1.16 14.47V-234Z"/></svg>';
+			let rembtn = document.createElement("button")
+			rembtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>';
+			itemElement.appendChild(imageArea);
+			itemElement.appendChild(rembtn);
+			attachmentsContainer.appendChild(itemElement);
+
+			fileslist.push(file);
+
+			onMessageInput();
+
+			rembtn.addEventListener("click",function() {
+				const index = fileslist.indexOf(file);
+				if (index > -1) {
+					fileslist.splice(index, 1);
+					onMessageInput();
 				}
-				itemElement.appendChild(imageArea);
-				itemElement.appendChild(rembtn);
-				attachmentsContainer.appendChild(itemElement);
-
-				fileslist.push(file);
-
-				onMessageInput();
-
-				rembtn.addEventListener("click",function() {
-					const index = fileslist.indexOf(file);
-					if (index > -1) {
-						fileslist.splice(index, 1);
-						onMessageInput();
+				itemElement.remove();
+			})
+			
+			if (file.type == "image/png" || 
+						file.type == "image/bmp" || 
+						file.type == "image/jpeg" ||
+						file.type == "image/gif") {
+				let reader = new FileReader();
+				reader.onload = function (e) { 
+					let imgs = new Image();
+					imgs.src = reader.result;
+					imgs.style.background = "white";
+					imgs.classList.add("msgimg");
+					imgs.onload = function() {
+						imgs.addEventListener("click", function() {
+							imageView(imgs.src);
+						});
+						imageArea.innerHTML = "";
+						imageArea.appendChild(imgs);
 					}
-					itemElement.remove();
-				})
-			};
-
-			reader.readAsDataURL(file); 
+				};
+				reader.readAsDataURL(file); 
+			}
 		}
 		
 		let attachmentsContainer = document.createElement("attachmentscont");
@@ -2880,6 +3096,8 @@ function openMainArea() {
 									fetch(currentServer + "joingroup", {body: JSON.stringify({'token': logininfo.token,'groupid': ugid}),method: 'POST'}).then((res) => {
 										if (res.ok) {
 											openchat(chatid);
+										}else {
+											alert(getString("join_group_error"));
 										}
 									});
 								})
@@ -3147,7 +3365,16 @@ function openMainArea() {
 						msgstatus.disabled = true;
 						msgstatus.title = "";
 					}
-				};	
+				};
+
+
+				let msgedited = element.querySelector(".msgedited");
+				if (msgedited) msgedited.style.display = data.isEdited ? "" : "none";
+
+				if (data.isEdited) {
+					let msgcontent = element.querySelector("msgcontent");
+					if (msgcontent) msgcontent.innerHTML = linkify(data.content);
+				}
 			}
 		}
 
@@ -3254,6 +3481,7 @@ function openMainArea() {
 				})
 			}
 			function reply() {
+				let oldreplyid = replymsgid;
 				replymsgid = id;
 				currentReplyContainer.style.display = "";
 				if (msg.senderUID == "0") {
@@ -3264,8 +3492,12 @@ function openMainArea() {
 				}else {
 					currentReplyContent.innerText = getMessageString(msg);
 				}
+
+				currentReplyUsername.innerText = "Loading...";
+				currentReplyUsername.classList.add("loading");
 				getInfo(msg.senderUID,(user) => {
 					currentReplyUsername.innerText = user.name;
+					currentReplyUsername.classList.remove("loading");
 				})
 
 				if (pinnedmessageslist.element.style.display == "") {
@@ -3275,6 +3507,9 @@ function openMainArea() {
 				msginput.focus();
 
 				updateMessage(id);
+				if (oldreplyid) {
+					updateMessage(oldreplyid);
+				}
 			}
 
 			msgc.addEventListener("keydown",function(e) {
@@ -3362,7 +3597,7 @@ function openMainArea() {
 				if (extra) {
 					if (extra.pinnedmessageslist == true) {
 						let gotobutton = createButton();
-						gotobutton.innerText = getString("goto_message");
+						gotobutton.innerText = getString("message_action_goto_message");
 						gotobutton.disabled = !crole.AllowSending;
 						gotobutton.addEventListener("click", function() {
 							if (pinnedmessageslist.element.style.display == "") {
@@ -3373,18 +3608,56 @@ function openMainArea() {
 						actionsContainer.appendChild(gotobutton);
 					}
 				}
+
 				let replybutton = createButton();
-				replybutton.innerText = getString("reply_to_message");
+				replybutton.innerText = getString("message_action_reply_to_message");
 				replybutton.disabled = !crole.AllowSending;
 				replybutton.addEventListener("click", function() {
 					reply();
 				})
 				actionsContainer.appendChild(replybutton);
+				
+				if (msg.senderUID == logininfo.userID && msg.forwardedFromUID == undefined) {
+					let editbutton = createButton();
+					editbutton.innerText = getString("message_action_edit_message");
+					editbutton.addEventListener("click", function() {
+						let editDialog = opendialog();
+						editDialog.title.innerText = getString("message_action_edit_message");
+						editDialog.inner.style.display = "flex";
+						editDialog.inner.style.flexDirection = "column";
+						editDialog.inner.style.alignItems = "center";
+
+						let editTextarea = document.createElement("textarea");
+						editTextarea.value = msg.content;
+						editTextarea.style.width = "500px";
+						editTextarea.style.height = "300px";
+						editTextarea.style.maxWidth = "100%";
+						editDialog.inner.appendChild(editTextarea);
+
+						let applyBtn = document.createElement("button");
+						applyBtn.innerText = getString("send_message");
+						editDialog.inner.appendChild(applyBtn);
+						applyBtn.disabled = true;
+
+						editTextarea.addEventListener("input", function() {
+							applyBtn.disabled = editTextarea.value.trim() == "" || editTextarea.value == msg.content;
+						});
+
+						applyBtn.addEventListener("click", function() {
+							editDialog.closebtn.click();
+							fetch(currentServer + "editmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageid': id, 'content': editTextarea.value.trim()}),method: 'POST'});
+						})
+
+						editTextarea.focus();
+					})
+					actionsContainer.appendChild(editbutton);
+				}
+
 				let forwardbutton = createButton();
-				forwardbutton.innerText = getString("forward_message");
+				forwardbutton.innerText = getString("message_action_forward_message");
 				forwardbutton.addEventListener("click", function() {
 					let diag = opendialog();
-					diag.title.innerText = getString("forward_message");
+					diag.title.innerText = getString("message_action_forward_message");
 					diag.inner.style.overflow = "hidden";
 					diag.inner.style.display = "flex";
 					diag.inner.style.flexDirection = "column";
@@ -3437,7 +3710,7 @@ function openMainArea() {
 						let item = list[index];
 						if (item == undefined) return;
 						let id = item["chatid"] ?? item.group;
-						itmcont.style.background = fchatselectsid.includes(id) ? "orange" : "";
+						itmcont.classList.toggle("active", fchatselectsid.includes(id));
 					});
 
 					chatslist.setList(chats);
@@ -3456,13 +3729,13 @@ function openMainArea() {
 				})
 				actionsContainer.appendChild(forwardbutton);
 				let selectbutton = createButton();
-				selectbutton.innerText = getString("select_message");
+				selectbutton.innerText = getString("message_action_select_message");
 				selectbutton.addEventListener("click", function() {
 					selectmessage();
 				})
 				actionsContainer.appendChild(selectbutton);
 				let savebtn = createButton();
-				savebtn.innerText = getString("save_message");
+				savebtn.innerText = getString("message_action_save_message");
 				savebtn.addEventListener("click", function() {
 					let messages = selectedMessages;
 					if (messages.length == 0) messages = [id];
@@ -3472,7 +3745,7 @@ function openMainArea() {
 				})
 				actionsContainer.appendChild(savebtn);
 				let pinbtn = createButton();
-				pinbtn.innerText = msgpinned.style.display == "" ? getString("unpin_message") : getString("pin_message");
+				pinbtn.innerText = msgpinned.style.display == "" ? getString("message_action_unpin_message") : getString("message_action_pin_message");
 				pinbtn.addEventListener("click", function() {
 					let messages = selectedMessages;
 					if (messages.length == 0) messages = [id];
@@ -3489,9 +3762,9 @@ function openMainArea() {
 				})
 				actionsContainer.appendChild(copybutton);
 				let deletebutton = createButton();
-				deletebutton.innerText = getString("delete_message");
+				deletebutton.innerText = getString("message_action_delete_message");
 				deletebutton.addEventListener("click", () => {
-					if (confirm(getString("delete_message_confirm"))) {
+					if (confirm(getString("message_action_delete_message_confirm"))) {
 						let messages = selectedMessages;
 						if (messages.length == 0) messages = [id];
 						fetch(currentServer + "deletemessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': messages}),method: 'POST'}).then((res) => {
@@ -3832,8 +4105,13 @@ function openMainArea() {
 			msgpinned.classList.add("msgpinned");
 			msgpinned.title = getString("message_pinned_hint");
 			msgpinned.style.display = msg.isPinned ? "" : "none";
-			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
+			msgpinned.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M624-744v264l85 85q5 5 8 11.5t3 14.5v20.81q0 15.38-10.35 25.79Q699.3-312 684-312H516v222q0 15.3-10.29 25.65Q495.42-54 480.21-54T454.5-64.35Q444-74.7 444-90v-222H276q-15.3 0-25.65-10.4Q240-332.81 240-348.19V-369q0-8 3-14.5t8-11.5l85-85v-264h-12q-15.3 0-25.65-10.29Q288-764.58 288-779.79t10.35-25.71Q308.7-816 324-816h312q15.3 0 25.65 10.29Q672-795.42 672-780.21t-10.35 25.71Q651.3-744 636-744h-12Z"/></svg>';
 
+			let msgedited = document.createElement("div");
+			msgedited.classList.add("msgedited");
+			msgedited.title = getString("message_edited_hint");
+			msgedited.style.display = msg.isEdited ? "" : "none";
+			msgedited.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M216-216h51l375-375-51-51-375 375v51Zm-35.82 72q-15.18 0-25.68-10.3-10.5-10.29-10.5-25.52v-86.85q0-14.33 5-27.33 5-13 16-24l477-477q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L318-165q-11 11-23.95 16t-27.24 5h-86.63ZM744-693l-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>';
 
 			if (msg.senderUID == logininfo.userID) {
 				msgm.classList.add("sender");
@@ -3865,6 +4143,7 @@ function openMainArea() {
 			}
 
 			msgstate.appendChild(msgpinned);
+			msgstate.appendChild(msgedited);
 			msgstate.appendChild(msgstatus);
 
 			let replydragstart = null;
@@ -4249,6 +4528,18 @@ function openMainArea() {
 							pdata.reactions = data.reactions;
 							pinnedmessageslist.updateItem(key, pdata);
 						}
+					}else if (val.event == "EDITED") {
+						let data = messageslist.getItemData(key);
+						data.isEdited = true;
+						data.content = val.content;
+						messageslist.updateItem(key, data);
+						// But message MIGHT be loaded in pinned messages area too.
+						let pdata = pinnedmessageslist.getItemData(key);
+						if (pdata) {
+							pdata.content = data.content;
+							pdata.isEdited = true;
+							pinnedmessageslist.updateItem(key, pdata);
+						}
 					}else if (val.event == "PINNED") {
 						let data = messageslist.getItemData(key);
 						if (data) {
@@ -4297,22 +4588,36 @@ if (currentServer == "") {
 		openConnectArea();
 	}else {
 		currentServer = localStorage.getItem("server");
-		if (localStorage.getItem("token") == null) {
-				openLoginArea();
-		}else {
-			fetch(currentServer + "getsessioninfo", {body: JSON.stringify({'token': localStorage.getItem("token")}),method: 'POST'}).then(function(res) {
-				if (res.ok) {
-					res.json().then(function (info) {
-						logininfo = info;
-						openMainArea();
-					})
-				}else {
-					openLoginArea();
-				}
-			}).catch(function() {
+		getServerInfo(currentServer).then(async function(info) {
+			if (info == null) {
 				openConnectArea(true);
-			});
-		}
+				return;
+			}
+
+			if (!await checkServerCompatibility(info)) {
+				openConnectArea(true);
+				return;
+			}
+
+			serverInfo = info;
+
+			if (localStorage.getItem("token") == null) {
+					openLoginArea();
+			}else {
+				fetch(currentServer + "getsessioninfo", {body: JSON.stringify({'token': localStorage.getItem("token")}),method: 'POST'}).then(function(res) {
+					if (res.ok) {
+						res.json().then(function (info) {
+							logininfo = info;
+							openMainArea();
+						})
+					}else {
+						openLoginArea();
+					}
+				}).catch(function() {
+					openConnectArea(true);
+				});
+			}
+		});
 	}
 }else {
 	fetch(currentServer + "ping").then(function() {

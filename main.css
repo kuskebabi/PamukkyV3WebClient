@@ -23,7 +23,7 @@ body,html {
 	
 	--main-bg: rgb(220,220,220);
 	--transparent-hover: rgba(0,0,0,0.2);
-	--pop-box-shandow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	--pop-box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 	--container-background: rgb(240,240,240);
 	--component-background: rgba(100,100,100,0.2);
 	--ripple-color: rgb(255,200,0);
@@ -102,7 +102,7 @@ centeredPopup {
 	padding: 8px;
 	animation-name: dialogappear;
 	animation-duration: 0.5s;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 }
 
 centeredPopup.closing:not(.slideclosing) {
@@ -190,13 +190,14 @@ button {
 	background-color: var(--component-background);
 	transition: background-color 200ms;
 }
-button:not(:disabled):hover {
-	background-color: var(--transparent-hover);
-	outline:1px solid gray;
-}
+
 button:disabled {
 	opacity:0.5;
 	cursor: default;
+}
+
+button:active:not(.fab):not(.ripple-element) {
+	opacity:0.7;
 }
 
 .clist {
@@ -224,7 +225,7 @@ titlebar {
 	position: relative;
 }
 
-titlebar.shandow::after, pinbar.shandow::after, .mediabar.shandow::after, msgbar.shandow::after {
+titlebar.shadow::after, pinbar.shadow::after, .mediabar.shadow::after, msgbar.shadow::after {
 	content: "";
 	position: absolute;
 	width: 100%;
@@ -233,9 +234,10 @@ titlebar.shandow::after, pinbar.shandow::after, .mediabar.shandow::after, msgbar
 	left: 0;
 	z-index: 1;
 	background: linear-gradient(to bottom, var(--main-bg), transparent);
+	pointer-events: none;
 }
 
-msgbar.shandow::after {
+msgbar.shadow::after {
 	top: -6px;
 	background: linear-gradient(to top, var(--main-bg), transparent);
 }
@@ -256,7 +258,7 @@ msgbar.shandow::after {
 	margin: 4px;
 	background:white;
 	flex-shrink: 0;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 }
 
 .errorlabel {
@@ -285,11 +287,11 @@ button.fab {
 	bottom: 20px;
 	right: 20px;
 	z-index: 1;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 button.fab:hover {
-	background:gold;
+	background:gold !important;
 	box-shadow: none;
 }
 
@@ -320,16 +322,13 @@ button.fab:hover:active {
 	background: transparent;
 	margin:0px;
 }
-.contextmenu button:hover:not(:disabled), .customctx button:hover:not(:disabled), .customctx button:focus-visible {
-	background: var(--transparent-hover);
-}
 .contextmenu {
 	outline: 1px solid gray;
 	z-index: 100;
 	border-radius:8px;
 	background: var(--container-background);
 	transition: opacity 200ms;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 }
 
 .customctx {
@@ -343,7 +342,7 @@ button.fab:hover:active {
 	transition: opacity 200ms;
 	animation-name: ctxappear;
 	animation-duration: 200ms;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 	margin-bottom: 8px;
 }
 
@@ -362,17 +361,13 @@ button.fab:hover:active {
 	/*max-height: 0px;*/
 	display: flex;
 	flex-direction: column;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 }
 
 .popupmenu > button {
 	display: flex;
 	align-items: center;
 	background: transparent;
-}
-
-.popupmenu > button:hover, .popupmenu > button:focus-visible {
-	background: var(--transparent-hover);
 }
 
 .popupmenu > button > div {
@@ -508,6 +503,7 @@ messageslist {
 	flex-direction: column;
 	width: 100%;
 	height: 100%;
+	padding: 8px 0 2px 0;
 	background-color: var(--container-background);
 }
 
@@ -631,7 +627,7 @@ msgmedia {
 	cursor:pointer;
 }
 .msgmedia:hover {
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 }
 
 uploaditm {
@@ -737,11 +733,6 @@ msgbar > div > textarea {
 	border-bottom: 1px solid gray;
 }
 
-.chatitem:hover, .chatitem:focus-visible {
-	background: var(--transparent-hover);
-	border-bottom: 1px solid transparent;
-}
-
 .chatitem.active {
 	background: rgba(255,170,0,0.4) !important;
 	border-bottom: 1px solid transparent;
@@ -754,7 +745,7 @@ msgbar > div > textarea {
 	margin-right: 5px;
 	flex-shrink:0;
 	background:white;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 }
 
 .chatitem > infoarea {
@@ -865,6 +856,11 @@ msgcont.selected > .selectid{
 	background-color: orange;
 }
 
+messageslist.selection > msgcont {
+	cursor: pointer;
+	user-select: none;
+}
+
 messageslist:not(.selection) > msgcont:not(.selected) > .selectid {
 	display: none;
 }
@@ -875,7 +871,7 @@ msgcont > img {
 	border-radius: 100%;
 	margin: 0px 8px 0px 8px;
 	background:white;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 	position: relative;
 	align-self: flex-end;
 	bottom: 16px;
@@ -900,7 +896,7 @@ msgmain > msgbubble {
 	width:auto;
 	animation-name: msgbappear;
 	animation-duration: 0.5s;
-	box-shadow: var(--pop-box-shandow);
+	box-shadow: var(--pop-box-shadow);
 }
 
 msgmain > msgsender.hidden {
@@ -1097,9 +1093,28 @@ msgreacts > button.rcted {
 
 /* ------ MEDIA RULES ------ */
 
+
+/* HOVER (on cursor only) */
+@media (hover: hover) and (pointer: fine) {
+	.chatitem:hover, .chatitem:focus-visible {
+		background: var(--transparent-hover);
+		border-bottom: 1px solid transparent;
+	}
+
+	.chatitem:not(:hover):not(:focus-visible) {
+		transition-delay: 100ms;
+	}
+
+	button:not(:disabled):hover {
+		background-color: var(--transparent-hover);
+		outline:1px solid gray;
+	}
+}
+
+
 @media only screen and (min-width: 2000px) {
 	msgcont {
-		padding: 0px 15% 0px 15%;
+		padding: 2px 15% 2px 15%;
 	}
 }
 /*@media only screen and (min-width: 1900px) {
@@ -1116,7 +1131,7 @@ msgreacts > button.rcted {
 
 @media only screen and (max-width: 1024px) {
 	msgcont {
-		padding: 0;
+		padding: 2px 0 2px 0;
 	}
 	centeredPopup {
 		max-width:100%;

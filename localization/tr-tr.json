@@ -18,6 +18,8 @@
     "cancel": "İptal",
     "continue": "Devam et",
     "email": "E-Posta",
+    "action_set": "Ayarla",
+    "file_too_big_info": "Dosya çok büyük. Bu sunucu için en büyük dosya boyutu [SIZE] megabayt.",
 
     "dialog_dock_to_right": "Sağa sabitle",
 
@@ -28,6 +30,7 @@
     "server_input_hint": "URL yada IP adresi girin...",
     "server_input_submit_button": "Bağlan",
     "server_connection_error": "Bağlantı hatası.",
+    "server_connection_error_version_unsupported": "Sunucu uyumlu değil! Bu istemci sadece [RANGE_CLIENT_CONNECT_SERVER_VERSIONS] sürümlerine bağlanabilir ancak sunucu [SERVER_VERSION] sürümünde.",
     
     "login_tip": "Bu Pamukky sunucusuna giriş yapın",
     "login_email_hint": "E-Posta",
@@ -57,6 +60,12 @@
     "leave_group": "Guruptan çık",
     "leave_group_confirm": "Bu guruptan gerçekten çıkmak istiyor musunuz?",
     "join_group": "Guruba katıl",
+    "join_group_error": "Guruba katılınamadı. Bu, guruptan engellendiğinizden, gurubun olmamasından yada sunucu hatasından olabilir.",
+
+    "public_tag": "Etiket",
+    "public_tag_none_hint": "Yok",
+    "set_public_tag_title": "Etiketi ayarla",
+    "set_public_tag_hint": "Yeni etiketi girin yada kaldırmak için boş bırakın.\n\nEtiketler 20 karakteri geçmemeli ve sadece harfler, sayılar ve alt çizgi içermelidir.",
 
     "edit_profile": "Profili düzenle",
     "save_profile": "Profili kaydet",
@@ -87,6 +96,7 @@
     "group_members_count": "[COUNT] katılımcı",
     "pinned_messages": "Sabitlenmiş mesajlar",
 
+    "message_bar_mode_edit": "Düzenle",
     "add_attachment": "Ek ekle",
     "send_message": "Gönder",
     "nobody_typing": "Hiçkimse yazmıyor",
@@ -111,18 +121,20 @@
     "reactions_list": "Tepkiler",
 
     "more_reactions": "Daha fazla tepki",
-    "goto_message": "Mesaja git",
-    "reply_to_message": "Mesaja yanıt ver",
-    "forward_message": "Mesajı ilet...",
-    "select_message": "Seç...",
-    "save_message": "Mesajı kaydet",
-    "pin_message": "Mesajı sabitle",
-    "unpin_message": "Mesajın sabitini kaldır",
-    "delete_message": "Mesajı sil",
-    "delete_message_confirm": "Bu mesajı gerçekten silmek istiyor musunuz?",
+    "message_action_goto_message": "Mesaja git",
+    "message_action_reply_to_message": "Mesaja yanıt ver",
+    "message_action_edit_message": "Mesajı düzenle...",
+    "message_action_forward_message": "Mesajı ilet...",
+    "message_action_select_message": "Seç...",
+    "message_action_save_message": "Mesajı kaydet",
+    "message_action_pin_message": "Mesajı sabitle",
+    "message_action_unpin_message": "Mesajın sabitini kaldır",
+    "message_action_delete_message": "Mesajı sil",
+    "message_action_delete_message_confirm": "Bu mesajı gerçekten silmek istiyor musunuz?",
 
     "forwarded_from_username": "[NAME] tarafından iletildi",
     "message_pinned_hint": "Sabitlenmiş",
+    "message_edited_hint": "Düzenlenmiş",
     "message_read_by_count": {
         "_NORMAL": "[COUNT] kişi tarafından okundu",
         "0": "Hiçkimse bu mesajı okumadı"

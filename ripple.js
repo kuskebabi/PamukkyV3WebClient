@@ -1,5 +1,6 @@
 function addRipple(element, color = "var(--ripple-color)") {
 	element.addEventListener("pointerdown", rippleStart);
+	element.classList.add("ripple-element");
 	element.style.position = "relative";
 	element.style.overflow = "hidden";
 	function rippleStart(event) {
