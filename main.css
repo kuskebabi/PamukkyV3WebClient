@@ -183,7 +183,7 @@ input:focus, textarea:focus {
 
 button {
 	border:none;
-	padding:5px;
+	padding: 6px;
 	border-radius:8px;
 	cursor:pointer;
 	margin:2px;
@@ -197,7 +197,7 @@ button:disabled {
 }
 
 button:active:not(.fab):not(.ripple-element) {
-	opacity:0.7;
+	opacity:0.5;
 }
 
 .clist {
@@ -205,7 +205,6 @@ button:active:not(.fab):not(.ripple-element) {
 	width: 100%;
 	height:100%;
 	overflow:auto;
-	padding:4px;
 }
 
 .bbar {
@@ -368,6 +367,7 @@ button.fab:hover:active {
 	display: flex;
 	align-items: center;
 	background: transparent;
+	flex-shrink: 0;
 }
 
 .popupmenu > button > div {
@@ -428,6 +428,7 @@ button.fab:hover:active {
 	animation-name: loadingbar;
 	animation-duration: 1s;
 	animation-iteration-count: infinite;
+	z-index: 5;
 }
 
 .bgcover {
@@ -586,13 +587,15 @@ attachmentscont > uploaditm {
 	height: 100px;
 	margin: 2px;
 	border-radius: 8px;
-	transition: box-shadow 200ms;
+	transition: box-shadow 200ms, background-color 200ms;
 	position: relative;
 	overflow: hidden;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	text-align: inherit;
+	font-size: inherit;
 }
 .msgmedia > img {
 	position: absolute;
@@ -614,6 +617,7 @@ attachmentscont > uploaditm {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	z-index: 6;
 }
 .msgmedia > .info {
 	position: absolute;
@@ -622,6 +626,7 @@ attachmentscont > uploaditm {
 	padding: 8px;
 	background-color: var(--container-background);
 	border-radius: 8px 0 0 0;
+	z-index: 6;
 }
 msgmedia {
 	cursor:pointer;
@@ -720,25 +725,31 @@ msgbar > div > textarea {
 }
 
 .chatitem {
-	display:flex;
 	padding: 8px;
-	border-radius: 0px;
 	width:100%;
-	/*height:54px;*/
+	display: flex;
 	margin: unset;
 	cursor:pointer;
 	text-align: inherit;
 	font-size: inherit;
-	background:transparent;
-	border-bottom: 1px solid gray;
+	border-radius: 0;
+	background: transparent !important;
+	outline: none !important;
 }
 
-.chatitem.active {
+.chatitem > .maincont {
+	display:flex;
+	border-radius: 8px;
+	padding: 8px;
+	width: 100%;
+	transition: background-color 200ms;
+}
+
+.chatitem.active > .maincont {
 	background: rgba(255,170,0,0.4) !important;
-	border-bottom: 1px solid transparent;
 }
 
-.chatitem > img {
+.chatitem > .maincont > img {
 	border-radius: 100%;
 	width: 40px;
 	height: 40px;
@@ -748,14 +759,14 @@ msgbar > div > textarea {
 	box-shadow: var(--pop-box-shadow);
 }
 
-.chatitem > infoarea {
+.chatitem > .maincont > infoarea {
 	display:flex;
 	flex-direction: column;
 	width:100%;
 	overflow: hidden; 
 }
 
-.chatitem > infoarea > label {
+.chatitem > .maincont > infoarea > label {
 	white-space:nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden; 
@@ -763,13 +774,13 @@ msgbar > div > textarea {
 	cursor:pointer;
 }
 
-.chatitem > infoarea > titlecont {
+.chatitem > .maincont > infoarea > titlecont {
 	display:flex;
 	align-items: center;
 	
 }
 
-.chatitem > infoarea > titlecont > h4 {
+.chatitem > .maincont > infoarea > titlecont > h4 {
 	width:100%;
 	cursor:pointer;
 	white-space:nowrap;
@@ -779,7 +790,7 @@ msgbar > div > textarea {
 	display:block;
 }
 
-.chatitem > infoarea > titlecont > time {
+.chatitem > .maincont > infoarea > titlecont > time {
 	white-space: nowrap;
 	flex-shrink: 0;
 	font-size:9px;
@@ -859,6 +870,10 @@ msgcont.selected > .selectid{
 messageslist.selection > msgcont {
 	cursor: pointer;
 	user-select: none;
+}
+
+messageslist.selection > msgcont > * {
+	pointer-events: none;
 }
 
 messageslist:not(.selection) > msgcont:not(.selected) > .selectid {
@@ -1096,13 +1111,9 @@ msgreacts > button.rcted {
 
 /* HOVER (on cursor only) */
 @media (hover: hover) and (pointer: fine) {
-	.chatitem:hover, .chatitem:focus-visible {
+	.chatitem:hover > .maincont, .chatitem:focus-visible > .maincont {
 		background: var(--transparent-hover);
-		border-bottom: 1px solid transparent;
-	}
-
-	.chatitem:not(:hover):not(:focus-visible) {
-		transition-delay: 100ms;
+		outline:1px solid gray;
 	}
 
 	button:not(:disabled):hover {

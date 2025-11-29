@@ -1701,20 +1701,32 @@ function openMainArea() {
 		document.body.appendChild(popupcontainer);
 		requestAnimationFrame(function() {
 			let popuprect = popupcontainer.getBoundingClientRect();
-			if (popuprect.width + popuprect.left > document.body.clientWidth) {
-				popupcontainer.style.left = "";
-				if (document.body.clientWidth - (document.body.clientWidth - rect.left) - popuprect.width > 0) {
-					popupcontainer.style.right = (document.body.clientWidth - rect.right) + "px";
-				}else {
-					popupcontainer.style.right = "0px";
+
+			if (popuprect.width > document.body.clientWidth) {
+				popupcontainer.style.left = "0px";
+				popupcontainer.style.width = "100%";
+			}else{
+				if (popuprect.width + popuprect.left > document.body.clientWidth) {
+					popupcontainer.style.left = "";
+					if (document.body.clientWidth - (document.body.clientWidth - rect.left) - popuprect.width > 0) {
+						popupcontainer.style.right = (document.body.clientWidth - rect.right) + "px";
+					}else {
+						popupcontainer.style.right = "0px";
+					}
 				}
 			}
-			if (popuprect.height + popuprect.top > document.body.clientHeight) {
-				popupcontainer.style.top = "";
-				if (document.body.clientHeight - (document.body.clientHeight - rect.top) - popuprect.height > 0) {
-					popupcontainer.style.bottom = (document.body.clientHeight - rect.top) + "px";
-				}else {
-					popupcontainer.style.bottom = "0px";
+
+			if (popuprect.height > document.body.clientHeight) {
+				popupcontainer.style.top = "0px";
+				popupcontainer.style.height = "100%";
+			}else{
+				if (popuprect.height + popuprect.top > document.body.clientHeight) {
+					popupcontainer.style.top = "";
+					if (document.body.clientHeight - (document.body.clientHeight - rect.top) - popuprect.height > 0) {
+						popupcontainer.style.bottom = (document.body.clientHeight - rect.top) + "px";
+					}else {
+						popupcontainer.style.bottom = "0px";
+					}
 				}
 			}
 			popupcontainer.style.opacity = "1";
@@ -1739,6 +1751,7 @@ function openMainArea() {
 
 	function showMenu(menuitems, element) {
 		let popupmenu = openPopupMenu(element);
+		popupmenu.style.overflow = "auto";
 
 		menuitems.forEach(function(item) {
 			let menuitem = document.createElement("button");
@@ -2112,11 +2125,14 @@ function openMainArea() {
 	function chatsListItemGenerator(item, itmcont) {
 		let id = item["chatid"] ?? item.group;
 		itmcont.classList.add("chatitem");
-		addRipple(itmcont);
+		let cont = document.createElement("div");
+		cont.classList.add("maincont");
+
 		let pfpimg = document.createElement("img")
 		pfpimg.loading = "lazy";
 		pfpimg.classList.add("loading");
-		itmcont.appendChild(pfpimg);
+		cont.appendChild(pfpimg);
+
 		let infocnt = document.createElement("infoarea");
 		let namecont = document.createElement("titlecont");
 		let nameh4 = document.createElement("h4");
@@ -2134,11 +2150,18 @@ function openMainArea() {
 		lastmsgcontent.classList.add("loading");
 
 		infocnt.appendChild(lastmsgcontent)
-		itmcont.appendChild(infocnt);
+		cont.appendChild(infocnt);
+
+		itmcont.appendChild(cont);
+
+		addRipple(cont, undefined, itmcont);
 
 		fetch(currentServer + "getmessages", {body: JSON.stringify({'token': logininfo.token, 'chatid': id, 'prefix': "#0"}),method: 'POST'}).then(function(response) { response.json().then(function(data) {
 			if (data["status"]) {
 				console.log(data);
+				lastmsgcontent.innerText = getString("chat_no_messages_tip");
+				lmt.style.display = "none";
+				lastmsgcontent.classList.remove("loading");
 			}else {
 				let msg = Object.values(data)[0];
 				if (msg) {
@@ -2164,7 +2187,12 @@ function openMainArea() {
 				}
 			}
 			lmt.classList.remove("loading");
-		})}).catch(function(error) {console.error(error);});
+		})}).catch(function(error) {
+			console.error(error);
+			lastmsgcontent.innerText = getString("chat_no_messages_tip");
+			lmt.style.display = "none";
+			lastmsgcontent.classList.remove("loading");
+		});
 
 		getInfo(item.type == "user" ? item.user : item.group, function(info) {
 			pfpimg.src = getpfp(info.picture, item.type == "user" ? "person.svg" : "group.svg");
@@ -3254,7 +3282,6 @@ function openMainArea() {
 						let react = reactions[ir];
 						let reactMainButton = document.createElement("button");
 						reactMainButton.style.cursor = "pointer";
-						reactMainButton.classList.add("interactive");
 						reactMainButton.addEventListener("click",function() {
 							fetch(currentServer + "sendreaction", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageid': id, 'reaction': ir}),method: 'POST'}).then((res) => {
 								
@@ -3661,6 +3688,7 @@ function openMainArea() {
 					diag.inner.style.overflow = "hidden";
 					diag.inner.style.display = "flex";
 					diag.inner.style.flexDirection = "column";
+					diag.inner.style.maxWidth = "800px"
 					let bottomBar = document.createElement("div");
 					bottomBar.classList.add("bbar");
 					let forwardChatsLabel = document.createElement("label");
@@ -3849,7 +3877,7 @@ function openMainArea() {
 
 			if (msg.replyMessageContent != undefined) {
 				let repliedtocont = document.createElement("button");
-				repliedtocont.classList.add("replycont", "interactive");
+				repliedtocont.classList.add("replycont");
 				addRipple(repliedtocont);
 				repliedtocont.addEventListener("click",function() {
 					showmessage(msg.replyMessageID);
@@ -3911,8 +3939,8 @@ function openMainArea() {
 						gridcont.classList.add("msgmediacont");
 						msgbubble.appendChild(gridcont);
 					}
-					let cont = document.createElement("div");
-					cont.classList.add("msgmedia", "interactive");
+					let cont = document.createElement("button");
+					cont.classList.add("msgmedia");
 
 					let iconcont = document.createElement("div");
 
@@ -3921,10 +3949,10 @@ function openMainArea() {
 						imgs.src = i.url.replace(/%SERVER%/g,currentServer) + (i.url.includes("%SERVER%") ? "&type=thumb" : "");
 						let img = document.createElement("img");
 						img.style.background = "white";
-						img.classList.add("loading");
+						cont.classList.add("loading");
 						imgs.onload = function() {
 							img.src = imgs.src;
-							img.classList.remove("loading");
+							cont.classList.remove("loading");
 						}
 						cont.appendChild(img);
 
@@ -3969,7 +3997,7 @@ function openMainArea() {
 				// List
 				msg.gAudio.forEach(function(i) {
 					let fd = document.createElement("button");
-					fd.classList.add("messageattachment", "interactive");
+					fd.classList.add("messageattachment");
 					addRipple(fd, "rgba(255,255,255,0.6)");
 					let path = i.url.replace(/%SERVER%/g,currentServer);
 					fd.setAttribute("data-audiopath", path);
@@ -4001,7 +4029,7 @@ function openMainArea() {
 					a.target = "_blank";
 					a.href = i.url.replace(/%SERVER%/g,currentServer);
 					let fd = document.createElement("button");
-					fd.classList.add("messageattachment", "interactive");
+					fd.classList.add("messageattachment");
 					addRipple(fd, "rgba(255,255,255,0.6)");
 					let fileico = document.createElement("div");
 					fileico.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M760-200H320q-33 0-56.5-23.5T240-280v-560q0-33 23.5-56.5T320-920h247q16 0 30.5 6t25.5 17l194 194q11 11 17 25.5t6 30.5v367q0 33-23.5 56.5T760-200Zm0-440L560-840v140q0 25 17.5 42.5T620-640h140ZM160-40q-33 0-56.5-23.5T80-120v-520q0-17 11.5-28.5T120-680q17 0 28.5 11.5T160-640v520h400q17 0 28.5 11.5T600-80q0 17-11.5 28.5T560-40H160Z"/></svg>';
@@ -4037,7 +4065,7 @@ function openMainArea() {
 			}
 
 			let msgstatus = document.createElement("button");
-			msgstatus.classList.add("msgstatus", "cb", "small", "interactive");
+			msgstatus.classList.add("msgstatus", "cb", "small");
 			msgstatus.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M395-285 226-455l50-50 119 118 289-288 50 51-339 339Z"/></svg>';
 			msgstatus.addEventListener("click", function() {
 				let diag = opendialog();
@@ -4191,7 +4219,8 @@ function openMainArea() {
 					let tagname = event.target.tagName.toString();
 					let parent = event.target;
 					while (parent) {
-						if (parent.classList.contains("interactive")) return;
+						let tag = parent.tagName.toLowerCase();
+						if (tag == "button" || parent.classList.contains("interactive")) return;
 						parent = parent.parentElement;
 					}
 					// Spawn context menu
@@ -4813,32 +4842,37 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 		let viewobserver = new IntersectionObserver(onintersection, {root: null, threshold: 0})
 		let loaded = false;
 		viewobserver.observe(element);
-
-		let oldsize = item.size;
-		function elemresize() {
-			if (pos == 1) {
-				listelement.scrollTop = listelement.scrollHeight;
-			}else if (scrolldirection == -1) {
-				let diff = element.offsetHeight - oldsize;
-				listelement.scrollTop += diff;
-			}
-		}
-		new ResizeObserver(elemresize).observe(element);
 		
 		function onintersection(entries, opts){
 			entries.forEach(function (entry) {
 				let visible = entry.isIntersecting;
+				item.visible = visible;
 				if (visible) {
 					if (loaded == false) {
-						viewobserver.unobserve(element);
 						element.style.height = "";
 						item.generator(item.data, element, key, listObject);
 						loaded = true;
 						item.updater(item.data, element, key, listObject);
 					}
+					if (item.updated) {
+						item.updated = false;
+
+						item.updater(item.data, item.element, key, listObject);
+					}
 				}
 			})
 		}
+
+		let oldsize = item.size;
+		function elemresize() {
+			if (pos == 1) {
+				listelement.scrollTop = listelement.scrollHeight;
+			}else if (element.offsetTop < listelement.scrollTop) {
+				let diff = element.offsetHeight - oldsize;
+				listelement.scrollTop += diff;
+			}
+		}
+		new ResizeObserver(elemresize).observe(element);
 	}
 
 
@@ -4849,12 +4883,20 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 				if (data != null) {
 					item.data = data;
 				}
-				item.updater(item.data, item.element, key, listObject);
+				updatelistitem(item);
 			}
 		}else {
 			list.forEach(function(i) {
-				i.updater(i.data, i.element, i.key, listObject);
+				updatelistitem(i);
 			});
+		}
+	}
+
+	function updatelistitem(item) {
+		if (item.visible) {
+			item.updater(item.data, item.element, item.key, listObject);
+		}else {
+			item.updated = true;
 		}
 	}
 

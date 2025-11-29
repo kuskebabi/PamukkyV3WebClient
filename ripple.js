@@ -1,6 +1,14 @@
-function addRipple(element, color = "var(--ripple-color)") {
-	element.addEventListener("pointerdown", rippleStart);
+function addRipple(element, color = "var(--ripple-color)", clickelement) {
+	
 	element.classList.add("ripple-element");
+	if (clickelement) {
+		clickelement.classList.add("ripple-element");
+	}else {
+		clickelement = element;
+	}
+
+	clickelement.addEventListener("pointerdown", rippleStart);
+
 	element.style.position = "relative";
 	element.style.overflow = "hidden";
 	function rippleStart(event) {
@@ -33,8 +41,8 @@ function addRipple(element, color = "var(--ripple-color)") {
 		});
 
 		var rp = true;
-		element.addEventListener("pointerup",endr);
-		element.addEventListener("pointerleave",endr);
+		clickelement.addEventListener("pointerup",endr);
+		clickelement.addEventListener("pointerleave",endr);
 		function endr() {
 			if (rp) {
 				setTimeout(function() {
@@ -44,8 +52,8 @@ function addRipple(element, color = "var(--ripple-color)") {
 					},1000)
 				}, 200)
 				rp = false;
-				element.removeEventListener("pointerup",endr);
-				element.removeEventListener("pointerleave",endr);
+				clickelement.removeEventListener("pointerup",endr);
+				clickelement.removeEventListener("pointerleave",endr);
 			}
 		}
 	}
