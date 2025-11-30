@@ -66,11 +66,6 @@ select {
 	transition: background-color 200ms;
 }
 
-select:hover {
-	outline:1px solid gray;
-	background: var(--transparent-hover);
-}
-
 body {
 	position: relative;
 }
@@ -196,7 +191,7 @@ button:disabled {
 	cursor: default;
 }
 
-button:active:not(.fab):not(.ripple-element) {
+button:active:not(.fab):not(.ripple-element), select:active, .interactive:active {
 	opacity:0.5;
 }
 
@@ -289,20 +284,12 @@ button.fab {
 	box-shadow: var(--pop-box-shadow);
 	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
-button.fab:hover {
-	background:gold !important;
-	box-shadow: none;
-}
 
 button.fab.secondary {
 	background: var(--component-background);
 	width:40px;
 	height:40px;
 	border-radius: 20px;
-}
-
-button.fab.secondary:hover {
-	background: var(--transparent-hover);
 }
 
 
@@ -1119,6 +1106,19 @@ msgreacts > button.rcted {
 	button:not(:disabled):hover {
 		background-color: var(--transparent-hover);
 		outline:1px solid gray;
+	}
+
+	button.fab:hover {
+		box-shadow: none;
+	}
+
+	button.fab:hover:not(.secondary) {
+		background:gold;
+	}
+
+	select:hover {
+		outline:1px solid gray;
+		background: var(--transparent-hover);
 	}
 }
 

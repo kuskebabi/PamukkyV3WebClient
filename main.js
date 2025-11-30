@@ -3490,7 +3490,7 @@ function openMainArea() {
 			if (msgc == undefined) {
 				return;
 			}
-			let dt = new Date(msg.sendTime);
+			
 			function selectmessage() {
 				if (msg.type == "time") return;
 				let idx = selectedMessages.indexOf(id);
@@ -3507,6 +3507,7 @@ function openMainArea() {
 					updateMessage(msgid);
 				})
 			}
+
 			function reply() {
 				let oldreplyid = replymsgid;
 				replymsgid = id;
@@ -3841,6 +3842,8 @@ function openMainArea() {
 			msgsendertxt.classList.add("loading");
 			msgcontent.style.overflowWrap = "break-word";
 
+			let dt = new Date(msg.sendTime);
+
 			if (msg.type != "time") {
 				let selectid = document.createElement("div");
 				selectid.classList.add("selectid");
@@ -3855,6 +3858,7 @@ function openMainArea() {
 			}else {
 				msgcontent.innerHTML = linkify(msg.content);
 			}
+
 			msgtimelbl.innerText = getTimeString(dt);
 
 			if (msg.forwardedFromUID != undefined) {
@@ -4762,7 +4766,7 @@ function createDynamicList(elemtype = "div", innertype = "div") {
 			
 			if (listelement.scrollTop == 0) {
 				pos = -1;
-			}else if (listelement.scrollTop < listelement.scrollHeight - listelement.offsetHeight - 28) {
+			}else if (listelement.scrollTop < listelement.scrollHeight - listelement.offsetHeight) {
 				pos = 0;
 			}else {
 				pos = 1;
