@@ -1241,7 +1241,7 @@ function openMainArea() {
 								if (user == undefined) return;
 								urow.style.display = "flex";
 								urow.style.width = "100%";
-								urow.style.height = "56px";
+								urow.style.height = "68px";
 								urow.style.padding = "8px";
 								let uname = document.createElement("div");
 								uname.style.display = "flex";
@@ -1306,7 +1306,8 @@ function openMainArea() {
 										urole.remove();
 										uacts.remove();
 									}
-									uacts.style.width = "68px";
+									uacts.style.width = "88px";
+									uacts.style.padding = "8px";
 									uacts.style.display = "flex";
 									uacts.style.flexShrink = "0";
 									if (crole.AllowKicking) {
@@ -1344,7 +1345,7 @@ function openMainArea() {
 									urow.appendChild(uacts);
 								}
 							});
-							userstable.setGetSize(function(list,idx) {return 56});
+							userstable.setGetSize(function(list,idx) {return 68});
 							diag.inner.appendChild(userstable.element);
 							fetch(currentServer + "getgrouproles", {body: JSON.stringify({'token': logininfo.token, 'groupid': id}),method: 'POST'}).then((res) => {
 								if (res.ok) {
@@ -1394,7 +1395,7 @@ function openMainArea() {
 								if (user == undefined) return;
 								urow.style.display = "flex";
 								urow.style.width = "100%";
-								urow.style.height = "56px";
+								urow.style.height = "68px";
 								urow.style.padding = "8px";
 								let uname = document.createElement("div");
 								uname.style.display = "flex";
@@ -1429,7 +1430,8 @@ function openMainArea() {
 										urow.style.opacity = "0.5";
 										uacts.remove();
 									}
-									uacts.style.width = "34px";
+									uacts.style.width = "52px";
+									uacts.style.padding = "8px";
 									uacts.style.display = "flex";
 									uacts.style.flexShrink = "0";
 									let unbanbtn = document.createElement("button");
@@ -1542,7 +1544,7 @@ function openMainArea() {
 		dialoginside.tabIndex = "0";
 		dialoginside.style.display = "flex";
 		dialoginside.style.flexDirection = "column";
-		dialoginside.style.padding = "8px 0 0 0";
+		dialoginside.style.padding = "8px";
 		dialoginside.style.background = "var(--main-bg)";
 		let title = document.createElement("div");
 		title.style.display = "flex";
@@ -2912,9 +2914,11 @@ function openMainArea() {
 			if (pinnedmessageslist.element.style.display == "none") {
 				pinnedmessageslist.element.style.display = "";
 				messageBar.classList.add("collapsed");
+				pinsbtn.classList.add("active");
 			}else {
 				pinnedmessageslist.element.style.display = "none";
 				messageBar.classList.remove("collapsed");
+				pinsbtn.classList.remove("active");
 			}
 		});
 

@@ -17,7 +17,7 @@ body,html {
 	font-style: normal;
 	font-variation-settings:
 		"wdth" 100;
-	accent-color:orange;
+	accent-color: var(--accent-color);
 	overflow:hidden;
 	background:wheat;
 	
@@ -26,7 +26,12 @@ body,html {
 	--pop-box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 	--container-background: rgb(240,240,240);
 	--component-background: rgba(100,100,100,0.2);
+
+	--accent-color: orange;
+	--accent-color-light: gold;
 	--ripple-color: rgb(255,200,0);
+	--active-color: rgba(255,170,0,0.4);
+	--message-sent-color: rgba(255,170,0,0.4);
 }
 
 flex {
@@ -81,6 +86,10 @@ body {
 	flex-shrink:0;
 }
 
+.cb.active {
+	background-color: var(--active-color);
+}
+
 .cb.small {
 	width: 24px;
 	height:24px;
@@ -115,9 +124,10 @@ centeredPopup.docked {
 	border-radius:0;
 	animation-name: dialogappeardocked;
 	animation-duration: 0.5s;
-	max-width:100%;
+	width: 360px;
 	max-height:100%;
 	box-shadow: none;
+	flex-shrink: 0;
 }
 
 centeredPopup.docked.closing {
@@ -160,6 +170,7 @@ mchat {
 	height:100%;
 	display:flex;
 	flex-direction: column;
+	background-color: var(--main-bg);
 }
 
 input, textarea {
@@ -269,7 +280,7 @@ msgbar.shadow::after {
 }
 
 button.fab {
-	background:orange;
+	background: var(--accent-color);
 	width:60px;
 	height:60px;
 	padding:0;
@@ -283,6 +294,8 @@ button.fab {
 	z-index: 1;
 	box-shadow: var(--pop-box-shadow);
 	transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+	animation: scaleup;
+	animation-duration: 200ms;
 }
 
 button.fab.secondary {
@@ -388,7 +401,7 @@ button.fab:hover:active {
 .loader {
   border: 4px solid #f3f3f3;
   border-radius: 50%;
-  border-top: 4px solid orange;
+  border-top: 4px solid var(--accent-color);
   width: 40px;
   height: 40px;
   animation: spin 0.8s linear infinite;
@@ -415,7 +428,7 @@ button.fab:hover:active {
 	animation-name: loadingbar;
 	animation-duration: 1s;
 	animation-iteration-count: infinite;
-	z-index: 5;
+	z-index: 1;
 }
 
 .bgcover {
@@ -468,6 +481,8 @@ button.fab:hover:active {
 	height:100%;
 	position: relative;
 	min-height: 0;
+	border-radius: 16px;
+	overflow: hidden;
 }
 
 .messagescont > messageslist {
@@ -604,7 +619,7 @@ attachmentscont > uploaditm {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 6;
+	z-index: 2;
 }
 .msgmedia > .info {
 	position: absolute;
@@ -613,7 +628,7 @@ attachmentscont > uploaditm {
 	padding: 8px;
 	background-color: var(--container-background);
 	border-radius: 8px 0 0 0;
-	z-index: 6;
+	z-index: 2;
 }
 msgmedia {
 	cursor:pointer;
@@ -623,14 +638,16 @@ msgmedia {
 }
 
 uploaditm {
-	width:52px;
-	height:52px;
+	width: 64px;
+	height: 64px;
 	margin:6px;
 	position:relative;
 	overflow:hidden;
 	border-radius: 8px;
 	background: rgba(0,0,0,0.1);
 	flex-shrink: 0;
+	animation: appearfrombottom;
+	animation-duration: 0.5s;
 }
 
 uploaditm svg {
@@ -730,17 +747,18 @@ msgbar > div > textarea {
 	padding: 8px;
 	width: 100%;
 	transition: background-color 200ms;
+	align-items: center;
 }
 
 .chatitem.active > .maincont {
-	background: rgba(255,170,0,0.4) !important;
+	background: var(--active-color) !important;
 }
 
 .chatitem > .maincont > img {
 	border-radius: 100%;
 	width: 40px;
 	height: 40px;
-	margin-right: 5px;
+	margin-right: 8px;
 	flex-shrink:0;
 	background:white;
 	box-shadow: var(--pop-box-shadow);
@@ -847,11 +865,11 @@ msgcont > .selectid {
 }
 
 msgcont.selected {
-	background-color: orange;
+	background-color: var(--accent-color);
 }
 
 msgcont.selected > .selectid{
-	background-color: orange;
+	background-color: var(--accent-color);
 }
 
 messageslist.selection > msgcont {
@@ -906,7 +924,7 @@ msgmain > msgsender.hidden {
 }
 
 msgmain.sender > msgbubble {
-	background: rgba(255,170,0,0.4);
+	background: var(--message-sent-color);
 }
 
 msgmain.sender > msgsender {
@@ -980,7 +998,7 @@ msgreacts > button.rcted {
 }
 
 .messageattachment > div:first-child {
-	background-color: orange;
+	background-color: var(--accent-color);
 	border-radius: 100%;
 	width: 40px;
 	height: 40px;
@@ -1092,6 +1110,15 @@ msgreacts > button.rcted {
   100% { transform: rotate(360deg); }
 }
 
+@keyframes appearfrombottom {
+  0% { transform: translateY(10%); opacity: 0; }
+  80% { transform: translateY(-2%); }
+}
+
+@keyframes scaleup {
+  from {transform:scale(0);}
+}
+
 
 /* ------ MEDIA RULES ------ */
 
@@ -1113,7 +1140,7 @@ msgreacts > button.rcted {
 	}
 
 	button.fab:hover:not(.secondary) {
-		background:gold;
+		background:var(--accent-color-light);
 	}
 
 	select:hover {

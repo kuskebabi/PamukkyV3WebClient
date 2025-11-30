@@ -16,28 +16,26 @@ function addRipple(element, color = "var(--ripple-color)", clickelement) {
 		const diameter = Math.max(element.clientWidth, element.clientHeight);
 		const radius = diameter / 2;
 		var ripple = document.createElement("div");
+
+		let boundingclient = element.getBoundingClientRect();
 		
 		ripple.style.position = "absolute";
-		ripple.style.transform = "scale(0)";
+		ripple.style.top = ripple.style.left = "0";
+		ripple.style.transform = "scale(0) translateX(" + ((event.clientX - radius) - (boundingclient.left)) + "px) translateY(" + ((event.clientY - radius) - (boundingclient.top)) + "px)";
 		ripple.style.opacity = "0.1";
-		ripple.style.transition = "transform " + (diameter / 12) + "s,opacity 0.7s";
+		ripple.style.transition = "transform 0.5s,opacity 0.7s";
 		ripple.style.borderRadius = "50%";
 		ripple.style.background = color;
 		ripple.style.width = diameter + "px";
 		ripple.style.height = diameter + "px";
 		ripple.style.pointerEvents = "none";
-
-		let boundingclient = element.getBoundingClientRect();
-		if (event.clientX) {
-			ripple.style.top = (event.clientY - (boundingclient.top + radius)) + "px";
-			ripple.style.left = (event.clientX - (boundingclient.left + radius)) + "px";
-		}
 		
 		element.appendChild(ripple);
 
 		requestAnimationFrame(_ => {
+			const offsetY = (diameter - Math.min(element.clientWidth, element.clientHeight)) / 2;
 			ripple.style.opacity = "0.6";
-			ripple.style.transform = "scale(" + radius + ")";
+			ripple.style.transform = "scale(1.1) translateY(-" + offsetY + "px)";
 		});
 
 		var rp = true;
