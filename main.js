@@ -1668,9 +1668,11 @@ function openMainArea() {
 		}
 	}
 
-	function createPopupContainer(posRef) {
-		activePopupCount++;
-		inertMainUI();
+	function createPopupContainer(posRef, focus = true) {
+		if (focus) {
+			activePopupCount++;
+			inertMainUI();
+		}
 		
 		let popupcontainer = document.createElement("div");
 		popupcontainer.classList.add("popup");
@@ -1685,8 +1687,10 @@ function openMainArea() {
 			if (closed) return;
 			closed = true;
 
-			activePopupCount--;
-			inertMainUI();
+			requestAnimationFrame(function() {
+				activePopupCount--;
+				inertMainUI();
+			});
 
 			//popupmenu.style.maxHeight = "0px";
 			popupcontainer.style.opacity = "";
@@ -1739,7 +1743,7 @@ function openMainArea() {
 			if (e.key == "Escape") close();
 		})
 
-		popupcontainer.focus();
+		if (focus) popupcontainer.focus();
 
 		return popupcontainer;
 	}
@@ -3479,8 +3483,10 @@ function openMainArea() {
 
 		function sendReadMessages() {
 			readSendTimeout = null;
-			fetch(currentServer + "readmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': newReadMessages}),method: 'POST'});
-			newReadMessages.length = 0;
+			if (document.hasFocus()) {
+				fetch(currentServer + "readmessage", {body: JSON.stringify({'token': logininfo.token, 'chatid': chatid, 'messageids': newReadMessages}),method: 'POST'});
+				newReadMessages.length = 0;
+			}
 		}
 
 		function updateMessage(id) {
@@ -3564,7 +3570,8 @@ function openMainArea() {
 			})
 
 			function spawnMessageMenu(spawnOnMessage = false) {
-				let ctxdiv = createPopupContainer(spawnOnMessage ? msgbubble : undefined);
+				let focus = getSelection().direction == "none";
+				let ctxdiv = createPopupContainer(spawnOnMessage ? msgbubble : undefined, focus);
 				ctxdiv.classList.add("customctx");
 				ctxdiv.style.width = "315px";
 
@@ -3624,7 +3631,7 @@ function openMainArea() {
 				let actionsContainer = document.createElement("div");
 				ctxdiv.appendChild(actionsContainer);
 				addKeyboardListSelectionSupport(actionsContainer);
-				setTimeout(function() {actionsContainer.focus();}, 100);
+				if (focus) setTimeout(function() {actionsContainer.focus();}, 100);
 
 				if (extra) {
 					if (extra.pinnedmessageslist == true) {
@@ -3694,6 +3701,7 @@ function openMainArea() {
 					diag.inner.style.display = "flex";
 					diag.inner.style.flexDirection = "column";
 					diag.inner.style.maxWidth = "800px"
+					diag.inner.style.padding = "0px"
 					let bottomBar = document.createElement("div");
 					bottomBar.classList.add("bbar");
 					let forwardChatsLabel = document.createElement("label");
@@ -4224,15 +4232,14 @@ function openMainArea() {
 
 				}else if (lastdiff < 5 && (Date.now() - dragtime) < 200) {
 					// Cancel if its a interactive element
-					let tagname = event.target.tagName.toString();
 					let parent = event.target;
 					while (parent) {
 						let tag = parent.tagName.toLowerCase();
-						if (tag == "button" || parent.classList.contains("interactive")) return;
+						if (tag == "button" || tag == "a" || parent.classList.contains("interactive")) return;
 						parent = parent.parentElement;
 					}
 					// Spawn context menu
-					setTimeout(function() {spawnMessageMenu()}, 100);
+					spawnMessageMenu()
 					event.preventDefault();
 				}else if (lastdiff >= 50) {
 					reply();

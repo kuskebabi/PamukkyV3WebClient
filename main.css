@@ -32,6 +32,7 @@ body,html {
 	--ripple-color: rgba(255,200,0,0.6);
 	--active-color: rgba(255,170,0,0.4);
 	--message-sent-color: rgba(255,170,0,0.4);
+	--hint-color: rgba(255, 200, 0, 0.5);
 }
 
 flex {
@@ -216,8 +217,8 @@ button:active:not(.fab):not(.ripple-element), select:active, .interactive:active
 .bbar {
 	display:flex;
 	flex-shrink:0;
-	min-height:30;
 	align-items:center;
+	padding: 8px;
 }
 
 titlebar {
@@ -846,7 +847,7 @@ msgcont {
 }
 
 msgcont.hint {
-	background: rgba(255, 200, 0, 0.5);
+	background: var(--hint-color);
 }
 
 msgcont > .selectid {
@@ -1244,7 +1245,7 @@ msgreacts > button.rcted {
 	msgcont {
 		break-inside: avoid;
 	}
-	messageslist,html,body,main {
+	messageslist,html,body,main,.messagescont {
 		overflow:visible !important;
 		background:white;
 	}
