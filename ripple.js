@@ -13,17 +13,27 @@ function addRipple(element, color = "var(--ripple-color)", clickelement) {
 	element.style.overflow = "hidden";
 	function rippleStart(event) {
 		if (element.disabled) return;
+		
 		const diameter = Math.max(element.clientWidth, element.clientHeight);
-		const radius = diameter / 2;
+		const boundingclient = element.getBoundingClientRect();
+
 		var ripple = document.createElement("div");
 
-		let boundingclient = element.getBoundingClientRect();
+		const locationX = event.clientX - boundingclient.left;
+		const locationY = event.clientY - boundingclient.top;
+
+		const offsetY = -((diameter - element.clientHeight) / 2);
+		const offsetX = -((diameter - element.clientWidth) / 2);
 		
+		const translateX = offsetX + (locationX - (element.clientWidth / 2));
+		const translateY = offsetY + (locationY - (element.clientHeight / 2));
+
 		ripple.style.position = "absolute";
+		ripple.style.zIndex = "1";
 		ripple.style.top = ripple.style.left = "0";
-		ripple.style.transform = "scale(0) translateX(" + ((event.clientX - radius) - (boundingclient.left)) + "px) translateY(" + ((event.clientY - radius) - (boundingclient.top)) + "px)";
+		ripple.style.transform = "translateX(" + translateX + "px) translateY(" + translateY + "px) scale(0)";
 		ripple.style.opacity = "0.1";
-		ripple.style.transition = "transform 0.5s,opacity 0.7s";
+		ripple.style.transition = "transform 0.4s,opacity 0.6s";
 		ripple.style.borderRadius = "50%";
 		ripple.style.background = color;
 		ripple.style.width = diameter + "px";
@@ -33,9 +43,8 @@ function addRipple(element, color = "var(--ripple-color)", clickelement) {
 		element.appendChild(ripple);
 
 		requestAnimationFrame(_ => {
-			const offsetY = (diameter - Math.min(element.clientWidth, element.clientHeight)) / 2;
-			ripple.style.opacity = "0.6";
-			ripple.style.transform = "scale(1.1) translateY(-" + offsetY + "px)";
+			ripple.style.opacity = "1";
+			ripple.style.transform = "translateY(" + offsetY + "px) translateX(" + offsetX + "px) scale(1.1)";
 		});
 
 		var rp = true;

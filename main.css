@@ -29,7 +29,7 @@ body,html {
 
 	--accent-color: orange;
 	--accent-color-light: gold;
-	--ripple-color: rgb(255,200,0);
+	--ripple-color: rgba(255,200,0,0.6);
 	--active-color: rgba(255,170,0,0.4);
 	--message-sent-color: rgba(255,170,0,0.4);
 }
